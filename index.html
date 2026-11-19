@@ -9,10 +9,30 @@
 @media(hover:none){#touch{display:flex}#help{max-width:48%;font-size:10px}}
 
 #ui{position:fixed;inset:0;pointer-events:none}.cockpit{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:min(560px,100vw);height:138px;background:linear-gradient(180deg,#142733e8,#071018fa);border:1px solid #6b9aaa66;border-bottom:0;border-radius:24px 24px 0 0;box-shadow:0 -8px 40px #0008;display:flex;align-items:center;justify-content:space-around;padding:8px 18px 12px;gap:10px}.cockpit-brand{position:absolute;top:8px;left:20px;font-size:9px;letter-spacing:2px;color:#8ba9b8}.cockpit-brand b{color:#56e8e2;margin-left:8px;letter-spacing:.5px}.speed-cluster{width:220px;margin-top:12px}.speed-cluster svg{width:100%;height:auto;overflow:visible}.drift-cluster{display:flex;flex-direction:column;gap:5px;min-width:105px;text-align:center;color:#8faab8;font-size:9px;letter-spacing:1px}.drift-cluster>b{font-size:22px;color:#fff;letter-spacing:0}.drift-cluster span b{color:#56e8e2;font-size:14px}@media(max-width:520px){.cockpit{height:116px;padding:8px 10px 8px;gap:2px}.speed-cluster{width:190px}.drift-cluster{min-width:82px;font-size:8px}.drift-cluster>b{font-size:18px}.cockpit-brand{left:14px;font-size:8px}}
+
+/* Visual refresh: cinematic start screen, richer menu backdrop, and branded loader. */
+#menu{isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 72% 48%,rgba(25,115,142,.26),transparent 42%),linear-gradient(115deg,rgba(3,10,18,.96),rgba(5,20,32,.78) 55%,rgba(4,11,19,.94))}
+#menu:before{content:"";position:absolute;inset:-12%;z-index:-1;background:linear-gradient(135deg,transparent 38%,rgba(70,213,220,.09) 38.2%,transparent 38.7%),linear-gradient(25deg,transparent 58%,rgba(255,255,255,.055) 58.2%,transparent 58.6%),radial-gradient(ellipse at 78% 28%,rgba(55,161,183,.23),transparent 32%),radial-gradient(ellipse at 12% 88%,rgba(23,78,112,.36),transparent 42%);transform:skewY(-7deg);animation:menuDrift 16s ease-in-out infinite alternate}
+#menu:after{content:"HARRISON MOTORSPORT  /  DRIFT DIVISION";position:absolute;left:clamp(18px,4vw,58px);bottom:22px;color:#a8c4d0a8;font-size:10px;letter-spacing:.28em}
+#menu .card{position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(13,34,49,.94),rgba(5,16,27,.92));border:1px solid rgba(92,220,224,.34);box-shadow:0 28px 100px rgba(0,0,0,.58),inset 0 1px rgba(255,255,255,.08);backdrop-filter:blur(18px)}
+#menu .card:before{content:"";position:absolute;right:-90px;top:-110px;width:270px;height:270px;border:1px solid rgba(87,223,224,.18);border-radius:50%;box-shadow:0 0 0 24px rgba(87,223,224,.035),0 0 0 52px rgba(87,223,224,.025);pointer-events:none}
+#menu h1{letter-spacing:-.055em;text-shadow:0 8px 34px rgba(0,0,0,.48)}
+#menu .eyebrow{display:inline-flex;align-items:center;gap:10px}#menu .eyebrow:before{content:"";width:24px;height:2px;background:#5de2e4;box-shadow:0 0 12px #5de2e4}
+#menu button{transition:transform .2s,border-color .2s,background .2s}#menu button:hover{transform:translateY(-2px);border-color:#5de2e4}
+#menu button.primary{box-shadow:0 8px 28px rgba(15,170,179,.24);background:linear-gradient(110deg,#12c4c2,#2778b5)}
+#loadingScreen{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 42%,rgba(21,105,132,.3),transparent 42%),linear-gradient(145deg,#030911,#0b1d2b 58%,#030911);transition:opacity .55s ease,visibility .55s ease}
+#loadingScreen.done{opacity:0;visibility:hidden;pointer-events:none}
+.loading-panel{width:min(440px,100%);text-align:center;padding:34px 28px;border:1px solid rgba(92,220,224,.28);border-radius:20px;background:rgba(6,20,31,.78);box-shadow:0 24px 90px #0009;backdrop-filter:blur(16px)}
+.loading-mark{font-size:11px;font-weight:800;letter-spacing:.34em;color:#67e8e5}.loading-title{margin:16px 0 8px;font-size:clamp(25px,6vw,38px);font-weight:900;letter-spacing:-.04em;color:#f4fbff}.loading-copy{font-size:12px;letter-spacing:.08em;color:#9cb6c5}.loading-track{height:4px;margin:25px 0 12px;border-radius:9px;overflow:hidden;background:#193344}.loading-track:after{content:"";display:block;width:42%;height:100%;border-radius:9px;background:linear-gradient(90deg,#1aa6b7,#70f2df);box-shadow:0 0 18px #38d9d4;animation:loadingSweep 1.35s ease-in-out infinite}
+.loading-foot{font-size:9px;letter-spacing:.24em;color:#648394}
+@keyframes loadingSweep{0%{transform:translateX(-110%)}100%{transform:translateX(250%)}}
+@keyframes menuDrift{from{transform:skewY(-7deg) translate3d(-1%,0,0)}to{transform:skewY(-7deg) translate3d(1%,1%,0)}}
+@media(max-width:520px){#menu .card{padding:25px 22px;border-radius:18px}#menu:after{font-size:8px;bottom:12px}.loading-panel{padding:28px 20px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
+<div id="loadingScreen"><div class="loading-panel"><div class="loading-mark">HARRISON MOTORSPORT</div><div class="loading-title">DRIFT WORLD</div><div class="loading-copy">PREPARING THE CIRCUIT</div><div class="loading-track"></div><div class="loading-foot">3D WORLD · GARAGE · TRACK</div></div></div>
 <div id="menu"><div class="card"><div class="eyebrow">HCG // 3D DRIFT WORLD</div><h1>BUILD IT.<br>SLIDE IT.</h1><p>A new 3D driving build. Hit the circuit, throw the car sideways, build drift points and tune your ride.</p><button class="primary" id="start">ENTER THE TRACK</button><button id="openGarage">GARAGE & TUNING</button><p style="font-size:11px">WASD / arrows to drive · Space for handbrake · Shift for boost · R to reset. Touch controls are available on phones.</p></div></div>
 <div id="garage"><div class="card"><button class="garage-back" id="closeGarage">← BACK</button><div class="garage-left">
 <label><span>TURBO: <b id="turboVal">14.3 psi</b></span><input id="turbo" type="range" min="0" max="25" step=".1" value="14.3"></label>
@@ -33,6 +53,9 @@
 <script type="module">
 import * as THREE from 'three';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/FBXLoader.js';
+const loadingScreen=document.getElementById('loadingScreen');
+function finishLoading(){if(loadingScreen)loadingScreen.classList.add('done')}
+setTimeout(finishLoading,6500);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x9cc6d2);scene.fog=new THREE.Fog(0x9cc6d2,95,330);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,700);
 const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;document.body.appendChild(renderer.domElement);
@@ -311,8 +334,8 @@ m4Loader.load('./assets/bmw-m4/source/BMW%20M4%202021%20v1.fbx',object=>{
  const fitted=new THREE.Box3().setFromObject(object),center=fitted.getCenter(new THREE.Vector3());
  object.position.x-=center.x;object.position.z-=center.z;object.position.y-=fitted.min.y;
  object.traverse(child=>{if(child.isMesh){child.castShadow=true;child.receiveShadow=true}});
- m4Model.add(object);m4Ready=true;const selected=localStorage.hcgStyle||'bmw_m4';$('carStyle').value=selected;applyStyle(selected);applyTune();toast('2021 BMW M4 Competition loaded');
-},undefined,error=>{console.error('BMW M4 model could not be loaded:',error);toast('BMW M4 files missing — classic BMW kept as fallback')});
+ m4Model.add(object);m4Ready=true;finishLoading();const selected=localStorage.hcgStyle||'bmw_m4';$('carStyle').value=selected;applyStyle(selected);applyTune();toast('2021 BMW M4 Competition loaded');
+},undefined,error=>{console.error('BMW M4 model could not be loaded:',error);finishLoading();toast('BMW M4 files missing — classic BMW kept as fallback')});
 // Apply garage tuning to the actual E46 model and driving physics.
 function applyTune(){
  const value=id=>Number($(id)?.value ?? localStorage['hcg_'+id] ?? ({turbo:14.3,frontCamber:-5,rearCamber:-1,frontOffset:5,rearOffset:3,brakeBalance:70,frontHeight:-6,rearHeight:1,brakePressure:100}[id]));

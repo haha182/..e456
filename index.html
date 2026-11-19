@@ -171,7 +171,7 @@ function applyStyle(style){body.scale.set(1.02,1,1.02);cabin.scale.set(1,1,1);re
 // REBUILT BMW E46 M3: replace the placeholder silhouette with a complete, separate model.
 for(const child of carRoot.children) child.visible=false;
 const e46=new THREE.Group();carRoot.add(e46);wheels.length=0;
-const e46Paint=paintMat, e46Glass=new THREE.MeshPhysicalMaterial({color:0x142b39,metalness:.28,roughness:.12,clearcoat:1}), e46Rubber=mat(0x090b0e,.9), e46Dark=mat(0x11171c,.55,.35), e46Metal=mat(0x9ba6aa,.25,.85), e46Red=new THREE.MeshStandardMaterial({color:0xc51620,emissive:0x4b0000}), e46White=new THREE.MeshPhysicalMaterial({color:0xeaf4ff,emissive:0x7893a8,emissiveIntensity:.45,roughness:.12});
+const e46Paint=new THREE.MeshPhysicalMaterial({color:paintMat.color.clone(),metalness:.58,roughness:.19,clearcoat:1,clearcoatRoughness:.08}), e46Glass=new THREE.MeshPhysicalMaterial({color:0x142b39,metalness:.18,roughness:.10,clearcoat:1,transparent:true,opacity:.58,depthWrite:false}), e46Rubber=mat(0x090b0e,.9), e46Dark=mat(0x11171c,.55,.35), e46Metal=mat(0x9ba6aa,.25,.85), e46Red=new THREE.MeshStandardMaterial({color:0xc51620,emissive:0x4b0000}), e46White=new THREE.MeshPhysicalMaterial({color:0xeaf4ff,emissive:0x7893a8,emissiveIntensity:.45,roughness:.12});
 function e46Profile(points,width,material,bevel=.035){const s=new THREE.Shape();s.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)s.lineTo(points[i][0],points[i][1]);s.closePath();const g=new THREE.ExtrudeGeometry(s,{depth:width,bevelEnabled:bevel>0,bevelSegments:3,steps:1,bevelSize:bevel,bevelThickness:bevel,curveSegments:10});g.translate(0,0,-width/2);g.rotateY(-Math.PI/2);const m=new THREE.Mesh(g,material);m.castShadow=true;m.receiveShadow=true;e46.add(m);return m}
 function e46Box(w,h,d,x,y,z,material,bevel=0){let g=new THREE.BoxGeometry(w,h,d);if(bevel){g=new THREE.BoxGeometry(w,h,d,1,1,1)}const m=new THREE.Mesh(g,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;e46.add(m);return m}
 function e46Round(w,h,d,x,y,z,material){const m=new THREE.Mesh(new THREE.CylinderGeometry(w/2,w/2,d,32),material);m.rotation.x=Math.PI/2;m.position.set(x,y,z);e46.add(m);return m}
@@ -219,6 +219,55 @@ for(const x of [-1.015,1.015])for(const z of [-1.43,1.43]){const arch=new THREE.
 e46Box(1.72,.07,.17,0,1.04,2.08,e46Paint);
 for(const x of [-.98,.98]){e46Box(.045,.06,.48,x,.91,-1.68,e46Dark);e46Box(.10,.055,.20,x*1.02,.93,1.70,e46Dark)}
 e46Box(.17,.075,.025,0,.91,2.40,e46Metal);
+// E46 M3 visual-detail pass: sculpted bonnet creases, door shut lines, precise trim and lighting.
+const seamMat=new THREE.MeshStandardMaterial({color:0x273038,roughness:.58,metalness:.25});
+const chromeMat=new THREE.MeshStandardMaterial({color:0xc4cbd0,roughness:.22,metalness:.9});
+const amberMat=new THREE.MeshBasicMaterial({color:0xffa52c});
+function e46Line(points,material=seamMat,r=.012){const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,32,r,6,false),material);e46.add(mesh);return mesh}
+// Raised bonnet shoulders and center power bulge, following the long E46 hood.
+for(const side of [-1,1]){
+ e46Line([[side*.22,1.064,-2.12],[side*.34,1.075,-1.82],[side*.48,1.078,-1.48],[side*.62,1.065,-1.12]],e46Paint,.018);
+ e46Line([[side*.91,1.045,-1.98],[side*.91,1.052,-1.52],[side*.89,1.055,-1.12]],chromeMat,.009);
+ // Door cut line and rear quarter-panel contour.
+ e46Line([[side*1.008,.98,-.68],[side*1.012,.88,-.58],[side*1.014,.62,-.50],[side*1.014,.48,-.30],[side*1.014,.47,.48],[side*1.014,.72,.70],[side*1.014,.99,.78]],seamMat,.012);
+ e46Line([[side*1.012,.94,.92],[side*1.012,.82,1.16],[side*1.012,.70,1.36]],e46Paint,.018);
+ // M3 side gill / indicator detail behind the front wheel.
+ e46Box(.035,.15,.42,side*1.018,.92,-1.03,e46Dark);
+ e46Box(.045,.045,.23,side*1.04,.94,-1.04,chromeMat);
+ e46Box(.048,.055,.14,side*1.045,.94,-1.04,amberMat);
+ // Door handle and subtle lower character crease.
+ e46Box(.035,.035,.18,side*1.025,1.045,.36,chromeMat);
+ e46Line([[side*1.015,.70,-.45],[side*1.018,.66,.05],[side*1.015,.69,.58]],e46Paint,.016);
+}
+// Twin kidney grille surrounds receive a dark inset and fine chrome perimeter.
+for(const x of [-.235,.235]){
+ e46Box(.365,.325,.018,x,.77,-2.322,chromeMat);
+ e46Box(.315,.275,.025,x,.77,-2.345,e46Dark);
+ for(let j=0;j<7;j++)e46Box(.014,.235,.014,x-.112+j*.037,.77,-2.368,chromeMat);
+}
+// More convincing headlamp internals: paired projector lenses and amber corner markers.
+for(const side of [-1,1]){
+ for(const x of [side*.49,side*.77]){
+  const projector=new THREE.Mesh(new THREE.CircleGeometry(.052,24),new THREE.MeshBasicMaterial({color:0xe9f5ff}));
+  projector.position.set(x,.91,-2.337);e46.add(projector);
+  const innerRing=new THREE.Mesh(new THREE.TorusGeometry(.061,.009,8,24),chromeMat);
+  innerRing.position.set(x,.91,-2.34);e46.add(innerRing);
+ }
+ e46Box(.10,.085,.035,side*.96,.88,-2.30,amberMat);
+ // Rear lamp red/clear split and boot-lid crease.
+ e46Box(.16,.14,.035,side*.91,.85,2.37,e46Red);
+ e46Box(.09,.13,.04,side*.70,.85,2.385,e46White);
+}
+// M3 rear deck lip, subtle trunk shut line and rear diffuser fins.
+e46Line([[-.88,.99,2.12],[-.48,1.005,2.16],[0,1.01,2.17],[.48,1.005,2.16],[.88,.99,2.12]],seamMat,.011);
+for(const x of [-.48,-.16,.16,.48])e46Box(.035,.10,.16,x,.43,2.43,e46Metal);
+// Wheel face details: drilled rotors, brake discs and colored M calipers.
+const rotorMat=mat(0x737d82,.42,.82),caliperMat=mat(0x9b2428,.45,.3);
+for(const side of [-1,1])for(const z of [-1.43,1.43]){
+ const rotor=new THREE.Mesh(new THREE.CylinderGeometry(.285,.285,.025,40),rotorMat);rotor.rotation.z=Math.PI/2;rotor.position.set(side*1.17,.55,z);e46.add(rotor);
+ const caliper=new THREE.Mesh(new THREE.BoxGeometry(.075,.22,.12),caliperMat);caliper.position.set(side*1.20,.64,z-.16);e46.add(caliper);
+ for(let k=0;k<8;k++){const a=k*Math.PI/4;const hole=new THREE.Mesh(new THREE.CircleGeometry(.012,8),e46Dark);hole.position.set(side*1.185,.55+Math.sin(a)*.24,z+Math.cos(a)*.24);hole.rotation.y=Math.PI/2; e46.add(hole)}
+}
 // E46 finishing details: side glazing, window frames, sculpted arches, panel gaps and M3 mirrors.
 for(const side of [-1,1]){
  const sideGlass=new THREE.Mesh(new THREE.BoxGeometry(.035,.42,1.30),e46Glass);sideGlass.position.set(side*.805,1.43,.02);e46.add(sideGlass);

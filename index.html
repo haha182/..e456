@@ -28,6 +28,22 @@
 @keyframes loadingSweep{0%{transform:translateX(-110%)}100%{transform:translateX(250%)}}
 @keyframes menuDrift{from{transform:skewY(-7deg) translate3d(-1%,0,0)}to{transform:skewY(-7deg) translate3d(1%,1%,0)}}
 @media(max-width:520px){#menu .card{padding:25px 22px;border-radius:18px}#menu:after{font-size:8px;bottom:12px}.loading-panel{padding:28px 20px}}
+
+/* Drift Hunters-inspired premium workshop showroom (original Harrison Motorsport styling). */
+#garage{background:linear-gradient(90deg,rgba(3,8,13,.78),transparent 28%,transparent 72%,rgba(3,8,13,.78))}
+#garage .card{grid-template-columns:minmax(205px,1fr) minmax(250px,1.25fr) minmax(205px,1fr);gap:2.4vw;padding:62px 3vw 72px}
+#garage .garage-left,#garage .garage-right{align-self:center;padding:18px 20px 20px;background:linear-gradient(145deg,rgba(8,17,24,.84),rgba(13,25,33,.62));border:1px solid rgba(145,177,188,.2);border-top:2px solid rgba(83,220,219,.7);border-radius:5px;box-shadow:0 18px 44px rgba(0,0,0,.28);backdrop-filter:blur(12px);max-height:min(76vh,720px);overflow:auto;pointer-events:auto}
+#garage label{color:#dce8eb;text-shadow:0 2px 5px #000;font-size:clamp(11px,1.05vw,14px);letter-spacing:.045em}
+#garage label span{color:#9bb2bb}
+#garage label span b{float:right;color:#66e5e0;font-variant-numeric:tabular-nums}
+#garage input[type=range]{accent-color:#59d9d7;cursor:pointer}
+#garage input[type=color]{height:34px;border:1px solid #5d7884;background:#101d25;padding:3px}
+#garage select{background:#101d25;border:1px solid #49616d;border-radius:3px;padding:10px;color:#eaf5f7}
+#garage h2{right:3vw;bottom:13px;font-size:clamp(27px,4vw,50px);letter-spacing:.12em;color:#d9e5e8;text-shadow:0 3px 18px #000}
+#garage .garage-back{background:rgba(5,13,19,.75);border:1px solid #536c76;border-radius:3px;padding:10px 18px}
+#garage .garage-actions button{background:rgba(8,19,27,.88);border:1px solid #69808a;border-radius:3px;letter-spacing:.08em}
+#garage .garage-actions .primary{background:linear-gradient(110deg,#58ded8,#a7f1e8);color:#07171c;border:0}
+@media(max-width:700px){#garage .card{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:48px 9px 64px}#garage .garage-left,#garage .garage-right{padding:10px 11px;max-height:43vh;background:rgba(5,14,21,.86)}#garage label{font-size:10px;margin:8px 0}#garage h2{font-size:24px;right:10px;bottom:8px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 </head>
@@ -140,6 +156,18 @@ for(let z=-21;z<=21;z+=3){const line=new THREE.Mesh(new THREE.BoxGeometry(42,.01
 for(const x of [-12,0,12]){const lamp=new THREE.Mesh(new THREE.BoxGeometry(5,.08,.65),new THREE.MeshBasicMaterial({color:0xfff2d9}));lamp.position.set(x,22.7,1);showroom.add(lamp);const glow=new THREE.PointLight(0xffedcf,85,30);glow.position.set(x,20,1);showroom.add(glow)}
 // Open ceiling: overhead strip lights remain as the garage lighting.
 const floorGrid=new THREE.GridHelper(44,44,0x737a79,0x565d5d);floorGrid.position.y=-.035;showroom.add(floorGrid);
+
+// Premium industrial showroom details: illuminated display plinth, wall branding and vertical light bars.
+const plinthMat=new THREE.MeshStandardMaterial({color:0x151d22,roughness:.38,metalness:.58});
+const plinth=new THREE.Mesh(new THREE.CylinderGeometry(5.15,5.35,.16,96),plinthMat);plinth.position.set(0,.015,0);plinth.receiveShadow=true;showroom.add(plinth);
+const plinthTop=new THREE.Mesh(new THREE.CylinderGeometry(4.98,4.98,.035,96),new THREE.MeshStandardMaterial({color:0x303a3f,roughness:.42,metalness:.4}));plinthTop.position.set(0,.105,0);showroom.add(plinthTop);
+const plinthRing=new THREE.Mesh(new THREE.TorusGeometry(5.08,.035,8,120),new THREE.MeshBasicMaterial({color:0x58dcd7}));plinthRing.rotation.x=Math.PI/2;plinthRing.position.y=.13;showroom.add(plinthRing);
+const wallLogo=new THREE.Group();wallLogo.position.set(0,17.8,-13.45);showroom.add(wallLogo);
+const logoPlate=new THREE.Mesh(new THREE.BoxGeometry(15,2.6,.22),new THREE.MeshStandardMaterial({color:0x111b21,roughness:.6,metalness:.3}));wallLogo.add(logoPlate);
+const logoText=new THREE.Mesh(new THREE.BoxGeometry(10,.12,.04),new THREE.MeshBasicMaterial({color:0x61e3df}));logoText.position.y=-.58;logoText.position.z=.14;wallLogo.add(logoText);
+for(const x of [-20.8,20.8]){const bar=new THREE.Mesh(new THREE.BoxGeometry(.12,17,.18),new THREE.MeshBasicMaterial({color:0x62e5df}));bar.position.set(x,9,-11.8);showroom.add(bar);const glow=new THREE.PointLight(0x70e9e4,24,20);glow.position.set(x,9,-8);showroom.add(glow)}
+for(const z of [-15,-7,1,9]){const overhead=new THREE.Mesh(new THREE.BoxGeometry(6,.07,.5),new THREE.MeshBasicMaterial({color:0xe5f8f4}));overhead.position.set(0,22.55,z);showroom.add(overhead)}
+
 const carRoot=new THREE.Group();scene.add(carRoot);
 const paintMat=mat(0xbfc7ce,.2,.78),glassMat=new THREE.MeshPhysicalMaterial({color:0x132d3c,metalness:.35,roughness:.12,clearcoat:1});
 function profileMesh(points,width,material,bevel=.06){

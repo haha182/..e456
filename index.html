@@ -154,6 +154,60 @@ const haloMat=new THREE.MeshBasicMaterial({color:0xeaf5ff});
 for(const x of [-.76,-.48,.48,.76]){const lamp=new THREE.Mesh(new THREE.TorusGeometry(.075,.018,8,24),haloMat);lamp.position.set(x,.91,-2.325);bmwDetails.add(lamp);const lens=new THREE.Mesh(new THREE.CircleGeometry(.065,24),new THREE.MeshBasicMaterial({color:0xc9e5f2}));lens.position.set(x,.91,-2.33);bmwDetails.add(lens)}
 const bmwBadge=new THREE.Mesh(new THREE.CircleGeometry(.075,24),mat(0xdce5e9,.35,.7));bmwBadge.position.set(0,.91,-2.34);bmwDetails.add(bmwBadge);
 function applyStyle(style){body.scale.set(1.02,1,1.02);cabin.scale.set(1,1,1);rearSpoiler.visible=false;frontLip.visible=true;bmwDetails.visible=style==="bmw_e46";$("carLabel").textContent="BMW M3 E46"}
+
+// REBUILT BMW E46 M3: replace the placeholder silhouette with a complete, separate model.
+for(const child of carRoot.children) child.visible=false;
+const e46=new THREE.Group();carRoot.add(e46);wheels.length=0;
+const e46Paint=paintMat, e46Glass=new THREE.MeshPhysicalMaterial({color:0x142b39,metalness:.28,roughness:.12,clearcoat:1}), e46Rubber=mat(0x090b0e,.9), e46Dark=mat(0x11171c,.55,.35), e46Metal=mat(0x9ba6aa,.25,.85), e46Red=new THREE.MeshStandardMaterial({color:0xc51620,emissive:0x4b0000}), e46White=new THREE.MeshPhysicalMaterial({color:0xeaf4ff,emissive:0x7893a8,emissiveIntensity:.45,roughness:.12});
+function e46Profile(points,width,material,bevel=.035){const s=new THREE.Shape();s.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)s.lineTo(points[i][0],points[i][1]);s.closePath();const g=new THREE.ExtrudeGeometry(s,{depth:width,bevelEnabled:bevel>0,bevelSegments:3,steps:1,bevelSize:bevel,bevelThickness:bevel,curveSegments:10});g.translate(0,0,-width/2);g.rotateY(-Math.PI/2);const m=new THREE.Mesh(g,material);m.castShadow=true;m.receiveShadow=true;e46.add(m);return m}
+function e46Box(w,h,d,x,y,z,material,bevel=0){let g=new THREE.BoxGeometry(w,h,d);if(bevel){g=new THREE.BoxGeometry(w,h,d,1,1,1)}const m=new THREE.Mesh(g,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;e46.add(m);return m}
+function e46Round(w,h,d,x,y,z,material){const m=new THREE.Mesh(new THREE.CylinderGeometry(w/2,w/2,d,32),material);m.rotation.x=Math.PI/2;m.position.set(x,y,z);e46.add(m);return m}
+// Steel monocoque and sculpted side profile: long hood, short rear deck, low coupe roof.
+e46Profile([[-2.34,.48],[-2.28,.78],[-2.08,.96],[-1.48,1.04],[-.92,1.08],[-.58,1.22],[.36,1.22],[.78,1.05],[1.55,1.00],[2.22,.88],[2.31,.56],[2.12,.43],[-2.15,.43]],1.98,e46Paint,.075);
+// Hood and boot lid are separate panels for clear E46 proportions.
+e46Box(1.82,.075,1.10,0,1.015,-1.68,e46Paint);
+e46Box(1.78,.065,.72,0,.965,1.82,e46Paint);
+e46Box(1.96,.28,.34,0,.67,-2.27,e46Paint);
+e46Box(1.98,.27,.34,0,.66,2.25,e46Paint);
+// Coupe greenhouse with dark glass, a painted roof and visible window frames.
+e46Profile([[-.99,1.08],[-.55,1.68],[-.34,1.76],[.30,1.76],[.48,1.68],[.91,1.08]],1.58,e46Glass,.025);
+e46Profile([[-.50,1.69],[-.34,1.79],[.30,1.79],[.46,1.69]],1.63,e46Paint,.025);
+// Windscreen and rear screen as sloped glass panels.
+e46Profile([[-.98,1.10],[-.55,1.66],[-.49,1.65],[-.88,1.12]],1.50,e46Glass,.012);
+e46Profile([[.43,1.65],[.87,1.10],[.94,1.11],[.50,1.66]],1.50,e46Glass,.012);
+// Front kidney grilles, chrome surrounds, and vertical slats.
+for(const x of [-.235,.235]){e46Box(.34,.30,.045,x,.77,-2.315,e46Metal);e46Box(.285,.245,.052,x,.77,-2.35,e46Dark);for(let j=0;j<6;j++)e46Box(.018,.218,.018,x-.105+j*.042,.77,-2.382,e46Metal)}
+// Four distinct round E46 halo lamps with clear lenses.
+for(const x of [-.77,-.49,.49,.77]){const ring=new THREE.Mesh(new THREE.TorusGeometry(.105,.022,10,32),e46White);ring.position.set(x,.91,-2.315);e46.add(ring);e46Round(.155,.155,.035,x,.91,-2.30,e46White)}
+e46Box(.16,.075,.025,0,.99,-2.34,e46Metal);
+// M3 front bumper, lower intake, side intakes and front splitter.
+e46Box(1.94,.23,.23,0,.57,-2.29,e46Paint);
+e46Box(1.24,.13,.045,0,.51,-2.425,e46Dark);
+for(const x of [-.76,.76]){e46Box(.28,.13,.045,x,.57,-2.42,e46Dark);e46Box(.31,.035,.08,x,.47,-2.39,e46Metal)}
+e46Box(2.12,.07,.34,0,.405,-2.30,e46Dark);
+// Rear bumper, diffuser, twin exhausts and red tail lamps.
+e46Box(1.98,.24,.24,0,.56,2.27,e46Paint);
+e46Box(1.45,.12,.06,0,.43,2.405,e46Dark);
+for(const x of [-.82,.82]){e46Box(.42,.17,.055,x,.85,2.34,e46Red);e46Box(.30,.045,.06,x,.85,2.38,e46White)}
+for(const x of [-.68,.68]){const tip=new THREE.Mesh(new THREE.CylinderGeometry(.095,.11,.18,20),e46Metal);tip.rotation.x=Math.PI/2;tip.position.set(x,.49,2.42);e46.add(tip)}
+// Side skirts, wheel arches, mirrors, door seams and handles.
+for(const x of [-1.0,1.0]){e46Box(.12,.15,2.5,x,.47,0,e46Dark);e46Box(.13,.09,.25,x*1.03,1.22,-.70,e46Dark);e46Box(.23,.13,.30,x*1.10,1.25,-.78,e46Paint);e46Box(.025,.50,.035,x*1.002,1.30,.12,e46Dark);e46Box(.14,.035,.07,x*1.02,1.08,.43,e46Metal)}
+// Wheel arches are dark curved fender lips; wheels are independent steerable groups.
+for(const x of [-1.015,1.015])for(const z of [-1.43,1.43]){const arch=new THREE.Mesh(new THREE.TorusGeometry(.53,.055,8,40,Math.PI),e46Dark);arch.rotation.z=Math.PI;arch.position.set(x,.57,z);e46.add(arch);
+ const pivot=new THREE.Group();pivot.position.set(x,.55,z);e46.add(pivot);
+ const tire=new THREE.Mesh(new THREE.CylinderGeometry(.49,.49,.29,40),e46Rubber);tire.rotation.z=Math.PI/2;tire.castShadow=true;pivot.add(tire);
+ const outer=new THREE.Mesh(new THREE.CylinderGeometry(.345,.345,.305,32),e46Metal);outer.rotation.z=Math.PI/2;pivot.add(outer);
+ const inner=new THREE.Mesh(new THREE.CylinderGeometry(.27,.27,.315,32),e46Dark);inner.rotation.z=Math.PI/2;pivot.add(inner);
+ const hub=new THREE.Mesh(new THREE.CylinderGeometry(.095,.095,.33,20),e46Metal);hub.rotation.z=Math.PI/2;pivot.add(hub);
+ for(let j=0;j<10;j++){const a=j*Math.PI/5;const spoke=new THREE.Mesh(new THREE.BoxGeometry(.035,.29,.055),e46Metal);spoke.position.set(x<0?-.17:.17,Math.sin(a)*.145,Math.cos(a)*.145);spoke.rotation.x=a;pivot.add(spoke)}
+ wheels.push({pivot,x,z});
+}
+// Rear M3 deck lip, subtle fender flares, badges and grille detail.
+e46Box(1.72,.07,.17,0,1.04,2.08,e46Paint);
+for(const x of [-.98,.98]){e46Box(.045,.06,.48,x,.91,-1.68,e46Dark);e46Box(.10,.055,.20,x*1.02,.93,1.70,e46Dark)}
+e46Box(.17,.075,.025,0,.91,2.40,e46Metal);
+function applyE46Paint(){e46Paint.color.copy(paintMat.color)}
+
 function tick(t){requestAnimationFrame(tick);const dt=Math.min((t-last)/1000,.035);last=t;if(!paused){const gas=keys.w||keys.arrowup,brake=keys.s||keys.arrowdown,left=keys.a||keys.arrowleft,right=keys.d||keys.arrowright,hand=keys[' '],nitro=keys.shift;const turn=(right?1:0)-(left?1:0);const maxPower=Number(localStorage.hcgPower||3);const grip=hand?.38:.92;if(gas){speed+=31*maxPower/3*dt;}else if(brake){if(speed>0){speed=Math.max(0,speed-42*dt);}else{speed-=18*dt;}}else{speed-=Math.sign(speed)*Math.min(Math.abs(speed),5.5*dt);}speed=THREE.MathUtils.clamp(speed,-18,68+(nitro&&boost>0?20:0));if(nitro&&gas&&boost>0){speed+=18*dt;boost=Math.max(0,boost-25*dt)}else boost=Math.min(100,boost+8*dt);const response=Number(localStorage.hcgSteer||3);steerAngle=THREE.MathUtils.damp(steerAngle,turn*.58*response/3,5,dt);heading-=steerAngle*dt*Math.min(1.8,Math.abs(speed)/17)*Math.sign(speed||1);const forward=new THREE.Vector3(-Math.sin(heading),0,-Math.cos(heading));const side=new THREE.Vector3(forward.z,0,-forward.x);const lateral=vel.dot(side);const desired=hand?Math.sin(steerAngle)*Math.abs(speed)*.75:0;vel.addScaledVector(forward,(speed-vel.dot(forward))*Math.min(1,dt*4));vel.addScaledVector(side,(desired-lateral)*Math.min(1,dt*(hand?1.15:5.5*grip)));carPos.addScaledVector(vel,dt);carRoot.position.copy(carPos);carRoot.position.y=.05+Math.sin(t*.012)*.018;const motionYaw=Math.atan2(vel.x,vel.z);driftAngle=THREE.MathUtils.euclideanModulo(heading-motionYaw+Math.PI,Math.PI*2)-Math.PI;carRoot.rotation.y=heading;for(const w of wheels){if(Math.abs(w.z)>1)w.pivot.rotation.y=turn*.24}slip=Math.abs(driftAngle)*Math.abs(speed);if(hand&&Math.abs(speed)>10&&slip>.48){driftTimer+=dt;combo=Math.min(5,1+Math.floor(driftTimer/1.5));const earned=Math.floor(slip*dt*5*combo);score+=earned;points+=earned;if(Math.random()<.7){const p=carRoot.localToWorld(new THREE.Vector3((Math.random()-.5)*1.5,.35,1.6));const s=smoke.find(q=>q.life<=0);if(s){s.life=1.2;s.mesh.position.copy(p);s.mesh.scale.setScalar(.7+Math.random())}}}else{driftTimer=Math.max(0,driftTimer-dt*1.6);if(driftTimer===0)combo=1}for(const s of smoke){if(s.life>0){s.life-=dt;s.mesh.visible=true;s.mesh.position.y+=dt*1.5;s.mesh.scale.multiplyScalar(1+dt*.55);s.mesh.material.opacity=Math.max(0,s.life*.25)}else{s.mesh.visible=false;s.mesh.scale.setScalar(1)}}$('speed').textContent=Math.round(Math.abs(speed)*3.6);$('score').textContent=score.toLocaleString();$('combo').textContent='x'+combo;}if(!garageMode){const look=new THREE.Vector3(Math.sin(heading)*4,1.4,Math.cos(heading)*4).add(carRoot.position);const desiredCam=cameraMode===0?new THREE.Vector3(carRoot.position.x-Math.sin(heading)*12,7.2,carRoot.position.z-Math.cos(heading)*12):cameraMode===1?new THREE.Vector3(carRoot.position.x-Math.sin(heading)*5,3.1,carRoot.position.z-Math.cos(heading)*5):new THREE.Vector3(carRoot.position.x+Math.sin(heading)*2,17,carRoot.position.z+Math.cos(heading)*2);camera.position.lerp(desiredCam,.085);camera.lookAt(look)}renderer.render(scene,camera)}
 requestAnimationFrame(tick);
 function start(){paused=false;$('menu').style.display='none';$('driveActions').style.display='block';last=performance.now()}

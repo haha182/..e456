@@ -96,7 +96,7 @@ for(let y=1.1;y<12;y+=.72){const rib=new THREE.Mesh(new THREE.BoxGeometry(19.8,.
 const cabinetMat=new THREE.MeshStandardMaterial({color:0x20282b,roughness:.65,metalness:.35});
 for(const x of [-16,-12,-8]){const cab=new THREE.Mesh(new THREE.BoxGeometry(3.4,3.3,1.2),cabinetMat);cab.position.set(x,1.65,-8.5);showroom.add(cab);for(let y=.65;y<3;y+=.75){const drawer=new THREE.Mesh(new THREE.BoxGeometry(3.15,.055,1.25),darkConcrete);drawer.position.set(x,y,-7.86);showroom.add(drawer)}}
 const barrelMat=new THREE.MeshStandardMaterial({color:0x9c3430,roughness:.5,metalness:.25});
-for(const x of [12,15]){const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.58,.58,1.7,20),barrelMat);barrel.position.set(x,.85,-7.8);showroom.add(barrel);const band=new THREE.Mesh(new THREE.TorusGeometry(.59,.055,8,24),rimMat);band.rotation.x=Math.PI/2;band.position.set(x,1.1,-7.8);showroom.add(band)}
+for(const x of [12,15]){const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.58,.58,1.7,20),barrelMat);barrel.position.set(x,.85,-7.8);showroom.add(barrel);const band=new THREE.Mesh(new THREE.TorusGeometry(.59,.055,8,24),darkConcrete);band.rotation.x=Math.PI/2;band.position.set(x,1.1,-7.8);showroom.add(band)}
 const tileMat=new THREE.MeshStandardMaterial({color:0x555b5d,roughness:.88});
 for(let x=-21;x<=21;x+=3){const line=new THREE.Mesh(new THREE.BoxGeometry(.035,.018,42),tileMat);line.position.set(x,.012,0);showroom.add(line)}
 for(let z=-21;z<=21;z+=3){const line=new THREE.Mesh(new THREE.BoxGeometry(42,.018,.035),tileMat);line.position.set(0,.013,z);showroom.add(line)}

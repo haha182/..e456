@@ -192,7 +192,7 @@ if(!mobileQuality){
  scene.environment=studioEnvironment.texture;scene.environmentIntensity=.72;
  pmremGenerator.dispose();
 }
-scene.add(new THREE.HemisphereLight(0x243b68,0x080b13,.34));
+const hemiLight=new THREE.HemisphereLight(0x243b68,0x080b13,.34);scene.add(hemiLight);
 const moon=new THREE.DirectionalLight(0x9bbcff,.62);moon.position.set(-85,115,65);moon.castShadow=!mobileQuality;moon.shadow.mapSize.set(1024,1024);moon.shadow.camera.left=-155;moon.shadow.camera.right=155;moon.shadow.camera.top=155;moon.shadow.camera.bottom=-155;scene.add(moon);
 const mat=(color,rough=.7,metal=0)=>new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal,envMapIntensity:metal>.12?1.15:.72});
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),new THREE.MeshBasicMaterial({color:0x080d13,roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-1.2;ground.receiveShadow=false;ground.renderOrder=0;scene.add(ground);
@@ -306,6 +306,33 @@ for(let i=0;i<22;i++){
  const routeSpeed=(19+(i%7)*2.7)/Math.max(80,info.curve.getLength());
  trafficCars.push({group,route:info.curve,closed:info.closed,u:(i*.173+ri*.117)%1,lane,targetLane:lane,allowedLanes:laneSet,laneChangeTimer:5+(i%6)*2,direction,speed:routeSpeed,wheels,hitCooldown:0,passCooldown:0});
 }
+// A single straight night highway with a dealership at its end.
+const highwayWorld=new THREE.Group();scene.add(highwayWorld);
+const highwayRoute=new THREE.CatmullRomCurve3([new THREE.Vector3(0,0,45),new THREE.Vector3(0,0,-1450)],false,'catmullrom',0);
+const roadMat2=new THREE.MeshStandardMaterial({color:0x252a30,map:asphaltTexture,roughness:.96});
+const road2=new THREE.Mesh(new THREE.PlaneGeometry(28,1420),roadMat2);road2.rotation.x=-Math.PI/2;road2.position.set(0,.02,-670);highwayWorld.add(road2);
+const ground2=new THREE.Mesh(new THREE.PlaneGeometry(520,1900),new THREE.MeshBasicMaterial({color:0x080d13}));ground2.rotation.x=-Math.PI/2;ground2.position.set(0,-.12,-690);highwayWorld.add(ground2);
+const stripe2=new THREE.MeshBasicMaterial({color:0xf1ead8}),dash2=new THREE.InstancedMesh(new THREE.BoxGeometry(.18,.025,5.2),stripe2,150),dummy2=new THREE.Object3D();
+for(let i=0;i<150;i++){dummy2.position.set(0,.06,22-i*9.2);dummy2.updateMatrix();dash2.setMatrixAt(i,dummy2.matrix)}dash2.instanceMatrix.needsUpdate=true;highwayWorld.add(dash2);
+const edge2=new THREE.Mesh(new THREE.BoxGeometry(.18,.03,1420),stripe2);edge2.position.set(-13.8,.06,-670);highwayWorld.add(edge2);const edge3=edge2.clone();edge3.position.x=13.8;highwayWorld.add(edge3);
+const poleMat2=new THREE.MeshStandardMaterial({color:0x343d46,metalness:.7,roughness:.38}),bulbMat2=new THREE.MeshBasicMaterial({color:0xffe4b0});
+for(let z=-35;z>-1320;z-=85)for(const side of [-1,1]){const x=side*19,pole=new THREE.Mesh(new THREE.CylinderGeometry(.09,.15,8,8),poleMat2);pole.position.set(x,4,z);highwayWorld.add(pole);const arm=new THREE.Mesh(new THREE.BoxGeometry(2.8,.12,.12),poleMat2);arm.position.set(x-side*1.25,7.85,z);highwayWorld.add(arm);const bulb=new THREE.Mesh(new THREE.BoxGeometry(.65,.14,.48),bulbMat2);bulb.position.set(x-side*2.45,7.7,z);highwayWorld.add(bulb);if(!mobileQuality){const glow=new THREE.PointLight(0xffd09a,26,42,1.5);glow.position.copy(bulb.position);highwayWorld.add(glow)}}
+const dealerBuilding=new THREE.Group();dealerBuilding.position.set(0,0,-1350);highwayWorld.add(dealerBuilding);
+const dmat=new THREE.MeshStandardMaterial({color:0x202a33,roughness:.5,metalness:.35}),dglass=new THREE.MeshPhysicalMaterial({color:0x8ab6c8,transparent:true,opacity:.23,roughness:.12}),dfloor=new THREE.MeshStandardMaterial({color:0x353d45,roughness:.76}),dneon=new THREE.MeshBasicMaterial({color:0x64e8e0});
+const dbox=(w,h,d,x,y,z,m)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);dealerBuilding.add(o);return o};
+dbox(62,.35,58,0,-.18,0,dfloor);dbox(62,1,58,0,13,0,dmat);dbox(62,13,1.1,0,6.5,-29,dmat);dbox(1.2,13,58,-31,6.5,0,dmat);dbox(1.2,13,58,31,6.5,0,dmat);
+dbox(20,12,1,-21,6,28,dmat);dbox(20,12,1,21,6,28,dmat);dbox(8,9,.35,0,4.5,28.4,dglass);
+for(const x of [-4.1,4.1])dbox(.18,9,.5,x,4.5,28.2,dneon);
+for(const x of [-27,-18,-9,0,9,18,27])dbox(8.5,8,.22,x,6.5,28.55,dglass);
+dbox(62,.45,58,0,13.5,0,dmat);dbox(26,3,.5,0,16,29.1,dneon);
+for(const x of [-19,-7,7,19]){dbox(8,.38,13,x,.22,-4,dmat);dbox(7.4,.07,12.4,x,.45,-4,dneon)}
+for(const x of [-22,22]){const light=new THREE.PointLight(0x8beaff,115,40,1.4);light.position.set(x,10,4);dealerBuilding.add(light)}
+trafficCars.forEach((car,i)=>{car.route=highwayRoute;car.closed=false;car.u=.035+i*.041;car.lane=i%2===0?-7.2:7.2;car.targetLane=car.lane;car.allowedLanes=[car.lane];car.direction=1;car.speed=(19+(i%7)*2.7)/highwayRoute.getLength();car.group.position.set(car.lane,0,20-car.u*highwayRoute.getLength());highwayWorld.add(car.group)});
+let onFoot=false,playerHeading=0;const playerPos=new THREE.Vector3(),playerAvatar=new THREE.Group();playerAvatar.visible=false;scene.add(playerAvatar);
+const playerBody=new THREE.Mesh(new THREE.CapsuleGeometry(.32,.85,4,8),new THREE.MeshStandardMaterial({color:0x25394b,roughness:.8}));playerBody.position.y=.95;playerAvatar.add(playerBody);
+const playerHead=new THREE.Mesh(new THREE.SphereGeometry(.24,12,10),new THREE.MeshStandardMaterial({color:0xc58d6a,roughness:.86}));playerHead.position.y=1.62;playerAvatar.add(playerHead);
+for(const x of [-.14,.14]){const leg=new THREE.Mesh(new THREE.BoxGeometry(.16,.58,.2),new THREE.MeshStandardMaterial({color:0x171d26}));leg.position.set(x,.36,0);playerAvatar.add(leg)}
+function toggleOnFoot(){if(paused||garageMode)return;if(!onFoot){onFoot=true;speed=0;vel.set(0,0,0);playerPos.copy(carPos).add(new THREE.Vector3(2.4,0,0));playerHeading=heading;playerAvatar.position.copy(playerPos);playerAvatar.visible=true;toast('ON FOOT - WASD TO WALK - E NEAR CAR TO DRIVE')}else if(playerPos.distanceTo(carPos)<7){onFoot=false;playerAvatar.visible=false;carRoot.visible=true;heading=playerHeading;carRoot.rotation.y=heading;toast('BACK IN CAR')}else toast('WALK BACK TO YOUR CAR TO GET IN')}
 let trafficNearMisses=0,trafficRewardFlash=0;
 function updateTraffic(dt){
  if(paused||garageMode)return;

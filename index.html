@@ -597,6 +597,8 @@ const fpConsole=fpBox(firstPersonCockpit,.42,.36,.62,.48,.83,-.28,fpDashMat);fpC
 for(const side of [-1,1]){const pillar=fpBox(firstPersonCockpit,.075,.62,.10,side*.99,1.68,-.62,fpLeather);pillar.rotation.z=side*.13;fpBox(firstPersonCockpit,.22,.12,.12,side*1.01,1.57,-.27,fpDashMat);fpBox(firstPersonCockpit,.18,.075,.018,side*1.01,1.575,-.337,fpGlass)}
 fpBox(firstPersonCockpit,2.04,.10,.12,0,2.00,-.48,fpLeather);const fpHood=fpBox(firstPersonCockpit,1.82,.075,1.02,0,.79,-1.58,paintMat);fpHood.rotation.x=-.035;
 
+// Replace the earlier placeholder dash with the detailed cabin while retaining the animated wheel, column and hood.
+firstPersonCockpit.clear();firstPersonCockpit.add(fpWheel,fpColumn,fpHood);
 // MK7 Jetta-inspired cabin detailing: stitched soft-touch dash, door cards, seats and center stack.
 const j7Cabin=new THREE.Group();j7Cabin.name='MK7_JETTA_CABIN_DETAILS';firstPersonCockpit.add(j7Cabin);
 const j7Black=new THREE.MeshStandardMaterial({color:0x111416,roughness:.88});
@@ -642,6 +644,9 @@ const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.025,.03,.19,12),j7Silver)
 const knob=new THREE.Mesh(new THREE.SphereGeometry(.075,16,12),j7Leather);knob.scale.set(1,.72,1);knob.position.y=.25;shifter.add(knob);
 j7Panel(.25,.035,.32,.48,.59,.28,j7Leather);
 j7Panel(.38,.075,.48,.48,.63,.75,j7Soft);
+// Windshield frame and roof header, kept slim so the view stays open.
+for(const side of [-1,1]){const ap=fpBox(j7Cabin,.065,.65,.09,side*.99,1.66,-.64,j7Leather);ap.rotation.z=side*.12}
+fpBox(j7Cabin,2.02,.085,.11,0,2.0,-.48,j7Leather);
 // Door cards: padded armrests, grab handles, speaker grilles and stitched seams.
 for(const side of [-1,1]){
  const x=side*.91;

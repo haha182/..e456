@@ -158,6 +158,7 @@ body>canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;touch-action
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/meshopt_decoder.module.js';
 import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
 const gameError=document.getElementById('gameError');
 function showGameError(message){if(gameError){gameError.textContent=message;gameError.style.display='block'}}
@@ -917,7 +918,7 @@ spectralLoader.load('https://raw.githubusercontent.com/JaronKBragg7337/spectral-
  spectralReady=true;applyStyle('spectral_gt');applyTune();finishLoading();if($('garageStatus'))$('garageStatus').textContent='SPECTRAL GT RS READY';toast('Spectral GT RS loaded');
 },undefined,error=>{console.error('Spectral GT RS load failed:',error);if($('garageStatus'))$('garageStatus').textContent='CAR MODEL FAILED TO LOAD — RELOAD TO RETRY';finishLoading();toast('Spectral GT download failed — check connection');});
 // Additional original CC0 cars from Innerscene's public-domain library.
-const extraCarLoader=new GLTFLoader();
+const extraCarLoader=new GLTFLoader();extraCarLoader.setMeshoptDecoder(MeshoptDecoder);
 // 2012 Lexus LFA Nürburgring Package, Ddiaz Design, CC BY-NC-SA 4.0.
 const extraCarModels={
  lexus_lfa:{label:'2012 Lexus LFA Nürburgring Package',url:'https://raw.githubusercontent.com/edwinpaul121/Deliverift-Midnight-Noodles/4f06f0d9d5b608999318a708dc2187ac71414fad/public/models/car-halcyon-v10.glb',group:new THREE.Group(),ready:false,loading:false},

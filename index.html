@@ -144,6 +144,15 @@ const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const isCh
 // Optional live performance diagnostics: press F3 while driving to show/hide.
 const perfPanel=document.createElement('div');perfPanel.id='perfPanel';perfPanel.style.cssText='position:fixed;left:12px;top:12px;z-index:30;display:none;padding:9px 11px;background:#06111ddd;border:1px solid #6d879966;border-radius:8px;color:#dff3ff;font:12px/1.55 ui-monospace,monospace;pointer-events:none;white-space:pre;';perfPanel.textContent='PERFORMANCE';document.body.appendChild(perfPanel);
 let perfFrames=0,perfWindowStart=performance.now(),perfLastUpdate=0;
+// Adaptive render resolution: preserve full quality when the GPU has headroom,
+// then lower pixel density gradually during sustained slow frames instead of stuttering.
+const devicePixelRatioCap=isChromeOS?.88:(mobileQuality?Math.min(devicePixelRatio,.88):Math.min(devicePixelRatio,1));
+let adaptivePixelRatio=devicePixelRatioCap,qualitySampleStart=performance.now(),qualitySampleFrames=0;
+function applyAdaptivePixelRatio(){
+ const garageCap=garageMode?Math.min(devicePixelRatioCap,.78):devicePixelRatioCap;
+ const next=Math.max(.62,Math.min(garageCap,adaptivePixelRatio));
+ if(Math.abs(renderer.getPixelRatio()-next)>.015){renderer.setPixelRatio(next);renderer.setSize(innerWidth,innerHeight,false)}
+}
 window.addEventListener('keydown',e=>{if(e.code==='F3'&&!e.repeat){perfPanel.style.display=perfPanel.style.display==='none'?'block':'none';e.preventDefault()}});
 
 // Desktop uses generated studio reflections; mobile skips PMREM to avoid GPU render artifacts.
@@ -875,8 +884,16 @@ function valueTune(id){const defaults={brakePressure:100,brakeBalance:70,turbo:1
 
 function tick(t){
  requestAnimationFrame(tick);
- perfFrames++;if(perfPanel.style.display!=='none'&&t-perfLastUpdate>500){const elapsed=Math.max(1,t-perfWindowStart),fps=Math.round(perfFrames*1000/elapsed),info=renderer.info;perfPanel.textContent='PERFORMANCE  [F3]\nFPS: '+fps+'  |  Frame: '+(1000/Math.max(1,fps)).toFixed(1)+' ms\nDraw calls: '+info.render.calls+'\nTriangles: '+info.render.triangles.toLocaleString()+'\nGeometries: '+info.memory.geometries+'  Textures: '+info.memory.textures+'\nWorld colliders: '+worldColliders.length;perfFrames=0;perfWindowStart=t;perfLastUpdate=t}
  const frameInterval=garageMode?(isChromeOS?1000/40:1000/60):(paused?1000/30:(isChromeOS?1000/40:(mobileQuality?1000/45:1000/60)));if(t-lastRender<frameInterval)return;lastRender=t;
+ perfFrames++;qualitySampleFrames++;
+ if(t-qualitySampleStart>=1800){
+  const measuredFps=qualitySampleFrames*1000/Math.max(1,t-qualitySampleStart);
+  const targetFps=garageMode?(isChromeOS?40:60):(isChromeOS?40:(mobileQuality?45:60));
+  if(measuredFps<targetFps-5)adaptivePixelRatio=Math.max(.62,adaptivePixelRatio-.055);
+  else if(measuredFps>targetFps+3)adaptivePixelRatio=Math.min(devicePixelRatioCap,adaptivePixelRatio+.025);
+  applyAdaptivePixelRatio();qualitySampleStart=t;qualitySampleFrames=0;
+ }
+ if(perfPanel.style.display!=='none'&&t-perfLastUpdate>500){const elapsed=Math.max(1,t-perfWindowStart),fps=Math.round(perfFrames*1000/elapsed),info=renderer.info;perfPanel.textContent='PERFORMANCE  [F3]\nFPS: '+fps+'  |  Frame: '+(1000/Math.max(1,fps)).toFixed(1)+' ms\nResolution scale: '+renderer.getPixelRatio().toFixed(2)+'x\nDraw calls: '+info.render.calls+'\nTriangles: '+info.render.triangles.toLocaleString()+'\nGeometries: '+info.memory.geometries+'  Textures: '+info.memory.textures+'\nWorld colliders: '+worldColliders.length;perfFrames=0;perfWindowStart=t;perfLastUpdate=t}
  const dt=Math.min((t-last)/1000,.035);
  last=t;
  if(!garageMode&&christmasBulbData.length){const blink=Math.floor(t/850);if(blink!==christmasBlinkTime){christmasBlinkTime=blink;for(let i=0;i<christmasBulbData.length;i++){const b=christmasBulbData[i],on=Math.sin(t*.00115+b.phase)>-.12;christmasColor.setHex(b.color).multiplyScalar(on?1:.055);christmasBulbs.setColorAt(i,christmasColor)}if(christmasBulbs.instanceColor)christmasBulbs.instanceColor.needsUpdate=true}}
@@ -1102,7 +1119,7 @@ function openGarage(){
  garageOrbitYaw=.28;garageOrbitPitch=.16;garageOrbitRadius=9.2;garageFramingKey='';garageCameraReady=false;
  $('menu').style.display='none';$('ui').style.display='none';$('help').style.display='none';$('touch').style.display='none';$('driveActions').style.display='none';$('carRadio').style.display='none';stopRadio();
  scene.background=new THREE.Color(0x101820);scene.fog=null;renderer.setClearColor(0x101820,1);
- scene.children.forEach(o=>{o.visible=(o===carRoot||o===showroom)});renderer.setPixelRatio(Math.min(devicePixelRatio,.68));
+ scene.children.forEach(o=>{o.visible=(o===carRoot||o===showroom)});adaptivePixelRatio=Math.min(adaptivePixelRatio,.78);applyAdaptivePixelRatio();
  restoreTreeVisibility(showroom,true);restoreTreeVisibility(carRoot,true);
  showroom.visible=true;carRoot.visible=true;restoreTreeVisibility(carRoot,true);applyStyle($('carStyle').value);updateFirstPersonCockpit();carPos.set(0,0,0);carRoot.position.set(0,-.065,0);carRoot.rotation.set(0,Math.PI,0);
  setGarageCamera(true);$('garage').style.display='grid';setGarageValues();applyTune();
@@ -1112,7 +1129,7 @@ function closeGarage(){
  $('garage').style.display='none';
  if(garageMode){
   garageMode=false;garageCameraReady=false;garageFramingKey='';for(const [object,wasVisible] of garageVisibilitySnapshot)object.visible=wasVisible;garageVisibilitySnapshot.length=0;showroom.visible=false;applyStyle($('carStyle').value);updateFirstPersonCockpit();
-  renderer.setPixelRatio(isChromeOS?.88:(mobileQuality?Math.min(devicePixelRatio,.88):Math.min(devicePixelRatio,1)));scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,145,560);renderer.setClearColor(0x050914,1);
+  adaptivePixelRatio=Math.min(adaptivePixelRatio,devicePixelRatioCap);applyAdaptivePixelRatio();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,145,560);renderer.setClearColor(0x050914,1);
   $('ui').style.display=garageWasPlaying?'block':'none';$('help').style.display=garageWasPlaying?'block':'none';$('touch').style.display=touchControls&&garageWasPlaying?'flex':'none';$('driveActions').style.display=garageWasPlaying?'block':'none';$('carRadio').style.display=garageWasPlaying?'block':'none';
   if(garageWasPlaying){$('ui').style.display='block'}else{$('menu').style.display='grid'}
   carPos.copy(garagePos);heading=garageHeading;carRoot.position.copy(carPos);carRoot.rotation.y=heading;

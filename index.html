@@ -283,16 +283,15 @@ for(let i=0;i<5;i++){addWorldCollider(330+(i-2)*20,-95,9.2,3.7);const container=
 // EXTENDED OPEN WORLD: two additional connected exploration districts.
 // The coastal freight loop joins the industrial road at both ends.
 const coastRoute=openRoad([[155,-35],[190,-95],[235,-155],[300,-215],[380,-245],[445,-210],[470,-135],[450,-75],[405,-48],[350,-75]],14);
-// The western backroad leaves the forest route, winds through a small town, and rejoins it.
-const westRoute=openRoad([[-130,55],[-190,15],[-255,-35],[-330,-70],[-405,-45],[-450,25],[-438,105],[-385,155],[-325,170]],13);
-for(const route of [coastRoute,westRoute]){
+// Keep the open-world network to the paved coastal and main district roads.
+for(const route of [coastRoute]){
  for(let i=4;i<68;i+=7){const p=route.getPointAt(i/72),t=route.getTangentAt(i/72),side=new THREE.Vector3(-t.z,0,t.x).normalize();
   for(const sign of [-1,1]){const pole=new THREE.Mesh(new THREE.CylinderGeometry(.07,.11,5.8,6),openRoadPostMat);pole.position.set(p.x+side.x*9.1,2.9,p.z+side.z*9.1);scene.add(pole);const arm=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,1.25),openRoadPostMat);arm.position.set(p.x+side.x*8.55,5.65,p.z+side.z*8.55);arm.rotation.y=Math.atan2(-side.x,-side.z);scene.add(arm);const bulb=new THREE.Mesh(new THREE.BoxGeometry(.42,.08,.48),lampGlowMat);bulb.position.set(p.x+side.x*8.05,5.55,p.z+side.z*8.05);scene.add(bulb)}
  }
 }
 // Add spaced warm streetlights along all five open-world routes; no extra shadow maps.
-for(const route of [northForestRoute,forestRoute,industrialRoute,coastRoute,westRoute]){
- for(let i=8;i<68;i+=20){const p=route.getPointAt(i/72),t=route.getTangentAt(i/72),side=new THREE.Vector3(-t.z,0,t.x).normalize(),sign=(i%40===8)?1:-1;const x=p.x+side.x*9.2*sign,z=p.z+side.z*9.2*sign;const pole=new THREE.Mesh(new THREE.CylinderGeometry(.075,.12,6.4,7),openRoadPostMat);pole.position.set(x,3.2,z);scene.add(pole);const arm=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,1.35),openRoadPostMat);arm.position.set(x-side.x*sign*.62,6.15,z-side.z*sign*.62);arm.rotation.y=Math.atan2(-side.x*sign,-side.z*sign);scene.add(arm);const bulb=new THREE.Mesh(new THREE.BoxGeometry(.46,.08,.5),lampGlowMat);bulb.position.set(x-side.x*sign*1.25,6.02,z-side.z*sign*1.25);scene.add(bulb);if(!mobileQuality){const glow=new THREE.PointLight(0xffc56b,18,38,1.6);glow.position.set(x-side.x*sign*1.25,5.9,z-side.z*sign*1.25);glow.castShadow=false;scene.add(glow)}}
+for(const route of [northForestRoute,forestRoute,industrialRoute,coastRoute]){
+ for(let i=5;i<70;i+=10){const p=route.getPointAt(i/72),t=route.getTangentAt(i/72),side=new THREE.Vector3(-t.z,0,t.x).normalize(),sign=(Math.floor(i/10)%2===0)?1:-1;const x=p.x+side.x*9.2*sign,z=p.z+side.z*9.2*sign;const pole=new THREE.Mesh(new THREE.CylinderGeometry(.075,.12,6.4,7),openRoadPostMat);pole.position.set(x,3.2,z);scene.add(pole);const arm=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,1.35),openRoadPostMat);arm.position.set(x-side.x*sign*.62,6.15,z-side.z*sign*.62);arm.rotation.y=Math.atan2(-side.x*sign,-side.z*sign);scene.add(arm);const bulb=new THREE.Mesh(new THREE.BoxGeometry(.46,.08,.5),lampGlowMat);bulb.position.set(x-side.x*sign*1.25,6.02,z-side.z*sign*1.25);scene.add(bulb);if(!mobileQuality){const glow=new THREE.PointLight(0xffd18a,34,54,1.45);glow.position.set(x-side.x*sign*1.25,5.9,z-side.z*sign*1.25);glow.castShadow=false;scene.add(glow)}}
 }
 // Coastal freight terminal: warehouse, loading bays, cranes and container stacks.
 const port=new THREE.Group();port.position.set(420,0,-90);scene.add(port);
@@ -333,7 +332,7 @@ function resolveWorldCollision(previous,next){
 }
 const christmasBulbData=[];
 const treeCount=mobileQuality?360:720;
-const forestRoutes=[curve,northForestRoute,forestRoute,industrialRoute,coastRoute,westRoute];
+const forestRoutes=[curve,northForestRoute,forestRoute,industrialRoute,coastRoute];
 const treeTrunkGeo=new THREE.CylinderGeometry(.35,.55,3.8,6),treeCrownGeo=new THREE.ConeGeometry(2.7,8,6);
 const treeTrunks=new THREE.InstancedMesh(treeTrunkGeo,trunkMat,treeCount),treeCrowns=new THREE.InstancedMesh(treeCrownGeo,leafMat,treeCount);
 treeTrunks.instanceMatrix.setUsage(THREE.StaticDrawUsage);treeCrowns.instanceMatrix.setUsage(THREE.StaticDrawUsage);
@@ -364,7 +363,7 @@ christmasBulbData.forEach((b,i)=>{christmasDummy.position.copy(b.position);chris
 christmasBulbs.instanceMatrix.needsUpdate=true;if(christmasBulbs.instanceColor)christmasBulbs.instanceColor.needsUpdate=true;scene.add(christmasBulbs);let christmasBlinkTime=-1;
 const cottageWhite=new THREE.MeshBasicMaterial({color:0xffffff}),cottageWall=mat(0x34404a,.92),cottageRoof=mat(0x18212d,.86),cottageBulbPositions=[];
 // Place the six decorated cabins clear of every drivable road and one another.
-const cabinRoutes=[curve,northForestRoute,forestRoute,industrialRoute,coastRoute,westRoute];
+const cabinRoutes=[curve,northForestRoute,forestRoute,industrialRoute,coastRoute];
 const cabinRoadSamples=[];for(const route of cabinRoutes)for(let s=0;s<=180;s+=4){const p=route.getPointAt(s/180);cabinRoadSamples.push([p.x,p.z]);}
 const cabinSpots=[];for(let h=0;h<6;h++){let best=null,bestScore=-Infinity;for(let r=205;r<=260;r+=5)for(let deg=0;deg<360;deg+=5){const a=deg*Math.PI/180,x=Math.cos(a)*r,z=Math.sin(a)*r;let roadClear=Infinity;for(const p of cabinRoadSamples){const d=Math.hypot(x-p[0],z-p[1]);if(d<roadClear)roadClear=d;if(roadClear<20)break}if(roadClear<30)continue;let spacing=Infinity;for(const p of cabinSpots)spacing=Math.min(spacing,Math.hypot(x-p.x,z-p.z));if(spacing<44)continue;const score=Math.min(roadClear,spacing===Infinity?100:spacing);if(score>bestScore){bestScore=score;best={x,z,a}}}if(best)cabinSpots.push(best)}
 for(let h=0;h<cabinSpots.length;h++){const {x,z,a}=cabinSpots[h],house=new THREE.Group();house.position.set(x,0,z);house.rotation.y=-a+Math.PI/2;scene.add(house);addWorldCollider(x,z,4.8,4.2);const walls=new THREE.Mesh(new THREE.BoxGeometry(8,4.2,6.5),cottageWall);walls.position.y=2.1;house.add(walls);const roofA=new THREE.Mesh(new THREE.BoxGeometry(4.8,.28,7.1),cottageRoof);roofA.position.set(-1.75,4.45,0);roofA.rotation.z=-.48;house.add(roofA);const roofB=new THREE.Mesh(new THREE.BoxGeometry(4.8,.28,7.1),cottageRoof);roofB.position.set(1.75,4.45,0);roofB.rotation.z=.48;house.add(roofB);const door=new THREE.Mesh(new THREE.BoxGeometry(1.15,2.5,.12),mat(0x49352d,.8));door.position.set(0,1.25,3.31);house.add(door);for(const wx of [-2.45,2.45]){const pane=new THREE.Mesh(new THREE.BoxGeometry(1.35,1.15,.1),new THREE.MeshBasicMaterial({color:0xffe6ad}));pane.position.set(wx,2.35,3.34);house.add(pane)}for(const pts of [[[-4,4.15,3.38],[0,4.15,3.38],[4,4.15,3.38]],[[-4,4.15,3.38],[-1.8,5.5,0],[0,5.5,-3.4]],[[4,4.15,3.38],[1.8,5.5,0],[0,5.5,-3.4]]]){const path=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(...p)));house.add(new THREE.Mesh(new THREE.TubeGeometry(path,20,.035,5,false),cottageWhite));for(let k=0;k<=12;k++)cottageBulbPositions.push(house.localToWorld(path.getPoint(k/12).clone()))}}const cottageBulbs=new THREE.InstancedMesh(new THREE.SphereGeometry(.075,6,5),cottageWhite,cottageBulbPositions.length);cottageBulbPositions.forEach((p,i)=>{christmasDummy.position.copy(p);christmasDummy.updateMatrix();cottageBulbs.setMatrixAt(i,christmasDummy.matrix)});cottageBulbs.instanceMatrix.needsUpdate=true;scene.add(cottageBulbs);

@@ -176,11 +176,11 @@ const perfPanel=document.createElement('div');perfPanel.id='perfPanel';perfPanel
 let perfFrames=0,perfWindowStart=performance.now(),perfLastUpdate=0;
 // Adaptive render resolution: preserve full quality when the GPU has headroom,
 // then lower pixel density gradually during sustained slow frames instead of stuttering.
-const devicePixelRatioCap=isChromeOS?1.05:(mobileQuality?Math.min(devicePixelRatio,1.12):Math.min(devicePixelRatio,1.35));
+const devicePixelRatioCap=isChromeOS?.78:(mobileQuality?Math.min(devicePixelRatio,.9):Math.min(devicePixelRatio,1.2));
 let adaptivePixelRatio=devicePixelRatioCap,qualitySampleStart=performance.now(),qualitySampleFrames=0;
 function applyAdaptivePixelRatio(){
  const garageCap=garageMode?Math.min(devicePixelRatioCap,.78):devicePixelRatioCap;
- const next=Math.max(.62,Math.min(garageCap,adaptivePixelRatio));
+ const next=Math.max(.52,Math.min(garageCap,adaptivePixelRatio));
  if(Math.abs(renderer.getPixelRatio()-next)>.015){renderer.setPixelRatio(next);renderer.setSize(innerWidth,innerHeight,false)}
 }
 window.addEventListener('keydown',e=>{if(e.code==='F3'&&!e.repeat){perfPanel.style.display=perfPanel.style.display==='none'?'block':'none';e.preventDefault()}});
@@ -188,10 +188,12 @@ window.addEventListener('keydown',e=>{if(e.code==='F3'&&!e.repeat){perfPanel.sty
 // Desktop uses generated studio reflections; mobile skips PMREM to avoid GPU render artifacts.
 {
  // Build one studio reflection map on every device so the imported LFA paint has real reflections.
- const pmremGenerator=new THREE.PMREMGenerator(renderer);pmremGenerator.compileEquirectangularShader();
- const studioEnvironment=pmremGenerator.fromScene(new RoomEnvironment(),0.04);
- scene.environment=studioEnvironment.texture;scene.environmentIntensity=mobileQuality?.48:1.0;
- pmremGenerator.dispose();
+ if(!isChromeOS){
+  const pmremGenerator=new THREE.PMREMGenerator(renderer);pmremGenerator.compileEquirectangularShader();
+  const studioEnvironment=pmremGenerator.fromScene(new RoomEnvironment(),0.04);
+  scene.environment=studioEnvironment.texture;scene.environmentIntensity=mobileQuality?.48:1.0;
+  pmremGenerator.dispose();
+ }else{scene.environmentIntensity=.32}
 }
 const hemiLight=new THREE.HemisphereLight(0x243b68,0x080b13,.34);scene.add(hemiLight);
 const moon=new THREE.DirectionalLight(0xb9d0ff,.82);moon.position.set(-85,115,65);moon.castShadow=!mobileQuality;moon.shadow.mapSize.set(1024,1024);moon.shadow.camera.left=-155;moon.shadow.camera.right=155;moon.shadow.camera.top=155;moon.shadow.camera.bottom=-155;scene.add(moon);
@@ -293,7 +295,8 @@ const trafficRoutes=[{curve,closed:true},...[northForestRoute,forestRoute,indust
 const trafficCars=[],trafficPaints=[0xc52b32,0xd8dce0,0x172b43,0xc68b35,0x253b31,0xeeeeea,0x563d70,0x17191d,0x8c252b,0x52606a];
 function trafficShell(points,width,bevel){const shape=new THREE.Shape();shape.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)shape.lineTo(points[i][0],points[i][1]);shape.closePath();const geometry=new THREE.ExtrudeGeometry(shape,{depth:width,steps:1,bevelEnabled:true,bevelSegments:3,bevelSize:bevel,bevelThickness:bevel,curveSegments:8});geometry.translate(0,0,-width/2);geometry.rotateY(Math.PI/2);return geometry}
 const trafficBodyGeo=trafficShell([[-2.12,.48],[-2.08,.78],[-1.72,.94],[-1.15,.99],[.78,.98],[1.48,.87],[2.08,.66],[2.12,.48]],1.78,.055),trafficCabinGeo=trafficShell([[-1.05,1.00],[-.82,1.48],[-.50,1.66],[.48,1.66],[.92,1.08],[.82,1.00]],1.42,.045),trafficWheelGeo=new THREE.CylinderGeometry(.38,.38,.22,20);
-for(let i=0;i<29;i++){
+const trafficCarCount=isChromeOS?16:(mobileQuality?20:29);
+for(let i=0;i<trafficCarCount;i++){
  const ri=i<10?0:1+(i-10)%4,info=trafficRoutes[ri],direction=i%2===0?1:-1;
  const laneSet=direction>0?[-12,-8,-4,0]:[4,8],lane=laneSet[Math.floor(i/2)%laneSet.length];
  const group=new THREE.Group(),paint=new THREE.MeshStandardMaterial({color:trafficPaints[i%trafficPaints.length],roughness:.34,metalness:.42}),glass=new THREE.MeshStandardMaterial({color:0x101c29,roughness:.19,metalness:.18});
@@ -1133,11 +1136,11 @@ function valueTune(id){const defaults={brakePressure:100,brakeBalance:70,turbo:1
 
 function tick(t){
  requestAnimationFrame(tick);
- const frameInterval=garageMode?(isChromeOS?1000/40:1000/60):(paused?1000/30:(isChromeOS?1000/40:(mobileQuality?1000/45:1000/60)));if(t-lastRender<frameInterval)return;lastRender=t;
+ const frameInterval=garageMode?(isChromeOS?1000/30:1000/60):(paused?1000/30:(isChromeOS?1000/30:(mobileQuality?1000/40:1000/60)));if(t-lastRender<frameInterval)return;lastRender=t;
  perfFrames++;qualitySampleFrames++;
  if(t-qualitySampleStart>=1800){
   const measuredFps=qualitySampleFrames*1000/Math.max(1,t-qualitySampleStart);
-  const targetFps=garageMode?(isChromeOS?40:60):(isChromeOS?40:(mobileQuality?45:60));
+  const targetFps=garageMode?(isChromeOS?30:60):(isChromeOS?30:(mobileQuality?40:60));
   if(measuredFps<targetFps-5)adaptivePixelRatio=Math.max(.62,adaptivePixelRatio-.055);
   else if(measuredFps>targetFps+3)adaptivePixelRatio=Math.min(devicePixelRatioCap,adaptivePixelRatio+.025);
   applyAdaptivePixelRatio();qualitySampleStart=t;qualitySampleFrames=0;

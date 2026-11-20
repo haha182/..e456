@@ -586,23 +586,48 @@ function applyCustomizations(){
  const finish=$('rimFinish')?.value||localStorage.hcg_rimFinish||'silver';
  const neon=$('neonColor')?.value||localStorage.hcg_neonColor||'#19d9ff';
  const tint=Number($('windowTint')?.value??localStorage.hcg_windowTint??35);
+ const rimColor=({silver:'#c5cdd1',black:'#101419',gold:'#d6a52d',bronze:'#95613b'})[finish]||'#c5cdd1';
  kitParts.visible=kit!=='factory';kitParts.children.forEach((o,i)=>{o.visible=kit==='widebody'||kit==='track'||(kit==='street'&&i<7)});
  spoilerParts.visible=true;ducktail.visible=spoiler==='ducktail';gtWing.visible=spoiler==='gtwing';
- customRimMat.color.set(({silver:'#c5cdd1',black:'#101419',gold:'#d6a52d',bronze:'#95613b'})[finish]||'#c5cdd1');
- neonMat.color.set(neon);neonParts.visible=localStorage.hcg_neonEnabled==='1';
+ customRimMat.color.set(rimColor);neonMat.color.set(neon);neonParts.visible=localStorage.hcg_neonEnabled==='1';
  const label=$('windowTintVal');if(label)label.textContent=tint+'%';
- const selectedChoice=$('carStyle')?.value||'lexus_lfa';
- const selected=extraCarModels[selectedChoice]?.group;
- if(selected)selected.traverse(o=>{if(!o.isMesh)return;const mats=Array.isArray(o.material)?o.material:[o.material];for(const m of mats){if(!m||!m.color)continue;const n=((m.name||'')+' '+(o.name||'')).toLowerCase();if(/glass|window|windshield|windscreen/.test(n)){if(!m.userData.hcgTintBase)m.userData.hcgTintBase=m.color.clone();m.color.copy(m.userData.hcgTintBase).lerp(new THREE.Color(0x071018),tint/100)}}});
+ const selected=extraCarModels[$('carStyle')?.value||'lexus_lfa'];
+ if(selected?.group){
+  const tintColor=new THREE.Color(0x071018);
+  selected.group.traverse(o=>{
+   if(!o.isMesh)return;
+   const mats=Array.isArray(o.material)?o.material:[o.material];
+   let p=o,inWheel=false;while(p&&p!==selected.group){if(p.name==='GTI_WHEEL_GROUP'||/wheel|tire|rim/i.test(p.name||'')){inWheel=true;break}p=p.parent}
+   for(const m of mats){
+    if(!m||!m.color)continue;
+    const n=((m.name||'')+' '+(o.name||'')).toLowerCase();
+    if(inWheel||/wheel|rim|alloy/i.test(n))m.color.set(rimColor);
+    if(/glass|window|windshield|windscreen/.test(n)||m.name==='GTI_GLASS'){
+     if(!m.userData.hcgTintBase)m.userData.hcgTintBase=m.color.clone();
+     m.color.copy(m.userData.hcgTintBase).lerp(tintColor,tint/100);
+    }
+   }
+  });
+  for(const m of (selected.group.userData.glassMaterials||[])){
+   if(!m.userData.hcgTintBase)m.userData.hcgTintBase=m.color.clone();
+   m.color.copy(m.userData.hcgTintBase).lerp(tintColor,tint/100);
+  }
+ }
 }
 function applyStyle(){
  for(const child of carRoot.children)child.visible=false;
- customParts.visible=false;applyCustomizations();customParts.visible=false;
+ customParts.visible=false;
  const choice=$('carStyle')?.value||'lexus_lfa';
  for(const [key,other] of Object.entries(extraCarModels))other.group.visible=(key===choice&&other.ready);
  if(gtiAudioCredit)gtiAudioCredit.style.display=garageMode&&choice.startsWith('gti_2010')?'block':'none';if(bmwModelCredit)bmwModelCredit.style.display=garageMode&&choice==='bmw_m4'?'block':'none';
  const item=extraCarModels[choice];if(!item){$('carLabel').textContent='LEXUS LFA MODEL UNAVAILABLE';return}
- if(item.ready){item.group.visible=true;customParts.visible=choice.startsWith('gti_2010');$('carLabel').textContent=item.label.toUpperCase();const status=$('garageStatus');if(status)status.textContent=item.label.toUpperCase()+' READY';applyCustomizations();customParts.visible=choice.startsWith('gti_2010');applyTune();if(garageMode)setGarageCamera(true);return}
+ if(item.ready){
+  item.group.visible=true;
+  if(customParts.parent!==item.group)item.group.add(customParts);
+  customParts.visible=true;
+  $('carLabel').textContent=item.label.toUpperCase();const status=$('garageStatus');if(status)status.textContent=item.label.toUpperCase()+' READY';
+  applyCustomizations();applyTune();if(garageMode)setGarageCamera(true);return
+ }
  if(item.loading){$('carLabel').textContent='LOADING '+item.label.toUpperCase();return}
  if(item.openX&&!item.url){item.loading=true;$('carLabel').textContent='EXTRACTING '+item.label.toUpperCase();item.archiveFile.async('arraybuffer').then(bytes=>{item.url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));item.loading=false;if(($('carStyle')?.value||'')===choice)applyStyle(choice)}).catch(error=>{item.loading=false;console.error('OpenX model extraction failed:',error);toast('Could not extract '+item.label)});return}
  item.loading=true;$('carLabel').textContent='LOADING '+item.label.toUpperCase();const status=$('garageStatus');if(status)status.textContent='DOWNLOADING '+item.label.toUpperCase()+'…';
@@ -614,9 +639,35 @@ function applyStyle(){
   model.rotation.y+=Math.PI;
   model.updateMatrixWorld(true);bounds=new THREE.Box3().setFromObject(model);dims=bounds.getSize(new THREE.Vector3());const longest=Math.max(dims.x,dims.z);
   if(!longest)throw Error('Downloaded car model contains no measurable geometry');
-  model.scale.setScalar(4.65/longest);model.updateMatrixWorld(true);bounds.setFromObject(model);const center=bounds.getCenter(new THREE.Vector3());const scaledSize=bounds.getSize(new THREE.Vector3());item.group.userData.vehicleHeight=scaledSize.y;item.group.userData.vehicleSize=scaledSize.clone();model.position.x-=center.x;model.position.z-=center.z;model.position.y-=bounds.min.y;
-  model.traverse(o=>{if(!o.isMesh)return;const meshBounds=new THREE.Box3().setFromObject(o);const meshSize=meshBounds.getSize(new THREE.Vector3());const wholeX=scaledSize.x,wholeZ=scaledSize.z;const meshName=(o.name||'').toLowerCase();const namedGround=/ground|platform|base.?plate|shadow|collision|helper/.test(meshName);const flatBase=meshSize.y<Math.max(wholeX,wholeZ)*.025&&meshSize.x>wholeX*.72&&meshSize.z>wholeZ*.72&&meshBounds.min.y<=bounds.min.y+scaledSize.y*.06;if(namedGround||flatBase){o.visible=false;return}o.castShadow=!mobileQuality;o.receiveShadow=!mobileQuality;const finishMaterial=m=>{const q=m.clone();const label=((q.name||'')+' '+(o.name||'')).toLowerCase();q.envMapIntensity=1.65;if(/paint|body|exterior|shell|fender|hood|bumper|door|carbon/.test(label)&&!/glass|window|rubber|tire|wheel|trim/.test(label)){const glossy=new THREE.MeshPhysicalMaterial({color:q.color?.clone()??0xffffff,map:q.map,normalMap:q.normalMap,roughnessMap:q.roughnessMap,metalnessMap:q.metalnessMap,metalness:Math.max(q.metalness??0,.48),roughness:.19,clearcoat:1,clearcoatRoughness:.055,side:q.side,transparent:q.transparent,opacity:q.opacity,alphaMap:q.alphaMap,alphaTest:q.alphaTest,vertexColors:q.vertexColors});glossy.name=q.name;glossy.envMapIntensity=2.0;return glossy}return q};if(Array.isArray(o.material))o.material=o.material.map(finishMaterial);else if(o.material)o.material=finishMaterial(o.material)});
-  item.group.add(model);item.group.updateMatrixWorld(true);item.group.traverse(o=>{if(o.isMesh){o.renderOrder=0;if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(material=>{if(material){material.depthWrite=!material.transparent;material.polygonOffset=false}})}});const modelBounds=new THREE.Box3().setFromObject(item.group);const modelCenter=modelBounds.getCenter(new THREE.Vector3());item.group.userData.cameraCenter=carRoot.worldToLocal(modelCenter.clone());item.group.userData.cameraCenter.y=scaledSize.y*.5;item.ready=true;item.loading=false;const isSelected=$('carStyle').value===choice;item.group.visible=isSelected;if(isSelected)applyCustomizations();applyTune();if(isSelected){$('carLabel').textContent=item.label.toUpperCase();if(status)status.textContent=item.label.toUpperCase()+' READY';if(garageMode)setGarageCamera();toast(item.label+' loaded')}
+  model.scale.setScalar(4.65/longest);model.updateMatrixWorld(true);bounds.setFromObject(model);const center=bounds.getCenter(new THREE.Vector3());const scaledSize=bounds.getSize(new THREE.Vector3());item.group.userData.vehicleHeight=scaledSize.y;item.group.userData.vehicleSize=scaledSize.clone();model.position.x-=center.x;model.position.z-=center.z;model.position.y-=bounds.min.y;model.updateMatrixWorld(true);
+  const editablePaint=[],editableWheels=[];
+  model.traverse(o=>{
+   const meshName=(o.name||'').toLowerCase();
+   if((o.isGroup||o.isMesh)&&/wheel|tire|rim/i.test(meshName)&&!/(arch|well|shadow)/.test(meshName)&&!(/wheel|tire|rim/i.test(o.parent?.name||''))){
+    const wp=o.getWorldPosition(new THREE.Vector3());editableWheels.push({node:o,position:o.position.clone(),rotation:o.rotation.clone(),side:Math.sign(wp.x)||1,front:wp.z<0});
+   }
+   if(!o.isMesh)return;
+   const meshBounds=new THREE.Box3().setFromObject(o),meshSize=meshBounds.getSize(new THREE.Vector3()),meshName2=(o.name||'').toLowerCase();
+   const namedGround=/ground|platform|base.?plate|shadow|collision|helper/.test(meshName2);
+   const flatBase=meshSize.y<Math.max(scaledSize.x,scaledSize.z)*.025&&meshSize.x>scaledSize.x*.72&&meshSize.z>scaledSize.z*.72&&meshBounds.min.y<=bounds.min.y+scaledSize.y*.06;
+   if(namedGround||flatBase){o.visible=false;return}
+   o.castShadow=!mobileQuality;o.receiveShadow=!mobileQuality;
+   const finishMaterial=m=>{
+    const q=m.clone(),label=((q.name||'')+' '+meshName2).toLowerCase();q.envMapIntensity=1.65;
+    const excluded=/glass|window|rubber|tire|wheel|rim|trim|chrome|light|lamp|interior|seat|dash/.test(label);
+    const bodyNamed=/paint|body|exterior|shell|fender|hood|bumper|door|carbon/.test(label);
+    const bb=new THREE.Box3().setFromObject(o),bs=bb.getSize(new THREE.Vector3()),bc=bb.getCenter(new THREE.Vector3());
+    if(bodyNamed||(!excluded&&bc.y>.28&&(bs.x>.55||bs.z>.72)&&!q.transparent)){
+     const glossy=new THREE.MeshPhysicalMaterial({color:q.color?.clone()??0xffffff,map:q.map,normalMap:q.normalMap,roughnessMap:q.roughnessMap,metalnessMap:q.metalnessMap,metalness:Math.max(q.metalness??0,.48),roughness:.19,clearcoat:1,clearcoatRoughness:.055,side:q.side,transparent:q.transparent,opacity:q.opacity,alphaMap:q.alphaMap,alphaTest:q.alphaTest,vertexColors:q.vertexColors});
+     glossy.name=q.name||'HCG_BODY_PAINT';glossy.envMapIntensity=2.0;editablePaint.push(glossy);return glossy
+    }
+    if(/glass|window|windshield|windscreen/.test(label))q.name=q.name||'HCG_GLASS';
+    return q
+   };
+   if(Array.isArray(o.material))o.material=o.material.map(finishMaterial);else if(o.material)o.material=finishMaterial(o.material);
+  });
+  item.group.userData.paintMaterials=editablePaint;item.group.userData.wheelTuning=editableWheels;
+  item.group.add(model);item.group.updateMatrixWorld(true);item.group.traverse(o=>{if(o.isMesh){o.renderOrder=0;if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(material=>{if(material){material.depthWrite=!material.transparent;material.polygonOffset=false}})}});const modelBounds=new THREE.Box3().setFromObject(item.group);const modelCenter=modelBounds.getCenter(new THREE.Vector3());item.group.userData.cameraCenter=carRoot.worldToLocal(modelCenter.clone());item.group.userData.cameraCenter.y=scaledSize.y*.5;item.ready=true;item.loading=false;const isSelected=$('carStyle').value===choice;item.group.visible=isSelected;if(isSelected)applyStyle();else applyTune();if(isSelected){$('carLabel').textContent=item.label.toUpperCase();if(status)status.textContent=item.label.toUpperCase()+' READY';if(garageMode)setGarageCamera();toast(item.label+' loaded')}
  },undefined,error=>{item.loading=false;console.error(item.label+' load failed:',error);if($('carStyle').value===choice){$('carLabel').textContent='CAR DOWNLOAD FAILED';if(status)status.textContent='MODEL DOWNLOAD FAILED — SELECT ANOTHER CAR';toast('Could not download '+item.label+'; your other cars are still available')}});
 }
 
@@ -771,11 +822,11 @@ const bmwModelCredit=document.createElement('div');bmwModelCredit.style.cssText=
 // Lightweight custom Mk6 GTI model: detailed hatchback proportions without a heavy external asset.
 {
  const g=extraCarModels.gti_2010.group;
- const paint=new THREE.MeshPhysicalMaterial({color:0xb71925,metalness:.48,roughness:.22,clearcoat:1,clearcoatRoughness:.07});
- const glass=new THREE.MeshPhysicalMaterial({color:0x101f2b,metalness:.18,roughness:.12,transparent:true,opacity:.78,clearcoat:1});
+ const paint=new THREE.MeshPhysicalMaterial({color:0xb71925,metalness:.48,roughness:.22,clearcoat:1,clearcoatRoughness:.07});paint.name='GTI_BODY_PAINT';
+ const glass=new THREE.MeshPhysicalMaterial({color:0x101f2b,metalness:.18,roughness:.12,transparent:true,opacity:.78,clearcoat:1});glass.name='GTI_GLASS';
  const black=new THREE.MeshStandardMaterial({color:0x101316,roughness:.68});
  const rubber=new THREE.MeshStandardMaterial({color:0x090b0d,roughness:.94});
- const alloy=new THREE.MeshStandardMaterial({color:0xb7c0c5,metalness:.86,roughness:.24});
+ const alloy=new THREE.MeshStandardMaterial({color:0xb7c0c5,metalness:.86,roughness:.24});alloy.name='GTI_ALLOY';
  const red=new THREE.MeshStandardMaterial({color:0xb90e18,emissive:0x260000});
  const white=new THREE.MeshStandardMaterial({color:0xdce9f0,emissive:0x607080,emissiveIntensity:.28});
  const addBox=(w,h,d,x,y,z,m,bevel=0)=>{const geo=bevel?new THREE.BoxGeometry(w,h,d):new THREE.BoxGeometry(w,h,d);const mesh=new THREE.Mesh(geo,m);mesh.position.set(x,y,z);mesh.castShadow=!mobileQuality;mesh.receiveShadow=!mobileQuality;g.add(mesh);return mesh};
@@ -799,10 +850,11 @@ const bmwModelCredit=document.createElement('div');bmwModelCredit.style.cssText=
   addBox(.055,.12,2.25,side*.89,.48,0,black);
   // Wheel/tire and five-spoke alloy detail.
   for(const z of [-1.32,1.30]){
-   const tire=new THREE.Mesh(new THREE.CylinderGeometry(.39,.39,.22,24),rubber);tire.rotation.z=Math.PI/2;tire.position.set(side*.91,.48,z);tire.castShadow=!mobileQuality;g.add(tire);
-   const rim=new THREE.Mesh(new THREE.CylinderGeometry(.265,.265,.235,20),alloy);rim.rotation.z=Math.PI/2;rim.position.copy(tire.position);g.add(rim);
-   const hub=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.245,16),black);hub.rotation.z=Math.PI/2;hub.position.copy(tire.position);g.add(hub);
-   for(let s=0;s<5;s++){const spoke=addBox(.035,.30,.045,side*1.035,.48,z,alloy);spoke.rotation.x=s*Math.PI*2/5;spoke.rotation.z=side*Math.PI/2}
+   const wheelGroup=new THREE.Group();wheelGroup.name='GTI_WHEEL_GROUP';wheelGroup.position.set(side*.91,.48,z);g.add(wheelGroup);
+   const tire=new THREE.Mesh(new THREE.CylinderGeometry(.39,.39,.22,24),rubber);tire.rotation.z=Math.PI/2;tire.castShadow=!mobileQuality;wheelGroup.add(tire);
+   const rim=new THREE.Mesh(new THREE.CylinderGeometry(.265,.265,.235,20),alloy);rim.rotation.z=Math.PI/2;wheelGroup.add(rim);
+   const hub=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.245,16),black);hub.rotation.z=Math.PI/2;wheelGroup.add(hub);
+   for(let s=0;s<5;s++){const spoke=new THREE.Mesh(new THREE.BoxGeometry(.035,.30,.045),alloy);spoke.position.set(side*.125,0,0);spoke.rotation.x=s*Math.PI*2/5;spoke.rotation.z=side*Math.PI/2;wheelGroup.add(spoke)}
   }
   // GTI red grille stripe, front lamps and rear LED lamps.
   addBox(.025,.22,.46,side*.73,.91,-2.035,white);
@@ -820,6 +872,7 @@ const bmwModelCredit=document.createElement('div');bmwModelCredit.style.cssText=
  // GTI grille badge and red front caliper accents.
  addBox(.18,.075,.025,0,.93,-2.145,white);
  g.userData.vehicleHeight=1.9;g.userData.vehicleSize=new THREE.Vector3(2.05,1.9,4.25);g.userData.cameraCenter=new THREE.Vector3(0,.9,0);
+ g.userData.paintMaterials=[paint];g.userData.glassMaterials=[glass];
 }
 // Separate hood-dump GTI build; cloned meshes share the light base geometry.
 {
@@ -1060,12 +1113,24 @@ function updateFirstPersonCockpit(){firstPersonCockpit.visible=cameraMode===3&&!
 // Apply garage tuning to the selected car and driving physics.
 function applyTune(){
  const value=id=>Number($(id)?.value ?? localStorage['hcg_'+id] ?? ({turbo:14.3,frontCamber:-5,rearCamber:-1,frontOffset:5,rearOffset:3,brakeBalance:70,frontHeight:-6,rearHeight:1,brakePressure:100}[id]));
- const frontH=value('frontHeight'),rearH=value('rearHeight');
- for(const target of [e46,m4Model]){target.position.y=(frontH+rearH)*.005;target.rotation.x=Math.atan(((frontH-rearH)/100)/2.86)}
- spectralModel.position.y=(frontH+rearH)*.005;spectralModel.rotation.x=Math.atan(((frontH-rearH)/100)/2.86);
+ const frontH=value('frontHeight'),rearH=value('rearHeight'),rake=Math.atan(((frontH-rearH)/100)/2.86),ride=(frontH+rearH)*.005;
+ for(const target of [e46,m4Model,spectralModel]){target.position.y=ride;target.rotation.x=rake}
  for(const w of wheels){const front=w.z<0,offset=value(front?'frontOffset':'rearOffset'),camber=value(front?'frontCamber':'rearCamber');w.pivot.position.x=Math.sign(w.x)*(1.015+(offset-(front?5:3))*.01);w.pivot.rotation.z=THREE.MathUtils.degToRad(camber)}
- for(const w of (spectralModel.userData.wheels||[])){const front=w.worldPosition.z<0,offset=value(front?'frontOffset':'rearOffset'),camber=value(front?'frontCamber':'rearCamber');w.node.position.copy(w.position);w.node.position.x+=Math.sign(w.position.x||1)*(offset-(front?5:3))*.01;w.node.rotation.set(w.rotation.x,w.rotation.y,w.rotation.z+THREE.MathUtils.degToRad(camber))}
- const paint=$('paint')?.value;if(paint){for(const m of (spectralModel.userData.paintMaterials||[]))m.color.set(paint);applyE46Paint();for(const item of Object.values(extraCarModels)){if(item.group)item.group.traverse(o=>{if(!o.isMesh)return;const mats=Array.isArray(o.material)?o.material:[o.material];for(const m of mats){const n=((m?.name||'')+' '+(o.name||'')).toLowerCase();if(m?.color&&/body|paint|shell|exterior|hood|door|bumper|fender/.test(n)&&!/glass|window|rubber|tire|wheel|trim/.test(n))m.color.set(paint)}})} }
+ const item=extraCarModels[$('carStyle')?.value||'lexus_lfa'];
+ if(item?.ready){
+  item.group.position.y=ride;item.group.rotation.x=rake;
+  if(!item.group.userData.wheelTuning){
+   const found=[];item.group.traverse(o=>{if(o.name==='GTI_WHEEL_GROUP'){const wp=o.getWorldPosition(new THREE.Vector3());found.push({node:o,position:o.position.clone(),rotation:o.rotation.clone(),side:Math.sign(wp.x)||1,front:wp.z<0})}});
+   item.group.userData.wheelTuning=found;
+  }
+  for(const w of (item.group.userData.wheelTuning||[])){
+   const offset=value(w.front?'frontOffset':'rearOffset'),camber=value(w.front?'frontCamber':'rearCamber');
+   w.node.position.copy(w.position);w.node.position.x+=w.side*(offset-(w.front?5:3))*.01;
+   w.node.rotation.copy(w.rotation);w.node.rotation.z+=THREE.MathUtils.degToRad(camber);
+  }
+  const paint=$('paint')?.value||localStorage.hcgPaint;
+  if(paint)for(const m of (item.group.userData.paintMaterials||[]))if(m?.color)m.color.set(paint);
+ }
  applyCustomizations();
 }
 function tunedBrakeForce(){return valueTune('brakePressure')/100}
@@ -1084,11 +1149,18 @@ const endlessRoadMaterials={
 };
 let endlessRoadEnd=null,endlessRoadHeading=0,endlessRoadActive=false;
 function makeEndlessRoadChunk(start,initialHeading){
- const group=new THREE.Group(),points=[],length=170,steps=12;
+ const group=new THREE.Group(),points=[],length=170,steps=16;
  let x=start.x,z=start.z,y=start.y,angle=initialHeading;
- const turn=(Math.random()-.5)*.22;
+ const turn=(Math.random()-.5)*.78;
+ const sBend=(Math.random()<.5?-1:1)*(.20+Math.random()*.18);
+ const hill=(Math.random()<.5?-1:1)*(2.2+Math.random()*1.8);
  for(let i=0;i<=steps;i++){
-  if(i>0){angle+=turn/steps;x+=-Math.sin(angle)*(length/steps);z+=-Math.cos(angle)*(length/steps)}
+  const t=i/steps;
+  if(i>0){
+   angle+=(turn+Math.sin(t*Math.PI*2)*sBend)/steps;
+   x+=-Math.sin(angle)*(length/steps);z+=-Math.cos(angle)*(length/steps);
+  }
+  y=start.y+hill*Math.sin(t*Math.PI*2)+.75*Math.sin(t*Math.PI*4);
   points.push(new THREE.Vector3(x,y,z));
  }
  const positions=[],indices=[],uv=[];
@@ -1519,8 +1591,8 @@ function openGarage(){
  $('menu').style.display='none';$('ui').style.display='none';$('help').style.display='none';$('touch').style.display='none';$('driveActions').style.display='none';$('carRadio').style.display='none';stopRadio();
  scene.background=new THREE.Color(0x101820);scene.fog=null;renderer.setClearColor(0x101820,1);renderer.toneMappingExposure=1.48;
  scene.children.forEach(o=>{o.visible=(o===carRoot||o===showroom)});adaptivePixelRatio=Math.min(adaptivePixelRatio,.78);applyAdaptivePixelRatio();
- restoreTreeVisibility(showroom,true);restoreTreeVisibility(carRoot,true);
- showroom.visible=true;carRoot.visible=true;restoreTreeVisibility(carRoot,true);applyStyle($('carStyle').value);updateFirstPersonCockpit();carPos.set(0,0,0);carRoot.position.set(0,-.065,0);carRoot.rotation.set(0,Math.PI,0);
+ // Keep existing helper-mesh visibility; avoid recursively touching every showroom and vehicle mesh.
+ showroom.visible=true;carRoot.visible=true;applyStyle($('carStyle').value);updateFirstPersonCockpit();carPos.set(0,0,0);carRoot.position.set(0,-.065,0);carRoot.rotation.set(0,Math.PI,0);
  setGarageCamera(true);$('garage').style.display='grid';setGarageValues();applyTune();
  renderer.render(scene,camera);
 }
@@ -1568,6 +1640,7 @@ setGarageValues();updateTuneLabels();
 for(const id of ['bodyKit','spoilerStyle','rimFinish','neonColor','windowTint'])$(id).addEventListener('input',()=>{localStorage['hcg_'+id]=$(id).value;applyCustomizations()});
 for(const id of ['bodyKit','spoilerStyle','rimFinish'])$(id).addEventListener('change',()=>{localStorage['hcg_'+id]=$(id).value;applyCustomizations()});
 if(localStorage.hcgPaint){$('paint').value=localStorage.hcgPaint;paintMat.color.set(localStorage.hcgPaint);applyTune()}
+$('paint').addEventListener('input',()=>{localStorage.hcgPaint=$('paint').value;applyTune()});
 const controlKeys=new Set(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' ','shift','1','2']);
 addEventListener('keydown',e=>{
  const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=true;e.preventDefault()}

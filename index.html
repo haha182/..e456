@@ -120,7 +120,7 @@ function finishLoading(){if(loadingScreen)loadingScreen.classList.add('done')}
 setTimeout(finishLoading,15000); // Failsafe only; normal completion follows the car load result.
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,145,560);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,950);
-const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power',precision:'mediump'});renderer.setPixelRatio(mobileQuality?Math.min(devicePixelRatio,.85):Math.min(devicePixelRatio,1));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;document.body.appendChild(renderer.domElement);
+const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const touchControls=matchMedia('(pointer:coarse)').matches&&navigator.maxTouchPoints>0;const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power',precision:'mediump'});renderer.setPixelRatio(mobileQuality?Math.min(devicePixelRatio,.85):Math.min(devicePixelRatio,1));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;document.body.appendChild(renderer.domElement);
 // Desktop uses generated studio reflections; mobile skips PMREM to avoid GPU render artifacts.
 if(!mobileQuality){
  const pmremGenerator=new THREE.PMREMGenerator(renderer);pmremGenerator.compileEquirectangularShader();
@@ -277,7 +277,7 @@ for(let i=0;i<(mobileQuality?9:18);i++){
   const inward=side.clone().multiplyScalar(-sign);const arm=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,2.05),streetLampMetal);arm.position.set(inward.x*-.92,8.35,inward.z*-.92);arm.rotation.y=Math.atan2(inward.x,inward.z);group.add(arm);
   const head=new THREE.Mesh(new THREE.BoxGeometry(.72,.18,1.05),streetLampMetal);head.position.set(inward.x*1.82,8.28,inward.z*1.82);head.rotation.y=arm.rotation.y;group.add(head);
   const bulb=new THREE.Mesh(new THREE.BoxGeometry(.52,.035,.72),lampGlowMat);bulb.position.set(inward.x*1.82,8.17,inward.z*1.82);bulb.rotation.y=arm.rotation.y;group.add(bulb);
-  if(!mobileQuality&&i%3===0){const light=new THREE.PointLight(0xffc45f,24,34,1.65);light.position.set(inward.x*1.8,7.95,inward.z*1.8);light.castShadow=false;group.add(light);}
+  if(i%3===0){const light=new THREE.PointLight(0xffc45f,52,68,1.45);light.position.set(inward.x*1.8,7.95,inward.z*1.8);light.castShadow=false;group.add(light);}
   const halo=new THREE.Mesh(new THREE.SphereGeometry(.42,10,8),new THREE.MeshBasicMaterial({color:0xffd985,transparent:true,opacity:.16}));halo.position.set(inward.x*1.8,7.95,inward.z*1.8);group.add(halo);
  }
 }
@@ -996,7 +996,7 @@ function start(){
   camera.position.set(carPos.x,carPos.y+7.2,carPos.z+12);
   cameraLook.set(carPos.x,carPos.y+1.4,carPos.z-4);camera.lookAt(cameraLook);
   $('menu').style.display='none';$('garage').style.display='none';
-  $('ui').style.display='block';$('help').style.display='block';$('touch').style.display=mobileQuality?'flex':'none';$('carRadio').style.display='block';
+  $('ui').style.display='block';$('help').style.display='block';$('touch').style.display=touchControls?'flex':'none';$('carRadio').style.display='block';
   $('driveActions').style.display='block';
   renderer.render(scene,camera);
   paused=false;last=performance.now();
@@ -1022,7 +1022,7 @@ function closeGarage(){
  if(garageMode){
   garageMode=false;restoreTreeVisibility(scene,true);showroom.visible=false;
   scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,145,560);renderer.setClearColor(0x050914,1);
-  $('ui').style.display=garageWasPlaying?'block':'none';$('help').style.display=garageWasPlaying?'block':'none';$('touch').style.display=mobileQuality&&garageWasPlaying?'flex':'none';$('driveActions').style.display=garageWasPlaying?'block':'none';$('carRadio').style.display=garageWasPlaying?'block':'none';
+  $('ui').style.display=garageWasPlaying?'block':'none';$('help').style.display=garageWasPlaying?'block':'none';$('touch').style.display=touchControls&&garageWasPlaying?'flex':'none';$('driveActions').style.display=garageWasPlaying?'block':'none';$('carRadio').style.display=garageWasPlaying?'block':'none';
   if(garageWasPlaying){$('ui').style.display='block'}else{$('menu').style.display='grid'}
   carPos.copy(garagePos);heading=garageHeading;carRoot.position.copy(carPos);carRoot.rotation.y=heading;
   camera.position.set(carPos.x+Math.sin(heading)*12,carPos.y+7.2,carPos.z+Math.cos(heading)*12);

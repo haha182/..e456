@@ -713,13 +713,31 @@ function tick(t){
   $('score').textContent=score.toLocaleString();$('combo').textContent='x'+combo;
  }
  if(!garageMode){
-  const look=new THREE.Vector3(-Math.sin(heading)*4,1.4,-Math.cos(heading)*4).add(carRoot.position);
   const forwardCam=new THREE.Vector3(-Math.sin(heading),0,-Math.cos(heading)),rightCam=new THREE.Vector3(Math.cos(heading),0,-Math.sin(heading));
-  const desiredCam=cameraMode===0?new THREE.Vector3(carRoot.position.x+Math.sin(heading)*12,7.2,carRoot.position.z+Math.cos(heading)*12):cameraMode===1?new THREE.Vector3(carRoot.position.x+Math.sin(heading)*5,3.1,carRoot.position.z+Math.cos(heading)*5):cameraMode===2?new THREE.Vector3(carRoot.position.x+Math.sin(heading)*2,17,carRoot.position.z+Math.cos(heading)*2):carRoot.localToWorld(new THREE.Vector3(-.49,1.56,-.06));
-  const desiredLook=cameraMode===3?carRoot.localToWorld(new THREE.Vector3(-.49,1.48,-22)):look;
-  const camAlpha=1-Math.exp(-(cameraMode===3?11:5.2)*dt);
-  camera.position.lerp(desiredCam,camAlpha);cameraLook.lerp(desiredLook,1-Math.exp(-(cameraMode===3?13:6.5)*dt));camera.lookAt(cameraLook);
+  const speedRatio=Math.min(Math.abs(speed)/55,1);
+  let desiredCam,desiredLook,targetFov;
+  if(cameraMode===3){
+   desiredCam=carRoot.localToWorld(new THREE.Vector3(-.49,1.56,-.06));
+   desiredLook=carRoot.localToWorld(new THREE.Vector3(-.49,1.48,-22));
+   targetFov=66+speedRatio*2;
+  }else{
+   // Three distinct follow distances, with extra room at high speed.
+   const distance=cameraMode===0?9.4+speedRatio*2.0:cameraMode===1?5.8+speedRatio*1.15:14.2+speedRatio*2.2;
+   const height=cameraMode===0?4.25+speedRatio*.9:cameraMode===1?2.75+speedRatio*.5:cameraMode===2?11.8+speedRatio*.8:4;
+   // A small outside-of-corner offset makes drifting easier to read without losing the car.
+   const sideOffset=Math.max(-1.25,Math.min(1.25,steerAngle*.48));
+   desiredCam=carRoot.position.clone().addScaledVector(forwardCam,-distance).addScaledVector(rightCam,sideOffset).add(new THREE.Vector3(0,height,0));
+   const lookAhead=(cameraMode===2?4.2:3.0)+speedRatio*4.0;
+   desiredLook=carRoot.position.clone().addScaledVector(forwardCam,lookAhead).add(new THREE.Vector3(0,cameraMode===2?1.0:1.12,0));
+   targetFov=(cameraMode===0?65:cameraMode===1?62:60)+speedRatio*(cameraMode===2?4:8);
+  }
+  const camAlpha=1-Math.exp(-(cameraMode===3?11:7.2)*dt);
+  camera.position.lerp(desiredCam,camAlpha);
+  cameraLook.lerp(desiredLook,1-Math.exp(-(cameraMode===3?13:8.4)*dt));
+  camera.lookAt(cameraLook);
+  camera.fov+=(targetFov-camera.fov)*(1-Math.exp(-3.8*dt));camera.updateProjectionMatrix();
   if(cameraMode===3){const speedShake=Math.min(Math.abs(speed)/46,1);camera.rotation.z+=-steerAngle*.025*speedShake;camera.position.y+=Math.sin(t*.012)*.006*speedShake}
+  else if(cameraMode===0||cameraMode===1){const speedShake=Math.min(Math.abs(speed)/65,1);camera.position.y+=Math.sin(t*.009)*.018*speedShake}
   updateFirstPersonCockpit();
  }
  if(spectralMixer&&!paused)spectralMixer.update(dt);

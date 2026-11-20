@@ -168,7 +168,7 @@ function finishIntro(){if(introFinished)return;introFinished=true;clearTimeout(i
 function startIntro(){const intro=document.getElementById('introScreen');if(!intro||introFinished)return;intro.style.display='grid';intro.classList.add('show');introTimer=setTimeout(finishIntro,5500)}
 function finishLoading(){if(loadingScreen)loadingScreen.classList.add('done');startIntro()}
 setTimeout(finishLoading,15000); // Failsafe only; normal completion follows the car load result.
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,145,560);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,175,500);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,950);
 const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const isChromeOS=/CrOS/i.test(navigator.userAgent);const touchControls=matchMedia('(pointer:coarse)').matches&&navigator.maxTouchPoints>0;const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',precision:'highp'});renderer.setPixelRatio(isChromeOS?.94:(mobileQuality?Math.min(devicePixelRatio,.88):Math.min(devicePixelRatio,1)));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;document.body.appendChild(renderer.domElement);
 // Optional live performance diagnostics: press F3 while driving to show/hide.
@@ -196,6 +196,23 @@ scene.add(new THREE.HemisphereLight(0x243b68,0x080b13,.34));
 const moon=new THREE.DirectionalLight(0x9bbcff,.62);moon.position.set(-85,115,65);moon.castShadow=!mobileQuality;moon.shadow.mapSize.set(1024,1024);moon.shadow.camera.left=-155;moon.shadow.camera.right=155;moon.shadow.camera.top=155;moon.shadow.camera.bottom=-155;scene.add(moon);
 const mat=(color,rough=.7,metal=0)=>new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal,envMapIntensity:metal>.12?1.15:.72});
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),new THREE.MeshBasicMaterial({color:0x080d13,roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-1.2;ground.receiveShadow=false;ground.renderOrder=0;scene.add(ground);
+// Dark, irregular horizon ridges hide the empty edge of the world without crowding roads.
+// Instancing keeps this distant scenery inexpensive on Chromebook GPUs.
+const horizonMat=new THREE.MeshStandardMaterial({color:0x111a22,roughness:1,metalness:0});
+const horizonGeo=new THREE.ConeGeometry(1,1,6,1);
+const horizonRidges=new THREE.InstancedMesh(horizonGeo,horizonMat,64);
+const horizonDummy=new THREE.Object3D();
+let horizonSeed=481516;
+for(let i=0;i<64;i++){
+ horizonSeed=(horizonSeed*1664525+1013904223)>>>0;const angle=i/64*Math.PI*2+(horizonSeed/4294967296-.5)*.045;
+ horizonSeed=(horizonSeed*1664525+1013904223)>>>0;const radius=520+(horizonSeed/4294967296)*62;
+ horizonSeed=(horizonSeed*1664525+1013904223)>>>0;const width=48+(horizonSeed/4294967296)*42;
+ horizonSeed=(horizonSeed*1664525+1013904223)>>>0;const height=48+(horizonSeed/4294967296)*62;
+ horizonDummy.position.set(Math.cos(angle)*radius,height*.5-1.2,Math.sin(angle)*radius);
+ horizonDummy.scale.set(width,height,width*(.72+(i%4)*.09));
+ horizonDummy.rotation.y=angle*.7;horizonDummy.updateMatrix();horizonRidges.setMatrixAt(i,horizonDummy.matrix);
+}
+horizonRidges.instanceMatrix.needsUpdate=true;horizonRidges.frustumCulled=true;scene.add(horizonRidges);
 // Procedural asphalt grain gives every road a believable, non-flat surface without external assets.
 const asphaltCanvas=document.createElement('canvas');asphaltCanvas.width=256;asphaltCanvas.height=256;
 const asphaltCtx=asphaltCanvas.getContext('2d');asphaltCtx.fillStyle='#30343a';asphaltCtx.fillRect(0,0,256,256);
@@ -1202,7 +1219,7 @@ function start(){
  try{
   initCarAudio();
   garageMode=false;restoreTreeVisibility(scene,true);showroom.visible=false;
-  scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,145,560);
+  scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,175,500);
   renderer.setClearColor(0x050914,1);
   carPos=curve.getPointAt(.03);const spawnTangent=curve.getTangentAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=Math.atan2(-spawnTangent.x,-spawnTangent.z);steerAngle=0;driftAngle=0;driftTimer=0;combo=1;score=0;points=0;boost=100;keys={};cameraMode=0;cockpitLookYaw=0;cockpitLookPitch=0;cockpitPointerDown=false;lastRender=0;camera.fov=65;camera.updateProjectionMatrix();
   $('speed').textContent='0';$('score').textContent='0';$('combo').textContent='x1';$('speedArc').style.strokeDashoffset='270';
@@ -1235,7 +1252,7 @@ function closeGarage(){
  $('garage').style.display='none';
  if(garageMode){
   garageMode=false;garageCameraReady=false;garageFramingKey='';for(const [object,wasVisible] of garageVisibilitySnapshot)object.visible=wasVisible;garageVisibilitySnapshot.length=0;showroom.visible=false;applyStyle($('carStyle').value);updateFirstPersonCockpit();
-  adaptivePixelRatio=Math.min(adaptivePixelRatio,devicePixelRatioCap);applyAdaptivePixelRatio();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,145,560);renderer.setClearColor(0x050914,1);
+  adaptivePixelRatio=Math.min(adaptivePixelRatio,devicePixelRatioCap);applyAdaptivePixelRatio();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,175,500);renderer.setClearColor(0x050914,1);
   $('ui').style.display=garageWasPlaying?'block':'none';$('help').style.display=garageWasPlaying?'block':'none';$('touch').style.display=touchControls&&garageWasPlaying?'flex':'none';$('driveActions').style.display=garageWasPlaying?'block':'none';$('carRadio').style.display=garageWasPlaying?'block':'none';
   if(garageWasPlaying){$('ui').style.display='block'}else{$('menu').style.display='grid'}
   carPos.copy(garagePos);heading=garageHeading;carRoot.position.copy(carPos);carRoot.rotation.y=heading;

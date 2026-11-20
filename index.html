@@ -495,7 +495,7 @@ function tick(t){
   const left=!!(keys.a||keys.arrowleft),right=!!(keys.d||keys.arrowright);
   const hand=!!keys[' '],nitro=!!keys.shift;
   const turn=(right?1:0)-(left?1:0);
-  const turbo=THREE.MathUtils.clamp(Number(localStorage.hcg_turbo||14.3),0,25);
+  const turbo=THREE.MathUtils.clamp(Number(localStorage.hcg_turbo??14.3),0,25);
   const brakePressure=THREE.MathUtils.clamp(Number(localStorage.hcg_brakePressure||100)/100,.2,1.3);
   const brakeBias=THREE.MathUtils.clamp(Number(localStorage.hcg_brakeBalance||70)/100,.3,.9);
   const throttle=gas?1:0;

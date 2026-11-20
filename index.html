@@ -1342,7 +1342,7 @@ async function initCarAudio(){
    return carAudioCtx.decodeAudioData(await r.arrayBuffer());
   }));
   const fallbackBuffers=results.filter(x=>x.status==='fulfilled').map(x=>x.value);
-  const buffers=lfaRecordingBuffer?[lfaRecordingBuffer]:(recordedV8Buffers.length?recordedV8Buffers:fallbackBuffers);
+  const buffers=recordedV8Buffers.length?recordedV8Buffers:fallbackBuffers;
   if(!buffers.length){
    // Offline-safe engine fallback: a harmonically rich loop with adjustable RPM.
    const rate=carAudioCtx.sampleRate,length=rate*2,buffer=carAudioCtx.createBuffer(1,length,rate),data=buffer.getChannelData(0);
@@ -1397,7 +1397,7 @@ function updateCarAudio(throttle,vehicleSpeed,slipAngle=0){
   if(Math.random()<.82)triggerExhaustPop(1.22*profile.pop,.225);
   lastExhaustPopAt=now;lastExhaustCrackleAt=now;
  }
- const v8Base=(38+rpm*205)*Math.min(profile.pitch,1.02);v8Voices.forEach((v,i)=>{const harmonicGain=(profile.harmonics[i]??.025)*(i===0?.38:.22)*(i===0?1.0:.82+engineThrottleSmooth*.28);v.osc.frequency.setTargetAtTime(v8Base*v.mult,now,.10);v.gain.gain.setTargetAtTime(lfaRecordingBuffer?0:harmonicGain,now,.14)});
+ const v8Base=(38+rpm*205)*Math.min(profile.pitch,1.02);v8Voices.forEach((v,i)=>{const harmonicGain=(profile.harmonics[i]??.025)*(i===0?.38:.22)*(i===0?1.0:.82+engineThrottleSmooth*.28);v.osc.frequency.setTargetAtTime(v8Base*v.mult,now,.10);v.gain.gain.setTargetAtTime(harmonicGain,now,.14)});
  lastExhaustThrottle=throttle;
 }
 const radioStations={
@@ -1458,8 +1458,8 @@ function start(){
   carPos.set(0,0,0);const spawnTangent=new THREE.Vector3(0,0,-1);vel.set(0,0,0);speed=0;slip=0;heading=Math.atan2(-spawnTangent.x,-spawnTangent.z);steerAngle=0;driftAngle=0;driftTimer=0;combo=1;score=0;points=0;boost=100;keys={};cameraMode=0;cockpitLookYaw=0;cockpitLookPitch=0;cockpitPointerDown=false;lastRender=0;camera.fov=65;camera.updateProjectionMatrix();
   $('speed').textContent='0';$('score').textContent='0';$('combo').textContent='x1';$('speedArc').style.strokeDashoffset='270';
   carRoot.visible=true;restoreTreeVisibility(carRoot,true);applyStyle($('carStyle').value);carRoot.position.copy(carPos);carRoot.rotation.set(0,0,0);
-  camera.position.set(carPos.x,carPos.y+7.2,carPos.z+12);
-  cameraLook.set(carPos.x,carPos.y+1.4,carPos.z-4);camera.lookAt(cameraLook);cameraSnap=true;
+  camera.position.set(carPos.x,carPos.y+2.85,carPos.z+6.1);
+  cameraLook.set(carPos.x,carPos.y+1.5,carPos.z-2.15);camera.fov=56;camera.updateProjectionMatrix();camera.lookAt(cameraLook);cameraSnap=true;
   $('menu').style.display='none';$('garage').style.display='none';
   $('ui').style.display='block';$('help').style.display='block';$('touch').style.display=touchControls?'flex':'none';$('carRadio').style.display='block';
   $('driveActions').style.display='block';

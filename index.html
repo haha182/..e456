@@ -1070,7 +1070,7 @@ const endlessRoadMaterials={
  trunk:new THREE.MeshStandardMaterial({color:0x40372c,roughness:1}),
  leaves:new THREE.MeshStandardMaterial({color:0x183323,roughness:1})
 };
-let endlessRoadEnd=null,endlessRoadHeading=0,endlessRoadTurn=0,endlessRoadActive=false;
+let endlessRoadEnd=null,endlessRoadHeading=0,endlessRoadActive=false;
 function makeEndlessRoadChunk(start,initialHeading){
  const group=new THREE.Group(),points=[],length=170,steps=12;
  let x=start.x,z=start.z,y=start.y,angle=initialHeading;
@@ -1111,7 +1111,7 @@ function makeEndlessRoadChunk(start,initialHeading){
    const dx=q.x-p.x,dz=q.z-p.z,yaw=Math.atan2(-dx,-dz);
    const rail=new THREE.Mesh(new THREE.BoxGeometry(29,.48,.16),endlessRoadMaterials.rail);
    rail.position.set(mid.x,mid.y+.72,mid.z);rail.rotation.y=yaw;group.add(rail);
-   for(const j of [0,1,2]){
+   for(const j of [0,2]){
     const at=p.clone().lerp(q,j/2);
     const post=new THREE.Mesh(new THREE.BoxGeometry(.16,.72,.18),endlessRoadMaterials.rail);
     post.position.set(at.x+Math.cos(angle)*side*8,at.y+.34,at.z-Math.sin(angle)*side*8);group.add(post);
@@ -1119,7 +1119,7 @@ function makeEndlessRoadChunk(start,initialHeading){
   }
  }
  // Sparse roadside trees provide depth without filling the scene with heavy assets.
- for(let i=1;i<steps;i+=3){
+ for(let i=2;i<steps;i+=4){
   const p=points[i],a=points[i-1],b=points[i+1],dx=b.x-a.x,dz=b.z-a.z,inv=1/Math.max(.001,Math.hypot(dx,dz));
   const rx=dz*inv,rz=-dx*inv;
   for(const side of [-1,1]){
@@ -1136,13 +1136,13 @@ function makeEndlessRoadChunk(start,initialHeading){
 function resetEndlessRoads(position,heading){
  for(const chunk of endlessRoadChunks)scene.remove(chunk.group);
  endlessRoadChunks.length=0;endlessRoadEnd=position.clone();endlessRoadHeading=heading;endlessRoadActive=true;
- for(let i=0;i<6;i++)appendEndlessRoad();
+ for(let i=0;i<4;i++)appendEndlessRoad();
 }
 function appendEndlessRoad(){
  if(!endlessRoadActive||!endlessRoadEnd)return;
  const chunk=makeEndlessRoadChunk(endlessRoadEnd,endlessRoadHeading);
  endlessRoadChunks.push(chunk);endlessRoadEnd.copy(chunk.end);endlessRoadHeading=chunk.heading;
- while(endlessRoadChunks.length>9){const old=endlessRoadChunks.shift();scene.remove(old.group);old.group.traverse(o=>{if(o.geometry)o.geometry.dispose()})}
+ while(endlessRoadChunks.length>6){const old=endlessRoadChunks.shift();scene.remove(old.group);old.group.traverse(o=>{if(o.geometry)o.geometry.dispose()})}
 }
 function updateEndlessRoads(position,heading){
  if(!endlessRoadActive||!endlessRoadEnd)return;
@@ -1318,8 +1318,10 @@ function tick(t){
  }
  if(spectralMixer&&!paused)spectralMixer.update(dt);
  const flameLeft=exhaustFlameUntil-performance.now();exhaustFlames.forEach((flame,i)=>{flame.visible=flameLeft>0;if(flameLeft>0){const flicker=.82+Math.sin(t*.11+i*2.4)*.18;flame.scale.set(flicker,flicker,flicker*(.8+Math.min(flameLeft/190,.6)))}});const hoodFlame=extraCarModels.gti_2010_hood_dump.group.userData.hoodFlame;if(hoodFlame){const left=(hoodFlame.userData.until||0)-performance.now();hoodFlame.visible=left>0;if(left>0){const flicker=.85+Math.sin(t*.17)*.15;hoodFlame.scale.set(flicker,flicker,flicker)}}
- updateEndlessRoads(carPos,heading);
- ground.position.x=carPos.x;ground.position.z=carPos.z;
+ if(!paused&&!garageMode){
+  updateEndlessRoads(carPos,heading);
+  ground.position.x=carPos.x;ground.position.z=carPos.z;
+ }
  renderer.render(scene,camera);
 }
 requestAnimationFrame(tick);

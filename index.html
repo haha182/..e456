@@ -56,11 +56,18 @@
 #menu .menu-actions button.primary{background:linear-gradient(110deg,#12c4c2,#2778b5);border:0;color:#04131b}
 @keyframes wallpaperGlow{from{opacity:.72;transform:scale(1) translate3d(-.5%,0,0)}to{opacity:1;transform:scale(1.045) translate3d(.5%,-.4%,0)}}
 @media(max-width:520px){#menu .card{gap:24px;padding:22px 12px}#menu h1{font-size:clamp(42px,12vw,66px)}#menu .menu-actions{width:min(250px,82vw)}}
+
+/* Keep the 3D canvas as the permanent full-screen game layer. */
+body>canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;touch-action:none}
+#ui,#help,#touch,#toast,#garage,#menu{z-index:4}
+#garage{z-index:6}#menu{z-index:8}
+#loadingScreen{z-index:20}
+#gameError{position:fixed;z-index:30;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,90vw);padding:20px;background:#160d12;border:1px solid #ff7585;border-radius:12px;color:#fff;font:14px/1.5 Arial,sans-serif;display:none;white-space:pre-wrap;box-shadow:0 15px 60px #000c}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
-<div id="loadingScreen"><div class="loading-panel"><div class="loading-mark">HARRISON MOTORSPORT</div><div class="loading-title">DRIFT WORLD</div><div class="loading-copy">PREPARING THE CIRCUIT</div><div class="loading-track"></div><div class="loading-foot">3D WORLD · GARAGE · TRACK</div></div></div>
+<div id="gameError" role="alert"></div><div id="loadingScreen"><div class="loading-panel"><div class="loading-mark">HARRISON MOTORSPORT</div><div class="loading-title">DRIFT WORLD</div><div class="loading-copy">PREPARING THE CIRCUIT</div><div class="loading-track"></div><div class="loading-foot">3D WORLD · GARAGE · TRACK</div></div></div>
 <div id="menu"><div class="card"><h1>Harrison’s<br>Car Game</h1><div class="menu-actions"><button class="primary" id="start">ENTER GAME</button><button id="openGarage">GARAGE &amp; TUNING</button></div></div></div>
 <div id="garage"><div class="card"><button class="garage-back" id="closeGarage">← BACK</button><div class="garage-left">
 <label><span>TURBO: <b id="turboVal">14.3 psi</b></span><input id="turbo" type="range" min="0" max="25" step=".1" value="14.3"></label>
@@ -82,6 +89,10 @@
 import * as THREE from 'three';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/FBXLoader.js';
 import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
+const gameError=document.getElementById('gameError');
+function showGameError(message){if(gameError){gameError.textContent=message;gameError.style.display='block'}}
+addEventListener('error',e=>{console.error(e.error||e.message);showGameError('A game error occurred. Reload the page and try again. '+(e.message||''))});
+addEventListener('unhandledrejection',e=>{console.error(e.reason);showGameError('A game resource failed to load. Check your connection and reload.')});
 const loadingScreen=document.getElementById('loadingScreen');
 function finishLoading(){if(loadingScreen)loadingScreen.classList.add('done')}
 setTimeout(finishLoading,6500);
@@ -579,7 +590,25 @@ function tick(t){
 requestAnimationFrame(tick);
 
 // Synthetic oscillator audio removed; waiting for real recorded engine samples.
-function start(){paused=false;$('menu').style.display='none';$('driveActions').style.display='block';last=performance.now()}
+function start(){
+ try{
+  garageMode=false;showroom.visible=false;
+  scene.children.forEach(o=>{o.visible=true});
+  scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,115,390);
+  carPos=curve.getPointAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=0;
+  carRoot.visible=true;carRoot.position.copy(carPos);carRoot.rotation.y=0;
+  camera.position.set(carPos.x,carPos.y+7.2,carPos.z+12);
+  cameraLook.set(carPos.x,carPos.y+1.4,carPos.z-4);camera.lookAt(cameraLook);
+  $('menu').style.display='none';$('garage').style.display='none';
+  $('ui').style.display='block';$('help').style.display='block';$('touch').style.display='';
+  $('driveActions').style.display='block';
+  renderer.setClearColor(0x050914,1);renderer.render(scene,camera);
+  paused=false;last=performance.now();
+ }catch(err){
+  console.error('Game start failed:',err);
+  showGameError('The game could not start: '+(err&&err.message?err.message:String(err)));
+ }
+}
 function setGarageValues(){const ids=['turbo','frontCamber','rearCamber','frontOffset','rearOffset','brakeBalance','frontHeight','rearHeight','brakePressure'];for(const id of ids){const el=$(id),v=localStorage['hcg_'+id]||el.value;el.value=v;$(id+'Val').textContent=({turbo:v+' psi',frontCamber:v+'°',rearCamber:v+'°',frontOffset:v+' cm',rearOffset:v+' cm',brakeBalance:v+'%',frontHeight:(+v>0?'+':'')+v+' cm',rearHeight:(+v>0?'+':'')+v+' cm',brakePressure:v+'%'})[id]}}function setGarageCamera(){const cp=Math.cos(garageOrbitPitch);camera.position.set(Math.sin(garageOrbitYaw)*garageOrbitRadius*cp,1+Math.sin(garageOrbitPitch)*garageOrbitRadius,Math.cos(garageOrbitYaw)*garageOrbitRadius*cp);camera.lookAt(0,1,0)}
 function openGarage(){garageWasPlaying=!paused;paused=true;garageMode=true;garagePos.copy(carPos);garageHeading=heading;garageOrbitYaw=.28;garageOrbitPitch=.16;garageOrbitRadius=10.5;$('menu').style.display='none';$('ui').style.display='none';$('help').style.display='none';$('touch').style.display='none';$('driveActions').style.display='none';scene.background=new THREE.Color(0x555d60);scene.fog=null;scene.children.forEach(o=>{o.visible=(o===carRoot||o.isLight||o===showroom)});showroom.visible=true;carPos.set(0,0,0);carRoot.position.set(0,0,0);carRoot.rotation.y=Math.PI;setGarageCamera();$('garage').style.display='grid';setGarageValues();applyTune()}function closeGarage(){ $('garage').style.display='none';if(garageMode){garageMode=false;showroom.visible=false;scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,115,390);scene.children.forEach(o=>o.visible=true);$('ui').style.display='block';$('help').style.display='block';$('touch').style.display='';$('driveActions').style.display=garageWasPlaying?'block':'none';if(garageWasPlaying){$('ui').style.display='block'}else{$('menu').style.display='grid'}carPos.copy(garagePos);heading=garageHeading;carRoot.position.copy(carPos);carRoot.rotation.y=heading}if(garageWasPlaying){paused=false;last=performance.now()}}function saveGarage(){const ids=['turbo','frontCamber','rearCamber','frontOffset','rearOffset','brakeBalance','frontHeight','rearHeight','brakePressure'];for(const id of ids)localStorage['hcg_'+id]=$(id).value;paintMat.color.set($('paint').value);localStorage.hcgPaint=$('paint').value;localStorage.hcgPower=$('turbo').value;localStorage.hcg_turbo=$('turbo').value;localStorage.hcgStyle=$('carStyle').value;applyStyle(localStorage.hcgStyle);closeGarage();toast('Tuning saved')}function updateTuneLabels(){for(const id of ['turbo','frontCamber','rearCamber','frontOffset','rearOffset','brakeBalance','frontHeight','rearHeight','brakePressure'])$(id).addEventListener('input',()=>{const v=$(id).value;$(id+'Val').textContent=({turbo:v+' psi',frontCamber:v+'°',rearCamber:v+'°',frontOffset:v+' cm',rearOffset:v+' cm',brakeBalance:v+'%',frontHeight:(+v>0?'+':'')+v+' cm',rearHeight:(+v>0?'+':'')+v+' cm',brakePressure:v+'%'})[id];localStorage['hcg_'+id]=v;if(id==='turbo')localStorage.hcg_turbo=v;applyTune()})}$('garage').addEventListener('pointerdown',e=>{if(!garageMode||e.target.closest('button,input,select,label'))return;garageDragging=true;garageLastX=e.clientX;garageLastY=e.clientY;$('garage').setPointerCapture(e.pointerId);$('garage').style.cursor='grabbing'});$('garage').addEventListener('pointermove',e=>{if(!garageDragging)return;const dx=e.clientX-garageLastX,dy=e.clientY-garageLastY;garageLastX=e.clientX;garageLastY=e.clientY;garageOrbitYaw-=dx*.009;garageOrbitPitch=THREE.MathUtils.clamp(garageOrbitPitch+dy*.007,-.12,1.05);setGarageCamera()});const stopGarageDrag=()=>{garageDragging=false;$('garage').style.cursor='grab'};$('garage').addEventListener('pointerup',stopGarageDrag);$('garage').addEventListener('pointercancel',stopGarageDrag);$('garage').addEventListener('wheel',e=>{if(!garageMode)return;e.preventDefault();garageOrbitRadius=THREE.MathUtils.clamp(garageOrbitRadius+e.deltaY*.012,6.2,19);setGarageCamera()},{passive:false});$('start').onclick=start;$('openGarage').onclick=openGarage;$('closeGarage').onclick=closeGarage;$('saveGarage').onclick=saveGarage;
 $('cameraBtn').onclick=changeCamera;$('garageBtn').onclick=openGarage;$('carStyle').value=localStorage.hcgStyle||'bmw_m4';applyStyle($('carStyle').value);$('carStyle').addEventListener('change',()=>{localStorage.hcgStyle=$('carStyle').value;applyStyle($('carStyle').value)});applyTune();if(localStorage.hcgPower)$('turbo').value=localStorage.hcgPower;setGarageValues();updateTuneLabels();if(localStorage.hcgPaint){$('paint').value=localStorage.hcgPaint;paintMat.color.set(localStorage.hcgPaint)}

@@ -618,7 +618,7 @@ function start(){
   scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,115,390);
   renderer.setClearColor(0x050914,1);
   carPos=curve.getPointAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=0;
-  carRoot.visible=true;restoreTreeVisibility(carRoot,true);carRoot.position.copy(carPos);carRoot.rotation.set(0,0,0);
+  carRoot.visible=true;restoreTreeVisibility(carRoot,true);applyStyle($('carStyle').value);carRoot.position.copy(carPos);carRoot.rotation.set(0,0,0);
   camera.position.set(carPos.x,carPos.y+7.2,carPos.z+12);
   cameraLook.set(carPos.x,carPos.y+1.4,carPos.z-4);camera.lookAt(cameraLook);
   $('menu').style.display='none';$('garage').style.display='none';
@@ -639,7 +639,7 @@ function openGarage(){
  scene.background=new THREE.Color(0x101820);scene.fog=null;renderer.setClearColor(0x101820,1);
  scene.children.forEach(o=>{o.visible=(o===carRoot||o===showroom||o.isLight)});
  restoreTreeVisibility(showroom,true);restoreTreeVisibility(carRoot,true);
- showroom.visible=true;carRoot.visible=true;carPos.set(0,0,0);carRoot.position.set(0,0,0);carRoot.rotation.set(0,Math.PI,0);
+ showroom.visible=true;carRoot.visible=true;restoreTreeVisibility(carRoot,true);applyStyle($('carStyle').value);carPos.set(0,0,0);carRoot.position.set(0,0,0);carRoot.rotation.set(0,Math.PI,0);
  setGarageCamera();$('garage').style.display='grid';setGarageValues();applyTune();
  renderer.render(scene,camera);
 }

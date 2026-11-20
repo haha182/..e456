@@ -480,7 +480,7 @@ function tunedBrakeForce(){return valueTune('brakePressure')/100}
 function valueTune(id){const defaults={brakePressure:100,brakeBalance:70,turbo:14.3};return Number(localStorage['hcg_'+id]??defaults[id])}
 
 function tick(t){
- requestAnimationFrame(t);
+ requestAnimationFrame(tick);
  const dt=Math.min((t-last)/1000,.035);
  last=t;
  if(!paused){

@@ -549,10 +549,16 @@ for(const x of [-1.08,1.08])for(const z of [-1.48,1.48]){
 const lightMat=new THREE.MeshBasicMaterial({color:0xfff3d0});
 const smokeMat=new THREE.MeshBasicMaterial({color:0xdce4e6,transparent:true,opacity:.32,depthWrite:false});const smoke=[];
 for(let i=0;i<34;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(.55+Math.random()*.5,8,7),smokeMat.clone());m.visible=false;scene.add(m);smoke.push({mesh:m,life:0})}
-let speed=0,slip=0,heading=0,score=0,points=0,boost=100,steerAngle=0,manualMode=false,manualGear=1,manualShiftLockUntil=0,engineRunning=true,paused=true,keys={},last=performance.now(),lastRender=0,carPos=curve.getPointAt(.03),vel=new THREE.Vector3(),driftAngle=0,combo=1,driftTimer=0,cameraMode=0,collisionShake=0,garageWasPlaying=false,garageMode=false,garagePos=new THREE.Vector3(),garageHeading=0,garageOrbitYaw=0,garageOrbitPitch=.20,garageOrbitRadius=9.5,cameraLook=new THREE.Vector3(),cameraSnap=true,garageTargetPosition=new THREE.Vector3(),garageTargetLook=new THREE.Vector3(),garageCameraReady=false,garageFramingKey='',garageDragging=false,garageLastX=0,garageLastY=0,garageVisibilitySnapshot=[];
+let speed=0,slip=0,heading=0,score=0,points=0,boost=100,steerAngle=0,manualMode=false,manualGear=1,manualShiftLockUntil=0,engineRunning=true,paused=true,keys={},last=performance.now(),lastRender=0,carPos=curve.getPointAt(.03),vel=new THREE.Vector3(),driftAngle=0,combo=1,driftTimer=0,cameraMode=0,collisionShake=0,garageWasPlaying=false,garageMode=false,garagePos=new THREE.Vector3(),garageHeading=0,garageOrbitYaw=0,garageOrbitPitch=.20,garageOrbitRadius=9.5,cameraLook=new THREE.Vector3(),cameraSnap=true,cameraSpringVelocity=new THREE.Vector3(),cameraLookSpringVelocity=new THREE.Vector3(),garageTargetPosition=new THREE.Vector3(),garageTargetLook=new THREE.Vector3(),garageCameraReady=false,garageFramingKey='',garageDragging=false,garageLastX=0,garageLastY=0,garageVisibilitySnapshot=[];
 carRoot.position.copy(carPos);carRoot.position.y=carPos.y;
 function shiftManualGear(delta){if(!manualMode)return;const next=THREE.MathUtils.clamp(manualGear+delta,0,6),caps=[18,29,42,57,74,96];if(next===manualGear)return;if(delta<0&&next>0&&Math.abs(speed)>caps[next-1]*.96){toast('DOWNSHIFT BLOCKED · TOO FAST');return}manualGear=next;manualShiftLockUntil=performance.now()+180;audioGear=manualGear;audioShiftDip=1;$('manualBtn').textContent='MANUAL '+(manualGear===0?'N':manualGear);toast(manualGear===0?'NEUTRAL · ENGINE DISCONNECTED':'GEAR '+manualGear+' · '+(delta>0?'UPSHIFT':'DOWNSHIFT'))}
 function toast(s){$('toast').textContent=s;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',1800)}
+function springCameraVector(position,target,velocity,omega,dt){
+ const y=position.clone().sub(target),j=velocity.clone().addScaledVector(y,omega),e=Math.exp(-omega*dt);
+ position.copy(target).addScaledVector(y.clone().addScaledVector(j,dt),e);
+ velocity.copy(velocity.clone().addScaledVector(j,-omega*dt).multiplyScalar(e));
+ return position;
+}
 function reset(){carPos=curve.getPointAt(.03);const resetTangent=curve.getTangentAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=Math.atan2(-resetTangent.x,-resetTangent.z);steerAngle=0;driftAngle=0;driftTimer=0;combo=1;keys={};carRoot.position.copy(carPos);carRoot.rotation.set(0,heading,0);resetEndlessRoads(carPos,heading);$('speed').textContent='0';$('combo').textContent='x1';const arc=$('speedArc');if(arc)arc.style.strokeDashoffset='270'}
 function toggleEngine(){engineRunning=!engineRunning;const button=$('engineBtn');if(engineRunning){initCarAudio();button.textContent='ENGINE ON';button.style.borderColor='#65d6a0';button.style.background='#10291f';button.style.color='#a5ffd0';button.setAttribute('aria-label','Shut down engine');toast('ENGINE STARTED')}else{stopCarAudio();keys.w=false;keys.arrowup=false;button.textContent='ENGINE OFF';button.style.borderColor='#e49a66';button.style.background='#302016';button.style.color='#ffd0a5';button.setAttribute('aria-label','Start engine');toast('ENGINE SHUT DOWN')}}
 function changeCamera(){cameraMode=cameraMode===3?0:3;cameraSnap=true;if(cameraMode===3){cockpitLookYaw=0;cockpitLookPitch=0}cockpitPointerDown=false;toast(cameraMode===3?'First-person cockpit — drag mouse to look':'Close chase camera');updateFirstPersonCockpit()}
@@ -1369,10 +1375,10 @@ function tick(t){
    // Small lateral/vertical movement adds vehicle feedback without shaking the road view.
    const fpSpeed=Math.min(Math.abs(speed)/55,1),fpSteer=THREE.MathUtils.clamp(steerAngle,-1,1);
    const fpBob=Math.sin(t*.010)*.0025*fpSpeed;
-   const fpSeat=new THREE.Vector3(-.49-fpSteer*.018,1.49+fpBob,.12);
+   const fpSeat=new THREE.Vector3(-.49-fpSteer*.012,1.47+fpBob,.12);
    desiredCam=carRoot.localToWorld(fpSeat);
    const fpYaw=cockpitLookYaw+fpSteer*.035*fpSpeed;
-   const fpPitch=THREE.MathUtils.clamp(cockpitLookPitch+Math.min(.035,fpSpeed*.035),-.42,.42);
+   const fpPitch=THREE.MathUtils.clamp(cockpitLookPitch+Math.min(.018,fpSpeed*.018),-.34,.34);
    // World-heading view direction prevents imported model pitch/roll from flipping the camera.
    const fpForward=forwardCam.clone().applyAxisAngle(new THREE.Vector3(0,1,0),fpYaw);
    const fpDirection=fpForward.multiplyScalar(Math.cos(fpPitch));fpDirection.y=Math.sin(fpPitch);fpDirection.normalize();
@@ -1385,13 +1391,18 @@ function tick(t){
    const height=2.85+speedRatio*.35+sizeBoost*.45;
    const sideOffset=Math.max(-.9,Math.min(.9,steerAngle*.3));
    desiredCam=vehicleCenter.clone().addScaledVector(forwardCam,-(cameraMode===1?7.0:distance)).addScaledVector(rightCam,sideOffset);desiredCam.y+=height;
-   const lookAhead=2.15+speedRatio*1.25;
+   const lookAhead=2.35+speedRatio*1.65;
    const lookHeight=Math.max(1.0,vehicleHeight*.56);
-   desiredLook=vehicleCenter.clone().addScaledVector(forwardCam,lookAhead);desiredLook.y+=cameraMode===2?Math.max(1,lookHeight):lookHeight;
+   // A small velocity lead makes corners easier to read without making the camera swing wide.
+   const motionLead=vel.clone();motionLead.y=0;motionLead.multiplyScalar(.075);
+   desiredLook=vehicleCenter.clone().addScaledVector(forwardCam,lookAhead).add(motionLead);desiredLook.y+=lookHeight;
    targetFov=56+speedRatio*3;
   }
-  const camAlpha=1-Math.exp(-(cameraMode===3?15:19)*dt);
-  if(cameraSnap){camera.position.copy(desiredCam);cameraLook.copy(desiredLook);cameraSnap=false}else{camera.position.lerp(desiredCam,camAlpha);cameraLook.lerp(desiredLook,1-Math.exp(-(cameraMode===3?18:22)*dt))}
+  // Critically damped chase/driver camera spring, adapted from proven Three.js follow-rig techniques.
+  // It follows smoothly at both low and high frame rates without the rubber-band snap.
+  const springRate=cameraMode===3?17:10.5;
+  if(cameraSnap){camera.position.copy(desiredCam);cameraLook.copy(desiredLook);cameraSpringVelocity.set(0,0,0);cameraLookSpringVelocity.set(0,0,0);cameraSnap=false}
+  else{springCameraVector(camera.position,desiredCam,cameraSpringVelocity,springRate,dt);springCameraVector(cameraLook,desiredLook,cameraLookSpringVelocity,springRate+2,dt)}
   if(collisionShake>0){const impact=collisionShake;camera.position.x+=Math.sin(t*.041)*impact*.16;camera.position.y+=Math.sin(t*.057)*impact*.09;collisionShake=Math.max(0,collisionShake-dt*1.8)}camera.up.set(0,1,0);camera.lookAt(cameraLook);if(cameraMode===3){camera.rotation.order='YXZ';camera.rotation.z=0;}
   const nextFov=camera.fov+(targetFov-camera.fov)*(1-Math.exp(-3.8*dt));if(Math.abs(nextFov-camera.fov)>.025){camera.fov=nextFov;camera.updateProjectionMatrix()}
   if(cameraMode===3){

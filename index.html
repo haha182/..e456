@@ -637,7 +637,7 @@ const smokeMat=new THREE.MeshBasicMaterial({color:0xdce4e6,transparent:true,opac
 for(let i=0;i<34;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(.55+Math.random()*.5,8,7),smokeMat.clone());m.visible=false;scene.add(m);smoke.push({mesh:m,life:0})}
 let speed=0,slip=0,heading=0,score=0,points=0,boost=100,steerAngle=0,manualMode=false,manualGear=1,manualShiftLockUntil=0,paused=true,keys={},last=performance.now(),lastRender=0,carPos=curve.getPointAt(.03),vel=new THREE.Vector3(),driftAngle=0,combo=1,driftTimer=0,cameraMode=0,garageWasPlaying=false,garageMode=false,garagePos=new THREE.Vector3(),garageHeading=0,garageOrbitYaw=0,garageOrbitPitch=.20,garageOrbitRadius=9.5,cameraLook=new THREE.Vector3(),cameraSnap=true,garageTargetPosition=new THREE.Vector3(),garageTargetLook=new THREE.Vector3(),garageCameraReady=false,garageFramingKey='',garageDragging=false,garageLastX=0,garageLastY=0,garageVisibilitySnapshot=[];
 carRoot.position.copy(carPos);carRoot.position.y=0;
-function shiftManualGear(delta){if(!manualMode)return;const next=THREE.MathUtils.clamp(manualGear+delta,1,6),caps=[22,36,51,66,82,100];if(next===manualGear)return;if(delta<0&&Math.abs(speed)>caps[next-1]*.96){toast('DOWNSHIFT BLOCKED · TOO FAST');return}manualGear=next;manualShiftLockUntil=performance.now()+180;audioGear=manualGear;$('manualBtn').textContent='MANUAL '+manualGear;toast('GEAR '+manualGear+' · '+(delta>0?'UPSHIFT':'DOWNSHIFT'))}
+function shiftManualGear(delta){if(!manualMode)return;const next=THREE.MathUtils.clamp(manualGear+delta,1,6),caps=[18,29,42,57,74,96];if(next===manualGear)return;if(delta<0&&Math.abs(speed)>caps[next-1]*.96){toast('DOWNSHIFT BLOCKED · TOO FAST');return}manualGear=next;manualShiftLockUntil=performance.now()+180;audioGear=manualGear;$('manualBtn').textContent='MANUAL '+manualGear;toast('GEAR '+manualGear+' · '+(delta>0?'UPSHIFT':'DOWNSHIFT'))}
 const $=id=>document.getElementById(id);
 function toast(s){$('toast').textContent=s;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',1800)}
 function reset(){carPos=curve.getPointAt(.03);const resetTangent=curve.getTangentAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=Math.atan2(-resetTangent.x,-resetTangent.z);steerAngle=0;driftAngle=0;driftTimer=0;combo=1;keys={};carRoot.position.copy(carPos);carRoot.rotation.set(0,0,0);$('speed').textContent='0';$('combo').textContent='x1';const arc=$('speedArc');if(arc)arc.style.strokeDashoffset='270'}
@@ -928,7 +928,7 @@ let fpScreenLast=0;
 function drawFirstPersonScreen(now){
  if(!fpScreenCtx||now-fpScreenLast<90)return;fpScreenLast=now;
  const ctx=fpScreenCtx,w=512,h=256,gear=manualMode?'M'+manualGear:'D';
- const cap=[22,36,51,66,82,100][manualGear-1],throttleHeld=!!(keys.w||keys.arrowup),rpm=manualMode?Math.min(1,Math.abs(speed)/cap+(throttleHeld?.22:0)):Math.min(1,.12+Math.abs(speed)/100+(throttleHeld?.16:0));
+ const cap=[18,29,42,57,74,96][manualGear-1],throttleHeld=!!(keys.w||keys.arrowup),rpm=manualMode?Math.min(1,Math.abs(speed)/cap+(throttleHeld?.22:0)):Math.min(1,.12+Math.abs(speed)/100+(throttleHeld?.16:0));
  ctx.fillStyle='#06131b';ctx.fillRect(0,0,w,h);
  ctx.strokeStyle='#174452';ctx.lineWidth=3;ctx.strokeRect(8,8,w-16,h-16);
  ctx.fillStyle='#54e9ef';ctx.font='bold 22px Arial';ctx.fillText('HARRISON PERFORMANCE',22,38);
@@ -1138,13 +1138,13 @@ function tick(t){
   const throttle=gas?1:0;
   const speedBefore=speed;
   // Longitudinal drivetrain: progressive throttle, engine drag, service brake and a small reverse gear.
-  if(gas){const ratios=[1,.76,.59,.47,.39,.33],gearCap=[22,36,51,66,82,100];const driveRatio=manualMode?ratios[manualGear-1]:1;if(!manualMode)speed+=(10.5+turbo*.19)*driveRatio*dt;else if(performance.now()>=manualShiftLockUntil){const cap=gearCap[manualGear-1];if(speed<cap)speed=Math.min(cap,speed+(10.5+turbo*.19)*driveRatio*dt);else speed=cap}else speed=Math.max(0,speed-2.2*dt)}
+  if(gas){const ratios=[1,.76,.59,.47,.39,.33],gearCap=[18,29,42,57,74,96];const driveRatio=manualMode?ratios[manualGear-1]:1;if(!manualMode)speed+=(10.5+turbo*.19)*driveRatio*dt;else if(performance.now()>=manualShiftLockUntil){const cap=gearCap[manualGear-1];if(speed<cap)speed=Math.min(cap,speed+(10.5+turbo*.19)*driveRatio*dt);else speed=cap}else speed=Math.max(0,speed-2.2*dt)}
   else if(brake&&speed>0) speed=Math.max(0,speed-43.5*brakePressure*(.82+.18*brakeBias)*dt);
   else if(brake&&speed<=0) speed-=12*dt;
   else speed-=Math.sign(speed)*Math.min(Math.abs(speed),1.45*dt);
   if(nitro&&gas&&boost>0){speed+=7*dt;boost=Math.max(0,boost-24*dt)}
   else boost=Math.min(100,boost+7*dt);
-  speed=THREE.MathUtils.clamp(speed,-12,(manualMode?100:82)+(nitro&&boost>0?10:0));
+  speed=THREE.MathUtils.clamp(speed,-12,(manualMode?96:82)+(nitro&&boost>0?10:0));
 
   // Progressive steering and speed-sensitive yaw, rather than the old handbrake-only sideways push.
   const response=THREE.MathUtils.clamp(Number(localStorage.hcgSteer||3)*1.2,1.2,5.2);
@@ -1300,8 +1300,8 @@ async function initCarAudio(){
  try{
   const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
   carAudioCtx=new AC();carAudioMaster=carAudioCtx.createGain();carAudioMaster.gain.value=0;carAudioMaster.connect(carAudioCtx.destination);
-  const v8Filter=carAudioCtx.createBiquadFilter();v8Filter.type='lowpass';v8Filter.frequency.value=760;v8Filter.connect(carAudioMaster);
-  for(const spec of [{type:'sawtooth',mult:1,gain:.25},{type:'triangle',mult:2,gain:.075},{type:'sine',mult:.5,gain:.31},{type:'triangle',mult:3,gain:.045},{type:'sine',mult:4,gain:.022}]){const osc=carAudioCtx.createOscillator(),gain=carAudioCtx.createGain();osc.type=spec.type;osc.frequency.value=15*spec.mult;gain.gain.value=spec.gain;osc.connect(gain);gain.connect(v8Filter);osc.start();v8Voices.push({osc,gain,mult:spec.mult})}
+  const v8Filter=carAudioCtx.createBiquadFilter();v8Filter.type='lowpass';v8Filter.frequency.value=460;v8Filter.Q.value=.72;v8Filter.connect(carAudioMaster);
+  for(const spec of [{type:'sawtooth',mult:1,gain:.10},{type:'triangle',mult:2,gain:.018},{type:'sine',mult:.5,gain:.20},{type:'triangle',mult:3,gain:.005},{type:'sine',mult:4,gain:.002}]){const osc=carAudioCtx.createOscillator(),gain=carAudioCtx.createGain();osc.type=spec.type;osc.frequency.value=15*spec.mult;gain.gain.value=spec.gain;osc.connect(gain);gain.connect(v8Filter);osc.start();v8Voices.push({osc,gain,mult:spec.mult})}
   exhaustNoiseBuffer=carAudioCtx.createBuffer(1,Math.floor(carAudioCtx.sampleRate*.18),carAudioCtx.sampleRate);const exhaustNoise=exhaustNoiseBuffer.getChannelData(0);for(let i=0;i<exhaustNoise.length;i++)exhaustNoise[i]=(Math.random()*2-1)*Math.pow(1-i/exhaustNoise.length,1.7);
   tireSquealSource=carAudioCtx.createBufferSource();tireSquealSource.buffer=exhaustNoiseBuffer;tireSquealSource.loop=true;tireSquealFilter=carAudioCtx.createBiquadFilter();tireSquealFilter.type='bandpass';tireSquealFilter.frequency.value=1350;tireSquealFilter.Q.value=.65;tireSquealGain=carAudioCtx.createGain();tireSquealGain.gain.value=0;tireSquealSource.connect(tireSquealFilter);tireSquealFilter.connect(tireSquealGain);tireSquealGain.connect(carAudioMaster);tireSquealSource.start();
   await carAudioCtx.resume();
@@ -1321,7 +1321,8 @@ async function initCarAudio(){
    const r=await fetch(url,{mode:'cors',cache:'force-cache'});if(!r.ok)throw Error('Engine sample HTTP '+r.status);
    return carAudioCtx.decodeAudioData(await r.arrayBuffer());
   }));
-  const buffers=[...recordedV8Buffers,...results.filter(x=>x.status==='fulfilled').map(x=>x.value)];
+  const fallbackBuffers=results.filter(x=>x.status==='fulfilled').map(x=>x.value);
+  const buffers=recordedV8Buffers.length?recordedV8Buffers:fallbackBuffers;
   if(!buffers.length){
    // Offline-safe engine fallback: a harmonically rich loop with adjustable RPM.
    const rate=carAudioCtx.sampleRate,length=rate*2,buffer=carAudioCtx.createBuffer(1,length,rate),data=buffer.getChannelData(0);
@@ -1330,8 +1331,8 @@ async function initCarAudio(){
   }
   buffers.forEach((buffer,i)=>{
    const source=carAudioCtx.createBufferSource(),gain=carAudioCtx.createGain();source.buffer=buffer;source.loop=true;
-   source.playbackRate.value=buffers.length===1?.9:.9+i*.045;gain.gain.value=i===0?.22:0;
-   source.connect(gain);gain.connect(carAudioMaster);source.start();engineVoices.push({source,gain});
+   source.playbackRate.value=recordedV8Buffers.length?.72+i*.035:.78+i*.025;gain.gain.value=i===0?.34:0;
+   source.connect(gain);gain.connect(carAudioMaster);source.start();engineVoices.push({source,gain,isRecordedV8:recordedV8Buffers.length>0});
   });
   engineAudioReady=true;if(engineAudioWanted)carAudioMaster.gain.setTargetAtTime(.92,carAudioCtx.currentTime,.3);
   if(results.some(x=>x.status==='rejected'))console.warn('Some engine samples failed; using the available samples.');
@@ -1362,17 +1363,17 @@ function updateCarAudio(throttle,vehicleSpeed,slipAngle=0){
  engineThrottleSmooth+=(throttle-engineThrottleSmooth)*.13;engineSpeedSmooth+=(Math.abs(vehicleSpeed)-engineSpeedSmooth)*.09;
  const speed=Math.abs(vehicleSpeed),now=carAudioCtx.currentTime;
  if(tireSquealGain){const squeal=THREE.MathUtils.clamp((Math.abs(slipAngle)-.13)*1.65,0,1)*THREE.MathUtils.clamp(speed/22,0,1);tireSquealGain.gain.setTargetAtTime(squeal*.20,now,.055);tireSquealFilter.frequency.setTargetAtTime(950+Math.min(900,speed*8),now,.08)}
- const profile=currentCarAudioProfile(),gearLimits=[0,9,18,28,39,51,64,77,92],manualCaps=[22,36,51,66,82,100];
+ const profile=currentCarAudioProfile(),gearLimits=[0,7,14,22,31,42,55,70,86],manualCaps=[18,29,42,57,74,96];
  if(manualMode)audioGear=manualGear;
  else if(audioGear<8&&speed>gearLimits[audioGear]&&now-audioGearShiftAt>.42){audioGear++;audioGearShiftAt=now;triggerExhaustPop(1.8*profile.shift,.015);triggerExhaustPop(1.65*profile.shift,.095);triggerExhaustPop(1.45*profile.shift,.18)}
  else if(audioGear>1&&speed<gearLimits[audioGear-1]*.72&&now-audioGearShiftAt>.55){audioGear--;audioGearShiftAt=now}
  const gearStart=manualMode?0:gearLimits[audioGear-1],gearEnd=manualMode?manualCaps[manualGear-1]:gearLimits[audioGear],gearProgress=THREE.MathUtils.clamp((speed-gearStart)/Math.max(1,gearEnd-gearStart),0,1);
- const rpm=THREE.MathUtils.clamp(.055+gearProgress*.82+engineThrottleSmooth*.22,0,1),index=rpm*(engineVoices.length-1),lo=Math.floor(index),hi=Math.min(engineVoices.length-1,lo+1),blend=index-lo;
- engineVoices.forEach((v,i)=>{const weight=i===lo?1-blend:i===hi?blend:0;v.gain.gain.setTargetAtTime(weight*(.58+engineThrottleSmooth*.72),now,.075);v.source.playbackRate.setTargetAtTime((.78+i*.055)*(1+rpm*.62)*profile.pitch,now,.07)});
+ const rpm=THREE.MathUtils.clamp(.055+gearProgress*.78+engineThrottleSmooth*.18,0,1),index=rpm*(engineVoices.length-1),lo=Math.floor(index),hi=Math.min(engineVoices.length-1,lo+1),blend=index-lo;
+ engineVoices.forEach((v,i)=>{if(v.isRecordedV8){const loaded=i===0,level=loaded?(.20+engineThrottleSmooth*.40):(.10+(1-engineThrottleSmooth)*.20);v.gain.gain.setTargetAtTime(level,now,.12);v.source.playbackRate.setTargetAtTime((loaded?.70:.66)*(1+rpm*.34)*Math.min(profile.pitch,1.02),now,.12)}else{const weight=i===lo?1-blend:i===hi?blend:0;v.gain.gain.setTargetAtTime(weight*(.12+engineThrottleSmooth*.12),now,.11);v.source.playbackRate.setTargetAtTime((.68+i*.032)*(1+rpm*.34)*Math.min(profile.pitch,1.02),now,.11)}});
  const lifted=lastExhaustThrottle>.68&&throttle<.12;
  if(lifted&&speed>10&&now-lastExhaustPopAt>.58){const count=4+Math.floor(Math.random()*3);for(let i=0;i<count;i++)triggerExhaustPop(((i===0?1.55:1.25)+Math.random()*.3)*profile.pop,i*.082);lastExhaustPopAt=now+.36;lastExhaustCrackleAt=now}
  else if(throttle<.08&&speed>16&&rpm>.32&&now-lastExhaustPopAt>.52&&now-lastExhaustCrackleAt>.25&&Math.random()<.24){triggerExhaustPop((.9+Math.random()*.42)*profile.pop);lastExhaustPopAt=now;lastExhaustCrackleAt=now}
- const v8Base=(60+rpm*373)*(profile.pitch*.96);v8Voices.forEach((v,i)=>{const harmonicGain=(profile.harmonics[i]??.025)*(i===0?1.0:.82+engineThrottleSmooth*.5);v.osc.frequency.setTargetAtTime(v8Base*v.mult,now,.055);v.gain.gain.setTargetAtTime(harmonicGain,now,.09)});
+ const v8Base=(38+rpm*205)*Math.min(profile.pitch,1.02);v8Voices.forEach((v,i)=>{const harmonicGain=(profile.harmonics[i]??.025)*(i===0?.38:.22)*(i===0?1.0:.82+engineThrottleSmooth*.28);v.osc.frequency.setTargetAtTime(v8Base*v.mult,now,.10);v.gain.gain.setTargetAtTime(harmonicGain,now,.14)});
  lastExhaustThrottle=throttle;
 }
 const radioStations={

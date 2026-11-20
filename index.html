@@ -63,7 +63,14 @@ body>canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;touch-action
 #garage{z-index:6}#menu{z-index:8}
 #loadingScreen{z-index:20}
 #gameError{position:fixed;z-index:30;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,90vw);padding:20px;background:#160d12;border:1px solid #ff7585;border-radius:12px;color:#fff;font:14px/1.5 Arial,sans-serif;display:none;white-space:pre-wrap;box-shadow:0 15px 60px #000c}
-\n/* Spotify-inspired compact in-car radio */\n#carRadio{right:16px;top:118px;width:318px;padding:14px 15px 12px;background:linear-gradient(145deg,#171b19f5,#080b0af5);border:1px solid #ffffff20;border-radius:17px;box-shadow:0 18px 48px #000b,0 0 0 1px #ffffff08 inset;color:#f5f7f5;font:12px/1.35 Arial,sans-serif;backdrop-filter:blur(16px)}\n#carRadio .radio-head{margin-bottom:13px;color:#1ed760;font-size:11px;letter-spacing:1.8px}#carRadio .radio-head span{display:flex;align-items:center;gap:8px}#carRadio .radio-dot{width:8px;height:8px;border-radius:50%;background:#1ed760;box-shadow:0 0 12px #1ed760;display:inline-block}#carRadio #radioClose{color:#b9c0bb;background:#ffffff10;border:0;border-radius:50%;width:25px;height:25px;padding:0!important;font-size:17px!important}\n#carRadio .spotify-now{display:grid;grid-template-columns:66px minmax(80px,1fr) 104px;align-items:center;gap:11px}#radioArt{width:66px;height:66px;object-fit:cover;border-radius:8px;box-shadow:0 5px 15px #0008}#carRadio .spotify-kicker{font-size:8px;letter-spacing:1.2px;color:#1ed760;font-weight:800;margin-bottom:5px}#carRadio #radioTrackTitle{font-size:13px;line-height:1.2;font-weight:800;color:#fff;max-height:32px;overflow:hidden}#carRadio .spotify-artist{font-size:10px;color:#a9b0aa;margin-top:5px}#ytPlayer{width:104px;height:59px;background:#000;border-radius:7px;overflow:hidden}#ytPlayer iframe{width:100%;height:100%;border:0}\n#carRadio .radio-status{font-size:9px;letter-spacing:.6px;color:#a5ada6;margin:11px 0 8px}#carRadio .radio-controls{display:flex;align-items:center;gap:7px;margin-top:0}#carRadio button{margin:0;padding:7px 10px;min-width:32px;border:1px solid #ffffff1c;border-radius:20px;background:#ffffff0d;color:#f5f7f5;font-size:10px;font-weight:700}#carRadio button.primary{width:35px;height:35px;min-width:35px;border:0;border-radius:50%;background:#1ed760;color:#061108;font-size:15px;padding:0}#carRadio input{min-width:0;width:72px;accent-color:#1ed760}#carRadio .radio-volume{font-size:8px;color:#a5ada6;letter-spacing:1px}#carRadio .spotify-footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:9px;border-top:1px solid #ffffff14;color:#89928b;font-size:8px;letter-spacing:1px}#carRadio .spotify-equalizer{color:#1ed760;font-size:12px;letter-spacing:1px}\n@media(max-width:520px){#carRadio{top:112px;right:8px;width:min(318px,calc(100vw - 16px));padding:11px 12px}#carRadio .spotify-now{grid-template-columns:58px minmax(70px,1fr) 92px;gap:9px}#radioArt{width:58px;height:58px}#ytPlayer{width:92px;height:52px}#carRadio #radioTrackTitle{font-size:12px}#carRadio input{width:62px}}\n</style>
+
+/* Spotify-inspired compact in-car radio */
+#carRadio{right:16px;top:118px;width:318px;padding:14px 15px 12px;background:linear-gradient(145deg,#171b19f5,#080b0af5);border:1px solid #ffffff20;border-radius:17px;box-shadow:0 18px 48px #000b,0 0 0 1px #ffffff08 inset;color:#f5f7f5;font:12px/1.35 Arial,sans-serif;backdrop-filter:blur(16px)}
+#carRadio .radio-head{margin-bottom:13px;color:#1ed760;font-size:11px;letter-spacing:1.8px}#carRadio .radio-head span{display:flex;align-items:center;gap:8px}#carRadio .radio-dot{width:8px;height:8px;border-radius:50%;background:#1ed760;box-shadow:0 0 12px #1ed760;display:inline-block}#carRadio #radioClose{color:#b9c0bb;background:#ffffff10;border:0;border-radius:50%;width:25px;height:25px;padding:0!important;font-size:17px!important}
+#carRadio .spotify-now{display:grid;grid-template-columns:66px minmax(80px,1fr) 104px;align-items:center;gap:11px}#radioArt{width:66px;height:66px;object-fit:cover;border-radius:8px;box-shadow:0 5px 15px #0008}#carRadio .spotify-kicker{font-size:8px;letter-spacing:1.2px;color:#1ed760;font-weight:800;margin-bottom:5px}#carRadio #radioTrackTitle{font-size:13px;line-height:1.2;font-weight:800;color:#fff;max-height:32px;overflow:hidden}#carRadio .spotify-artist{font-size:10px;color:#a9b0aa;margin-top:5px}#ytPlayer{width:104px;height:59px;background:#000;border-radius:7px;overflow:hidden}#ytPlayer iframe{width:100%;height:100%;border:0}
+#carRadio .radio-status{font-size:9px;letter-spacing:.6px;color:#a5ada6;margin:11px 0 8px}#carRadio .radio-controls{display:flex;align-items:center;gap:7px;margin-top:0}#carRadio button{margin:0;padding:7px 10px;min-width:32px;border:1px solid #ffffff1c;border-radius:20px;background:#ffffff0d;color:#f5f7f5;font-size:10px;font-weight:700}#carRadio button.primary{width:35px;height:35px;min-width:35px;border:0;border-radius:50%;background:#1ed760;color:#061108;font-size:15px;padding:0}#carRadio input{min-width:0;width:72px;accent-color:#1ed760}#carRadio .radio-volume{font-size:8px;color:#a5ada6;letter-spacing:1px}#carRadio .spotify-footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:9px;border-top:1px solid #ffffff14;color:#89928b;font-size:8px;letter-spacing:1px}#carRadio .spotify-equalizer{color:#1ed760;font-size:12px;letter-spacing:1px}
+@media(max-width:520px){#carRadio{top:112px;right:8px;width:min(318px,calc(100vw - 16px));padding:11px 12px}#carRadio .spotify-now{grid-template-columns:58px minmax(70px,1fr) 92px;gap:9px}#radioArt{width:58px;height:58px}#ytPlayer{width:92px;height:52px}#carRadio #radioTrackTitle{font-size:12px}#carRadio input{width:62px}}
+</style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
@@ -124,6 +131,9 @@ ribbon(18,.02,roadMat);ribbon(1.1,.045,curbRed);
 function pathTube(offset,radius,material){const points=[];for(let i=0;i<=360;i++){const t=i/360,p=curve.getPointAt(t),v=curve.getTangentAt(t),s=new THREE.Vector3(-v.z,0,v.x).normalize();points.push(new THREE.Vector3(p.x+s.x*offset,.12,p.z+s.z*offset))}const mesh=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),500,radius,6,true),material);scene.add(mesh)}
 pathTube(9.2,.18,curbWhite);pathTube(-9.2,.18,curbWhite);
 const dashGeo=new THREE.BoxGeometry(.22,.035,3.2);for(let i=0;i<100;i++){const p=curve.getPointAt(i/100),t=curve.getTangentAt(i/100),m=new THREE.Mesh(dashGeo,lineMat);m.position.set(p.x,.09,p.z);m.rotation.y=Math.atan2(t.x,t.z);scene.add(m)}
+// Collision registry must exist before any road, building or prop registers a collider.
+const worldColliders=[];
+function addWorldCollider(x,z,halfX,halfZ){worldColliders.push({x,z,halfX,halfZ})}
 // OPEN WORLD EXTENSION: connected mountain, forest and industrial roads beyond the original circuit.
 const openRoadMat=new THREE.MeshStandardMaterial({color:0x20262c,roughness:.96,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}),roadEdgeMat=mat(0xb9b8aa,.8),roadLineMat=mat(0xd8d3bd,.82);
 function openRoad(points,width=13){
@@ -163,7 +173,8 @@ const yard=new THREE.Group();yard.position.set(330,0,-95);scene.add(yard);
 const yardMat=mat(0x303a43,.9,.2);
 for(let i=0;i<5;i++){addWorldCollider(330+(i-2)*20,-95,9.2,3.7);const container=new THREE.Mesh(new THREE.BoxGeometry(18,5,7),i%2?mat(0x34464c,.85,.25):yardMat);container.position.set((i-2)*20,2.5,0);yard.add(container);for(let z=-3;z<=3;z+=1.5){const rib=new THREE.Mesh(new THREE.BoxGeometry(17.8,.07,.07),yardMat);rib.position.set((i-2)*20,2.5,z);yard.add(rib)}}
 
-\n// EXTENDED OPEN WORLD: two additional connected exploration districts.
+
+// EXTENDED OPEN WORLD: two additional connected exploration districts.
 // The coastal freight loop joins the industrial road at both ends.
 const coastRoute=openRoad([[155,-35],[190,-95],[235,-155],[300,-215],[380,-245],[445,-210],[470,-135],[450,-75],[405,-48],[350,-75]],14);
 // The western backroad leaves the forest route, winds through a small town, and rejoins it.
@@ -176,7 +187,8 @@ for(const route of [coastRoute,westRoute]){
 // Coastal freight terminal: warehouse, loading bays, cranes and container stacks.
 const port=new THREE.Group();port.position.set(420,0,-90);scene.add(port);
 const portWall=mat(0x39464c,.88,.22),portRoof=mat(0x252f35,.8,.3),portGlow=new THREE.MeshBasicMaterial({color:0xffc76b});
-addWorldCollider(420,-115,23,14);for(let i=0;i<4;i++)addWorldCollider(393+i*18,-72,8.6,3.8);\nconst warehouse=new THREE.Mesh(new THREE.BoxGeometry(46,12,28),portWall);warehouse.position.set(0,6,-25);port.add(warehouse);
+addWorldCollider(420,-115,23,14);for(let i=0;i<4;i++)addWorldCollider(393+i*18,-72,8.6,3.8);
+const warehouse=new THREE.Mesh(new THREE.BoxGeometry(46,12,28),portWall);warehouse.position.set(0,6,-25);port.add(warehouse);
 const warehouseRoof=new THREE.Mesh(new THREE.BoxGeometry(48,.8,30),portRoof);warehouseRoof.position.set(0,12.3,-25);port.add(warehouseRoof);
 for(let x=-17;x<=17;x+=11){const door=new THREE.Mesh(new THREE.BoxGeometry(7,7,.18),portRoof);door.position.set(x,4.1,-10.8);port.add(door);const lamp=new THREE.Mesh(new THREE.BoxGeometry(1.5,.18,.2),portGlow);lamp.position.set(x,8.2,-10.55);port.add(lamp)}
 for(let i=0;i<4;i++){const box=new THREE.Mesh(new THREE.BoxGeometry(17,4.8,7),i%2?mat(0x485b60,.84,.18):mat(0x6b4538,.86,.15));box.position.set(-27+i*18,2.4,18);port.add(box)}
@@ -184,7 +196,8 @@ for(const x of [-34,34]){const leg=new THREE.Mesh(new THREE.BoxGeometry(.8,19,.8
 const craneBeam=new THREE.Mesh(new THREE.BoxGeometry(70,.9,.9),portRoof);craneBeam.position.set(0,19,4);port.add(craneBeam);
 // Western roadside service stop.
 const serviceStop=new THREE.Group();serviceStop.position.set(-360,0,-85);scene.add(serviceStop);
-addWorldCollider(-360,-85,11.2,7.7);\nconst shop=new THREE.Mesh(new THREE.BoxGeometry(22,6,15),mat(0x465158,.9,.08));shop.position.y=3;serviceStop.add(shop);
+addWorldCollider(-360,-85,11.2,7.7);
+const shop=new THREE.Mesh(new THREE.BoxGeometry(22,6,15),mat(0x465158,.9,.08));shop.position.y=3;serviceStop.add(shop);
 const canopy=new THREE.Mesh(new THREE.BoxGeometry(27,.65,18),portRoof);canopy.position.set(0,6.4,1);serviceStop.add(canopy);
 for(const x of [-8,0,8]){addWorldCollider(-360+x,-72, .8,.8);const pump=new THREE.Mesh(new THREE.BoxGeometry(1.3,2.4,1.1),mat(0xc7c9c2,.45,.3));pump.position.set(x,1.2,13);serviceStop.add(pump);const screen=new THREE.Mesh(new THREE.BoxGeometry(.7,.45,.08),portGlow);screen.position.set(x,1.8,13.58);serviceStop.add(screen)}
 const signPost=new THREE.Mesh(new THREE.BoxGeometry(.35,8,.35),portRoof);signPost.position.set(15,4,0);serviceStop.add(signPost);
@@ -194,8 +207,6 @@ const signBoard=new THREE.Mesh(new THREE.BoxGeometry(7,2.8,.3),portGlow);signBoa
 // Environment: pine-like trees and distant hills
 const trunkMat=mat(0x201d20),leafMat=mat(0x101d1b),leaf2=mat(0x172725);
 // SOLID WORLD COLLISIONS: expanded-AABB car collision with axis sliding.
-const worldColliders=[];
-function addWorldCollider(x,z,halfX,halfZ){worldColliders.push({x,z,halfX,halfZ})}
 function resolveWorldCollision(previous,next){
  const carHalfX=1.15,carHalfZ=2.25;
  const hits=(p)=>worldColliders.some(o=>Math.abs(p.x-o.x)<o.halfX+carHalfX&&Math.abs(p.z-o.z)<o.halfZ+carHalfZ);
@@ -932,7 +943,7 @@ renderer.domElement.addEventListener('pointerdown',e=>{if(cameraMode!==3||garage
 renderer.domElement.addEventListener('pointermove',e=>{if(!cockpitPointerDown||cameraMode!==3)return;const dx=e.clientX-cockpitPointerX,dy=e.clientY-cockpitPointerY;cockpitPointerX=e.clientX;cockpitPointerY=e.clientY;cockpitLookYaw=THREE.MathUtils.clamp(cockpitLookYaw-dx*.0035,-1.32,1.32);cockpitLookPitch=THREE.MathUtils.clamp(cockpitLookPitch-dy*.003,-.48,.48)});
 renderer.domElement.addEventListener('pointerup',()=>cockpitPointerDown=false);renderer.domElement.addEventListener('pointercancel',()=>cockpitPointerDown=false);
 $('cameraBtn').onclick=changeCamera;$('garageBtn').onclick=openGarage;$('carStyle').value=localStorage.hcgStyle||'spectral_gt';applyStyle();$('carStyle').addEventListener('change',()=>{localStorage.hcgStyle=$('carStyle').value;applyStyle()});applyTune();if(localStorage.hcgPower)$('turbo').value=localStorage.hcgPower;setGarageValues();updateTuneLabels();for(const id of ['bodyKit','spoilerStyle','rimFinish','neonColor','windowTint'])$(id).addEventListener('input',()=>{localStorage['hcg_'+id]=$(id).value;applyCustomizations()});for(const id of ['bodyKit','spoilerStyle','rimFinish'])$(id).addEventListener('change',()=>{localStorage['hcg_'+id]=$(id).value;applyCustomizations()});if(localStorage.hcgPaint){$('paint').value=localStorage.hcgPaint;paintMat.color.set(localStorage.hcgPaint);applyTune()}
-const controlKeys=new Set(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' ','shift']);addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=true;e.preventDefault()}if(k==='c')changeCamera();if(k==='r')reset();if(e.key==='Escape'){paused=true;$('menu').style.display='grid'}});addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=false;e.preventDefault()}});addEventListener('blur',()=>{for(const k of controlKeys)keys[k]=false});
+const controlKeys=new Set(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' ','shift']);addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=true;e.preventDefault()}if(k==='c')changeCamera();if(k==='r')reset();if(e.key==='Escape'){paused=true;stopCarAudio();stopRadio();$('menu').style.display='grid';$('ui').style.display='none';$('help').style.display='none';$('touch').style.display='none';$('driveActions').style.display='none';$('carRadio').style.display='none'}});addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=false;e.preventDefault()}});addEventListener('blur',()=>{for(const k of controlKeys)keys[k]=false});
 function bind(id,k){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;el.setPointerCapture(e.pointerId)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,()=>keys[k]=false))}
 bind('left','a');bind('right','d');bind('gas','w');bind('brake','s');bind('hand',' ');bind('boost','shift');
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});

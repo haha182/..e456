@@ -233,6 +233,7 @@ body>canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;touch-action
 <div id="driveActions" style="position:fixed;right:12px;top:72px;z-index:4;pointer-events:auto"><button id="cameraBtn">CAMERA</button><button id="manualBtn">AUTO</button><button id="radioBtn">RADIO</button><button id="garageBtn">GARAGE</button></div>
 <div id="touch"><button id="left" aria-label="Steer left">◀</button><button id="right" aria-label="Steer right">▶</button><button id="gas" aria-label="Accelerate">▲</button><button id="brake" aria-label="Brake and reverse">▼</button><button id="hand" aria-label="Handbrake">DRIFT</button><button id="boost" aria-label="Nitro boost">BOOST</button></div>
 <div id="toast"></div><div id="carRadio"><div class="radio-head"><span><i class="radio-dot"></i> <b id="radioStationTitle">DRAKE RADIO</b></span><button id="radioClose" aria-label="Close radio">×</button></div><select id="radioStation" aria-label="Choose radio station"><option value="drake">Drake Radio</option><option value="rickross">Rick Ross Radio</option><option value="jcole">J. Cole Radio</option><option value="yeat">Yeat Radio</option></select><div class="spotify-now"><img id="radioArt" alt="Current Drake track artwork" src="https://i.ytimg.com/vi/xpVfcZ0ZcFM/hqdefault.jpg"><div class="spotify-track"><div class="spotify-kicker">NOW PLAYING</div><div id="radioTrackTitle">God’s Plan</div><div class="spotify-artist" id="radioArtistName">Drake</div></div><div id="ytPlayer" aria-label="YouTube music video player"></div></div><div class="radio-status" id="radioStatus">DRAKE MIX · READY TO PLAY</div><div class="radio-controls"><button id="radioToggle" class="primary">▶</button><button id="radioPrev" aria-label="Previous song">|◀</button><button id="radioNext" aria-label="Shuffle next song">▶|</button><span class="radio-volume">VOL</span><input id="radioVolume" type="range" min="0" max="100" value="35" aria-label="Radio volume"></div><div class="spotify-footer"><span class="spotify-equalizer">▂ ▅ ▃ ▆ ▄</span><span>SHUFFLE ON</span><span>YOUTUBE</span></div></div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
 import { Track as DriveGameTrack, RAIL_D as DRIVE_GAME_RAIL_D } from './drivegame/track.js';
@@ -522,7 +523,7 @@ let speed=0,slip=0,heading=0,score=0,points=0,boost=100,steerAngle=0,manualMode=
 carRoot.position.copy(carPos);carRoot.position.y=carPos.y;
 function shiftManualGear(delta){if(!manualMode)return;const next=THREE.MathUtils.clamp(manualGear+delta,0,6),caps=[18,29,42,57,74,96];if(next===manualGear)return;if(delta<0&&next>0&&Math.abs(speed)>caps[next-1]*.96){toast('DOWNSHIFT BLOCKED · TOO FAST');return}manualGear=next;manualShiftLockUntil=performance.now()+180;audioGear=manualGear;audioShiftDip=1;$('manualBtn').textContent='MANUAL '+(manualGear===0?'N':manualGear);toast(manualGear===0?'NEUTRAL · ENGINE DISCONNECTED':'GEAR '+manualGear+' · '+(delta>0?'UPSHIFT':'DOWNSHIFT'))}
 function toast(s){$('toast').textContent=s;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',1800)}
-function reset(){carPos=curve.getPointAt(.03);const resetTangent=curve.getTangentAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=Math.atan2(-resetTangent.x,-resetTangent.z);steerAngle=0;driftAngle=0;driftTimer=0;combo=1;keys={};carRoot.position.copy(carPos);carRoot.rotation.set(0,heading,0);$('speed').textContent='0';$('combo').textContent='x1';const arc=$('speedArc');if(arc)arc.style.strokeDashoffset='270'}
+function reset(){carPos=curve.getPointAt(.03);const resetTangent=curve.getTangentAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=Math.atan2(-resetTangent.x,-resetTangent.z);steerAngle=0;driftAngle=0;driftTimer=0;combo=1;keys={};carRoot.position.copy(carPos);carRoot.rotation.set(0,heading,0);resetEndlessRoads(carPos,heading);$('speed').textContent='0';$('combo').textContent='x1';const arc=$('speedArc');if(arc)arc.style.strokeDashoffset='270'}
 function changeCamera(){cameraMode=cameraMode===3?0:3;cameraSnap=true;if(cameraMode===3){cockpitLookYaw=0;cockpitLookPitch=0}cockpitPointerDown=false;toast(cameraMode===3?'First-person cockpit — drag mouse to look':'Close chase camera');updateFirstPersonCockpit()}
 const bmwDetails=new THREE.Group();carRoot.add(bmwDetails);
 const kidneyMat=mat(0x080d12,.38,.72),kidneyTrim=mat(0x9ba6aa,.3,.8);
@@ -1058,6 +1059,98 @@ function applyTune(){
 function tunedBrakeForce(){return valueTune('brakePressure')/100}
 function valueTune(id){const defaults={brakePressure:100,brakeBalance:70,turbo:14.3};return Number(localStorage['hcg_'+id]??defaults[id])}
 
+
+// Streaming procedural road extension. The existing Nürburgring and all existing
+// scenery remain intact; these connected road chunks are generated ahead of the car.
+const endlessRoadChunks=[];
+const endlessRoadMaterials={
+ asphalt:new THREE.MeshStandardMaterial({color:0x292d31,roughness:.96,metalness:0}),
+ line:new THREE.MeshBasicMaterial({color:0xe5e2d9}),
+ rail:new THREE.MeshStandardMaterial({color:0x9aa4aa,metalness:.72,roughness:.38}),
+ trunk:new THREE.MeshStandardMaterial({color:0x40372c,roughness:1}),
+ leaves:new THREE.MeshStandardMaterial({color:0x183323,roughness:1})
+};
+let endlessRoadEnd=null,endlessRoadHeading=0,endlessRoadTurn=0,endlessRoadActive=false;
+function makeEndlessRoadChunk(start,initialHeading){
+ const group=new THREE.Group(),points=[],length=170,steps=12;
+ let x=start.x,z=start.z,y=start.y,angle=initialHeading;
+ const turn=(Math.random()-.5)*.22;
+ for(let i=0;i<=steps;i++){
+  if(i>0){angle+=turn/steps;x+=-Math.sin(angle)*(length/steps);z+=-Math.cos(angle)*(length/steps)}
+  points.push(new THREE.Vector3(x,y,z));
+ }
+ const positions=[],indices=[],uv=[];
+ for(let i=0;i<points.length;i++){
+  const a=points[Math.max(0,i-1)],b=points[Math.min(points.length-1,i+1)];
+  const dx=b.x-a.x,dz=b.z-a.z,inv=1/Math.max(.001,Math.hypot(dx,dz));
+  const rx=dz*inv,rz=-dx*inv;
+  for(const side of [-1,1]){
+   positions.push(points[i].x+rx*side*8,points[i].y+.025,points[i].z+rz*side*8);
+   uv.push(side===-1?0:1,i/2);
+  }
+  if(i<points.length-1){const k=i*2;indices.push(k,k+1,k+2,k+1,k+3,k+2)}
+ }
+ const geo=new THREE.BufferGeometry();
+ geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+ geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+ geo.setIndex(indices);geo.computeVertexNormals();
+ const road=new THREE.Mesh(geo,endlessRoadMaterials.asphalt);road.receiveShadow=true;group.add(road);
+ // Continuous edge markings.
+ for(const side of [-1,1]){
+  const linePts=[];
+  for(let i=0;i<points.length;i++){
+   const a=points[Math.max(0,i-1)],b=points[Math.min(points.length-1,i+1)];
+   const dx=b.x-a.x,dz=b.z-a.z,inv=1/Math.max(.001,Math.hypot(dx,dz));
+   const rx=dz*inv,rz=-dx*inv;
+   linePts.push(new THREE.Vector3(points[i].x+rx*side*7.65,points[i].y+.06,points[i].z+rz*side*7.65));
+  }
+  const mark=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(linePts),steps*2,.075,5,false),endlessRoadMaterials.line);group.add(mark);
+  // Metal guardrail segments and supports, matching the existing track style.
+  for(let i=0;i<steps;i+=2){
+   const p=points[i],q=points[i+2],mid=p.clone().add(q).multiplyScalar(.5);
+   const dx=q.x-p.x,dz=q.z-p.z,yaw=Math.atan2(-dx,-dz);
+   const rail=new THREE.Mesh(new THREE.BoxGeometry(29,.48,.16),endlessRoadMaterials.rail);
+   rail.position.set(mid.x,mid.y+.72,mid.z);rail.rotation.y=yaw;group.add(rail);
+   for(const j of [0,1,2]){
+    const at=p.clone().lerp(q,j/2);
+    const post=new THREE.Mesh(new THREE.BoxGeometry(.16,.72,.18),endlessRoadMaterials.rail);
+    post.position.set(at.x+Math.cos(angle)*side*8,at.y+.34,at.z-Math.sin(angle)*side*8);group.add(post);
+   }
+  }
+ }
+ // Sparse roadside trees provide depth without filling the scene with heavy assets.
+ for(let i=1;i<steps;i+=3){
+  const p=points[i],a=points[i-1],b=points[i+1],dx=b.x-a.x,dz=b.z-a.z,inv=1/Math.max(.001,Math.hypot(dx,dz));
+  const rx=dz*inv,rz=-dx*inv;
+  for(const side of [-1,1]){
+   const tx=p.x+rx*side*(19+Math.random()*9),tz=p.z+rz*side*(19+Math.random()*9);
+   const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.22,.34,4,6),endlessRoadMaterials.trunk);
+   trunk.position.set(tx,p.y+2,tz);group.add(trunk);
+   const crown=new THREE.Mesh(new THREE.ConeGeometry(2.4,7,7),endlessRoadMaterials.leaves);
+   crown.position.set(tx,p.y+6.2,tz);group.add(crown);
+  }
+ }
+ scene.add(group);
+ return {group,start:points[0].clone(),end:points[points.length-1].clone(),heading:angle};
+}
+function resetEndlessRoads(position,heading){
+ for(const chunk of endlessRoadChunks)scene.remove(chunk.group);
+ endlessRoadChunks.length=0;endlessRoadEnd=position.clone();endlessRoadHeading=heading;endlessRoadActive=true;
+ for(let i=0;i<6;i++)appendEndlessRoad();
+}
+function appendEndlessRoad(){
+ if(!endlessRoadActive||!endlessRoadEnd)return;
+ const chunk=makeEndlessRoadChunk(endlessRoadEnd,endlessRoadHeading);
+ endlessRoadChunks.push(chunk);endlessRoadEnd.copy(chunk.end);endlessRoadHeading=chunk.heading;
+ while(endlessRoadChunks.length>9){const old=endlessRoadChunks.shift();scene.remove(old.group);old.group.traverse(o=>{if(o.geometry)o.geometry.dispose()})}
+}
+function updateEndlessRoads(position,heading){
+ if(!endlessRoadActive||!endlessRoadEnd)return;
+ const dx=position.x-endlessRoadEnd.x,dz=position.z-endlessRoadEnd.z;
+ if(dx*dx+dz*dz>650*650){resetEndlessRoads(position,heading);return}
+ if(dx*dx+dz*dz<330*330)appendEndlessRoad();
+}
+
 function tick(t){
  requestAnimationFrame(tick);
  const frameInterval=garageMode?(isChromeOS?1000/30:1000/60):(paused?1000/30:(isChromeOS?1000/30:(mobileQuality?1000/40:1000/60)));if(t-lastRender<frameInterval)return;lastRender=t;
@@ -1221,6 +1314,8 @@ function tick(t){
  }
  if(spectralMixer&&!paused)spectralMixer.update(dt);
  const flameLeft=exhaustFlameUntil-performance.now();exhaustFlames.forEach((flame,i)=>{flame.visible=flameLeft>0;if(flameLeft>0){const flicker=.82+Math.sin(t*.11+i*2.4)*.18;flame.scale.set(flicker,flicker,flicker*(.8+Math.min(flameLeft/190,.6)))}});const hoodFlame=extraCarModels.gti_2010_hood_dump.group.userData.hoodFlame;if(hoodFlame){const left=(hoodFlame.userData.until||0)-performance.now();hoodFlame.visible=left>0;if(left>0){const flicker=.85+Math.sin(t*.17)*.15;hoodFlame.scale.set(flicker,flicker,flicker)}}
+ updateEndlessRoads(carPos,heading);
+ ground.position.x=carPos.x;ground.position.z=carPos.z;
  renderer.render(scene,camera);
 }
 requestAnimationFrame(tick);

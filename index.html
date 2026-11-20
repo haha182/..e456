@@ -95,7 +95,7 @@ addEventListener('error',e=>{console.error(e.error||e.message);showGameError('A 
 addEventListener('unhandledrejection',e=>{console.error(e.reason);showGameError('A game resource failed to load. Check your connection and reload.')});
 const loadingScreen=document.getElementById('loadingScreen');
 function finishLoading(){if(loadingScreen)loadingScreen.classList.add('done')}
-setTimeout(finishLoading,6500);
+setTimeout(finishLoading,15000); // Failsafe only; normal completion follows the car load result.
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,115,390);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,700);
 const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power',precision:'mediump'});renderer.setPixelRatio(Math.min(devicePixelRatio,1));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;document.body.appendChild(renderer.domElement);
@@ -310,12 +310,12 @@ for(const x of [-1.08,1.08])for(const z of [-1.48,1.48]){
 const lightMat=new THREE.MeshBasicMaterial({color:0xfff3d0});
 const smokeMat=new THREE.MeshBasicMaterial({color:0xdce4e6,transparent:true,opacity:.32,depthWrite:false});const smoke=[];
 for(let i=0;i<34;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(.55+Math.random()*.5,8,7),smokeMat.clone());m.visible=false;scene.add(m);smoke.push({mesh:m,life:0})}
-let speed=0,slip=0,heading=0,score=0,points=0,boost=100,steerAngle=0,paused=true,keys={},last=performance.now(),carPos=curve.getPointAt(.03),vel=new THREE.Vector3(),driftAngle=0,combo=1,driftTimer=0,cameraMode=0,garageWasPlaying=false,garageMode=false,garagePos=new THREE.Vector3(),garageHeading=0,garageOrbitYaw=0,garageOrbitPitch=.20,garageOrbitRadius=9.5,cameraLook=new THREE.Vector3(),garageDragging=false,garageLastX=0,garageLastY=0;
+let speed=0,slip=0,heading=0,score=0,points=0,boost=100,steerAngle=0,paused=true,keys={},last=performance.now(),lastRender=0,carPos=curve.getPointAt(.03),vel=new THREE.Vector3(),driftAngle=0,combo=1,driftTimer=0,cameraMode=0,garageWasPlaying=false,garageMode=false,garagePos=new THREE.Vector3(),garageHeading=0,garageOrbitYaw=0,garageOrbitPitch=.20,garageOrbitRadius=9.5,cameraLook=new THREE.Vector3(),garageDragging=false,garageLastX=0,garageLastY=0;
 carRoot.position.copy(carPos);carRoot.position.y=0;
 const $=id=>document.getElementById(id);
 function toast(s){$('toast').textContent=s;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',1800)}
 function reset(){carPos=curve.getPointAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=0;carRoot.position.copy(carPos);carRoot.rotation.y=0}
-function changeCamera(){cameraMode=(cameraMode+1)%4;toast(["Chase camera","Close camera","High camera","Low interior view"][cameraMode])}
+function changeCamera(){cameraMode=(cameraMode+1)%4;toast(["Chase camera","Close camera","High camera","Cockpit view"][cameraMode])}
 const bmwDetails=new THREE.Group();carRoot.add(bmwDetails);
 const kidneyMat=mat(0x080d12,.38,.72),kidneyTrim=mat(0x9ba6aa,.3,.8);
 for(const x of [-.235,.235]){const surround=new THREE.Mesh(new THREE.BoxGeometry(.34,.29,.055),kidneyTrim);surround.position.set(x,.73,-2.325);bmwDetails.add(surround);const kidney=new THREE.Mesh(new THREE.BoxGeometry(.285,.245,.06),kidneyMat);kidney.position.set(x,.73,-2.36);bmwDetails.add(kidney);for(let j=0;j<5;j++){const slat=new THREE.Mesh(new THREE.BoxGeometry(.018,.21,.025),kidneyTrim);slat.position.set(x-.1+j*.05,.73,-2.395);bmwDetails.add(slat)}}
@@ -466,12 +466,12 @@ spectralLoader.load('https://raw.githubusercontent.com/JaronKBragg7337/spectral-
  const longest=Math.max(dims.x,dims.z);if(!longest)throw new Error('Spectral GT model has no measurable geometry');
  model.scale.setScalar(4.65/longest);model.updateMatrixWorld(true);bounds.setFromObject(model);const center=bounds.getCenter(new THREE.Vector3());model.position.x-=center.x;model.position.z-=center.z;model.position.y-=bounds.min.y;
  const spectralWheels=[];
- model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(Array.isArray(o.material))o.material=o.material.map(m=>m.clone());else if(o.material)o.material=o.material.clone();}if(/wheel|tire/i.test(o.name)&&!(/wheel|tire/i.test(o.parent?.name||''))){spectralWheels.push({node:o,position:o.position.clone(),rotation:o.rotation.clone()})}});
+ model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(Array.isArray(o.material))o.material=o.material.map(m=>m.clone());else if(o.material)o.material=o.material.clone();}if(/wheel|tire/i.test(o.name)&&!(/wheel|tire/i.test(o.parent?.name||''))){spectralWheels.push({node:o,position:o.position.clone(),worldPosition:o.getWorldPosition(new THREE.Vector3()),rotation:o.rotation.clone()})}});
  spectralModel.add(model);spectralModel.userData.wheels=spectralWheels;spectralModel.userData.paintMaterials=[];model.traverse(o=>{if(!o.isMesh)return;const materials=Array.isArray(o.material)?o.material:[o.material];for(const m of materials){if(!m||!m.color)continue;const n=(m.name+' '+o.name).toLowerCase();if(/paint|body|exterior|shell|fender|hood|bumper|door/.test(n)&&!/glass|window|rubber|tire|wheel|trim/.test(n))spectralModel.userData.paintMaterials.push(m)}});
  spectralClips=gltf.animations||[];spectralMixer=spectralClips.length?new THREE.AnimationMixer(model):null;
  const steeringClip=spectralClips.find(a=>a.name.toLowerCase().includes('steering'));if(steeringClip&&spectralMixer)spectralMixer.clipAction(steeringClip).play();
- spectralReady=true;applyStyle('spectral_gt');applyTune();if($('garageStatus'))$('garageStatus').textContent='SPECTRAL GT RS READY';toast('Spectral GT RS loaded');
-},undefined,error=>{console.error('Spectral GT RS load failed:',error);if($('garageStatus'))$('garageStatus').textContent='CAR MODEL FAILED TO LOAD — RELOAD TO RETRY';toast('Spectral GT download failed — check connection');});
+ spectralReady=true;applyStyle('spectral_gt');applyTune();finishLoading();if($('garageStatus'))$('garageStatus').textContent='SPECTRAL GT RS READY';toast('Spectral GT RS loaded');
+},undefined,error=>{console.error('Spectral GT RS load failed:',error);if($('garageStatus'))$('garageStatus').textContent='CAR MODEL FAILED TO LOAD — RELOAD TO RETRY';finishLoading();toast('Spectral GT download failed — check connection');});
 // Apply garage tuning to the selected car and driving physics.
 function applyTune(){
  const value=id=>Number($(id)?.value ?? localStorage['hcg_'+id] ?? ({turbo:14.3,frontCamber:-5,rearCamber:-1,frontOffset:5,rearOffset:3,brakeBalance:70,frontHeight:-6,rearHeight:1,brakePressure:100}[id]));
@@ -479,7 +479,7 @@ function applyTune(){
  for(const target of [e46,m4Model]){target.position.y=(frontH+rearH)*.005;target.rotation.x=Math.atan(((frontH-rearH)/100)/2.86)}
  spectralModel.position.y=(frontH+rearH)*.005;spectralModel.rotation.x=Math.atan(((frontH-rearH)/100)/2.86);
  for(const w of wheels){const front=w.z<0,offset=value(front?'frontOffset':'rearOffset'),camber=value(front?'frontCamber':'rearCamber');w.pivot.position.x=Math.sign(w.x)*(1.015+(offset-(front?5:3))*.01);w.pivot.rotation.z=THREE.MathUtils.degToRad(camber)}
- for(const w of (spectralModel.userData.wheels||[])){const front=w.position.z<0,offset=value(front?'frontOffset':'rearOffset'),camber=value(front?'frontCamber':'rearCamber');w.node.position.copy(w.position);w.node.position.x+=Math.sign(w.position.x||1)*(offset-(front?5:3))*.01;w.node.rotation.set(w.rotation.x,w.rotation.y,w.rotation.z+THREE.MathUtils.degToRad(camber))}
+ for(const w of (spectralModel.userData.wheels||[])){const front=w.worldPosition.z<0,offset=value(front?'frontOffset':'rearOffset'),camber=value(front?'frontCamber':'rearCamber');w.node.position.copy(w.position);w.node.position.x+=Math.sign(w.position.x||1)*(offset-(front?5:3))*.01;w.node.rotation.set(w.rotation.x,w.rotation.y,w.rotation.z+THREE.MathUtils.degToRad(camber))}
  const paint=$('paint')?.value;if(paint){for(const m of (spectralModel.userData.paintMaterials||[]))m.color.set(paint);applyE46Paint()}
 }
 function tunedBrakeForce(){return valueTune('brakePressure')/100}
@@ -487,6 +487,7 @@ function valueTune(id){const defaults={brakePressure:100,brakeBalance:70,turbo:1
 
 function tick(t){
  requestAnimationFrame(tick);
+ const frameInterval=mobileQuality?1000/40:1000/55;if(t-lastRender<frameInterval)return;lastRender=t;
  const dt=Math.min((t-last)/1000,.035);
  last=t;
  if(!paused){
@@ -591,7 +592,7 @@ function tick(t){
   const camAlpha=1-Math.exp(-5.2*dt);
   camera.position.lerp(desiredCam,camAlpha);cameraLook.lerp(desiredLook,1-Math.exp(-6.5*dt));camera.lookAt(cameraLook);
  }
- if(spectralMixer)spectralMixer.update(dt);
+ if(spectralMixer&&!paused)spectralMixer.update(dt);
  renderer.render(scene,camera);
 }
 requestAnimationFrame(tick);
@@ -617,7 +618,7 @@ function start(){
   showGameError('The game could not start: '+(err&&err.message?err.message:String(err)));
  }
 }
-function setGarageValues(){const ids=['turbo','frontCamber','rearCamber','frontOffset','rearOffset','brakeBalance','frontHeight','rearHeight','brakePressure'];for(const id of ids){const el=$(id),v=localStorage['hcg_'+id]||el.value;el.value=v;$(id+'Val').textContent=({turbo:v+' psi',frontCamber:v+'°',rearCamber:v+'°',frontOffset:v+' cm',rearOffset:v+' cm',brakeBalance:v+'%',frontHeight:(+v>0?'+':'')+v+' cm',rearHeight:(+v>0?'+':'')+v+' cm',brakePressure:v+'%'})[id]}}function setGarageCamera(){const cp=Math.cos(garageOrbitPitch);camera.position.set(Math.sin(garageOrbitYaw)*garageOrbitRadius*cp,1+Math.sin(garageOrbitPitch)*garageOrbitRadius,Math.cos(garageOrbitYaw)*garageOrbitRadius*cp);camera.lookAt(0,1,0)}
+function setGarageValues(){const ids=['turbo','frontCamber','rearCamber','frontOffset','rearOffset','brakeBalance','frontHeight','rearHeight','brakePressure'];for(const id of ids){const el=$(id),v=localStorage['hcg_'+id]??el.value;el.value=v;$(id+'Val').textContent=({turbo:v+' psi',frontCamber:v+'°',rearCamber:v+'°',frontOffset:v+' cm',rearOffset:v+' cm',brakeBalance:v+'%',frontHeight:(+v>0?'+':'')+v+' cm',rearHeight:(+v>0?'+':'')+v+' cm',brakePressure:v+'%'})[id]}}function setGarageCamera(){const cp=Math.cos(garageOrbitPitch);camera.position.set(Math.sin(garageOrbitYaw)*garageOrbitRadius*cp,1+Math.sin(garageOrbitPitch)*garageOrbitRadius,Math.cos(garageOrbitYaw)*garageOrbitRadius*cp);camera.lookAt(0,1,0)}
 function openGarage(){
  garageWasPlaying=!paused;paused=true;garageMode=true;garagePos.copy(carPos);garageHeading=heading;
  garageOrbitYaw=.28;garageOrbitPitch=.16;garageOrbitRadius=9.2;
@@ -625,7 +626,7 @@ function openGarage(){
  scene.background=new THREE.Color(0x101820);scene.fog=null;renderer.setClearColor(0x101820,1);
  scene.children.forEach(o=>{o.visible=(o===carRoot||o===showroom||o.isLight)});
  restoreTreeVisibility(showroom,true);restoreTreeVisibility(carRoot,true);
- showroom.visible=true;carRoot.visible=true;restoreTreeVisibility(carRoot,true);applyStyle($('carStyle').value);carPos.set(0,0,0);carRoot.position.set(0,.14,0);carRoot.rotation.set(0,Math.PI,0);
+ showroom.visible=true;carRoot.visible=true;restoreTreeVisibility(carRoot,true);applyStyle($('carStyle').value);carPos.set(0,0,0);carRoot.position.set(0,-.065,0);carRoot.rotation.set(0,Math.PI,0);
  setGarageCamera();$('garage').style.display='grid';setGarageValues();applyTune();
  renderer.render(scene,camera);
 }

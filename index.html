@@ -1001,7 +1001,7 @@ function tick(t){
   vel.copy(forward).multiplyScalar(speed).addScaledVector(side,lateralSpeed);
   const previousCarPos=carPos.clone();carPos.addScaledVector(vel,dt);resolveWorldCollision(previousCarPos,carPos);if(carPos.distanceToSquared(previousCarPos)<.0001){speed*=.18;vel.multiplyScalar(.12);driftTimer=0;combo=1;}
   carRoot.position.copy(carPos);
-  carRoot.position.y=.05+Math.sin(t*.012)*.018;
+  carRoot.position.y=.05+Math.sin(t*.012)*.005;
   const motionHeading=Math.atan2(-vel.x,-vel.z);
   driftAngle=Math.atan2(Math.sin(heading-motionHeading),Math.cos(heading-motionHeading));
   carRoot.rotation.y=heading;
@@ -1046,14 +1046,14 @@ function tick(t){
    // Driver-eye camera: anchored to the left-hand seat, not the imported model's origin.
    // Small lateral/vertical movement adds vehicle feedback without shaking the road view.
    const fpSpeed=Math.min(Math.abs(speed)/55,1),fpSteer=THREE.MathUtils.clamp(steerAngle,-1,1);
-   const fpBob=Math.sin(t*.010)*.009*fpSpeed;
-   const fpSeat=new THREE.Vector3(-.49-fpSteer*.018,1.49+fpBob,-.02);
+   const fpBob=Math.sin(t*.010)*.0025*fpSpeed;
+   const fpSeat=new THREE.Vector3(-.49-fpSteer*.018,1.53+fpBob,-.22);
    desiredCam=carRoot.localToWorld(fpSeat);
    const fpYaw=cockpitLookYaw+fpSteer*.035*fpSpeed;
    const fpPitch=cockpitLookPitch+Math.min(.035,fpSpeed*.035);
-   const fpAim=new THREE.Vector3(-.49+Math.sin(fpYaw)*24,1.49+Math.sin(fpPitch)*24,-.02-Math.cos(fpYaw)*24);
+   const fpAim=new THREE.Vector3(-.49+Math.sin(fpYaw)*24,1.53+Math.sin(fpPitch)*24,-.22-Math.cos(fpYaw)*24);
    desiredLook=carRoot.localToWorld(fpAim);
-   targetFov=70+fpSpeed*1.5;
+   targetFov=76+fpSpeed*1.5;
   }else{
    // Three distinct follow distances, with extra room at high speed.
    const selectedExtra=extraCarModels[$('carStyle')?.value];const vehicleHeight=selectedExtra?.ready?Math.max(1.1,Math.min(2.7,selectedExtra.group.userData.vehicleHeight||1.5)):1.5;const sizeBoost=Math.max(0,vehicleHeight-1.5);const localCenter=selectedExtra?.ready&&selectedExtra.group.userData.cameraCenter?selectedExtra.group.userData.cameraCenter:new THREE.Vector3(0,vehicleHeight*.5,0);const vehicleCenter=carRoot.position.clone().add(new THREE.Vector3(0,localCenter.y,0));

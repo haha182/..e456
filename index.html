@@ -692,7 +692,7 @@ function radioPlayIndex(index,fromShuffle=false){if(!drakeTracks[index])return;i
 function startRadio(){radioWanted=true;if(radioIndex<0){radioOrder=shuffledRadioOrder();radioPlayIndex(radioOrder.shift(),true);return}if(!ytReady){radioLoadApi();$('radioStatus').textContent='LOADING YOUTUBE PLAYER';$('radioToggle').textContent='Ⅱ';return}ytPlayer.playVideo();$('radioToggle').textContent='Ⅱ'}
 function stopRadio(){radioWanted=false;if(ytPlayer&&ytReady)ytPlayer.pauseVideo();$('radioToggle').textContent='▶';$('radioStatus').textContent=radioIndex>=0?'PAUSED · '+drakeTracks[radioIndex].title.toUpperCase():'DRAKE MIX · READY TO PLAY'}
 function radioNext(automatic=false){if(radioOrder.length===0)radioOrder=shuffledRadioOrder(radioIndex>=0?drakeTracks[radioIndex].id:'');const next=radioOrder.shift();radioPlayIndex(next,true)}
-function radioPrev(){if(radioHistory.length){const previous=radioHistory.pop();radioIndex=previous;radioWanted=true;if(ytReady)ytPlayer.loadVideoById(drakeTracks[previous].id);$('radioStatus').textContent='NOW PLAYING · '+drakeTracks[previous].title.toUpperCase();$('radioToggle').textContent='Ⅱ PAUSE'}else if(ytReady)ytPlayer.seekTo(0,true)}
+function radioPrev(){if(radioHistory.length){const previous=radioHistory.pop();radioIndex=previous;radioWanted=true;if(ytReady)ytPlayer.loadVideoById(drakeTracks[previous].id);$('radioStatus').textContent='NOW PLAYING · '+drakeTracks[previous].title.toUpperCase();$('radioToggle').textContent='Ⅱ'}else if(ytReady)ytPlayer.seekTo(0,true)}
 function updateRadioVolume(){if(ytPlayer&&ytReady)ytPlayer.setVolume(+$('radioVolume').value)}
 $('radioToggle').addEventListener('click',()=>radioWanted?stopRadio():startRadio());
 $('radioNext').addEventListener('click',()=>radioNext());

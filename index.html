@@ -32,7 +32,7 @@
 /* Drift Hunters-inspired premium workshop showroom (original Harrison Motorsport styling). */
 #garage{background:linear-gradient(90deg,rgba(3,8,13,.78),transparent 28%,transparent 72%,rgba(3,8,13,.78))}
 #garage .card{grid-template-columns:minmax(205px,1fr) minmax(250px,1.25fr) minmax(205px,1fr);gap:2.4vw;padding:62px 3vw 72px}
-#garage .garage-left,#garage .garage-right{align-self:center;padding:18px 20px 20px;background:linear-gradient(145deg,rgba(8,17,24,.84),rgba(13,25,33,.62));border:1px solid rgba(145,177,188,.2);border-top:2px solid rgba(83,220,219,.7);border-radius:5px;box-shadow:0 18px 44px rgba(0,0,0,.28);backdrop-filter:blur(12px);max-height:min(76vh,720px);overflow:auto;pointer-events:auto}
+#garage .garage-left,#garage .garage-right{align-self:center;padding:18px 20px 20px;background:rgba(8,17,24,.96);border:1px solid rgba(145,177,188,.24);border-top:2px solid rgba(83,220,219,.7);border-radius:5px;box-shadow:0 10px 24px rgba(0,0,0,.22);backdrop-filter:none;max-height:min(76vh,720px);overflow:auto;pointer-events:auto;overscroll-behavior:contain}
 #garage label{color:#dce8eb;text-shadow:0 2px 5px #000;font-size:clamp(11px,1.05vw,14px);letter-spacing:.045em}
 #garage label span{color:#9bb2bb}
 #garage label span b{float:right;color:#66e5e0;font-variant-numeric:tabular-nums}
@@ -110,7 +110,7 @@ function finishLoading(){if(loadingScreen)loadingScreen.classList.add('done')}
 setTimeout(finishLoading,15000); // Failsafe only; normal completion follows the car load result.
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,145,560);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,950);
-const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power',precision:'mediump'});renderer.setPixelRatio(Math.min(devicePixelRatio,1));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;document.body.appendChild(renderer.domElement);
+const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power',precision:'mediump'});renderer.setPixelRatio(mobileQuality?Math.min(devicePixelRatio,.85):Math.min(devicePixelRatio,1));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;document.body.appendChild(renderer.domElement);
 // Desktop uses generated studio reflections; mobile skips PMREM to avoid GPU render artifacts.
 if(!mobileQuality){
  const pmremGenerator=new THREE.PMREMGenerator(renderer);pmremGenerator.compileEquirectangularShader();
@@ -138,20 +138,23 @@ function addWorldCollider(x,z,halfX,halfZ){worldColliders.push({x,z,halfX,halfZ}
 const openRoadMat=new THREE.MeshStandardMaterial({color:0x20262c,roughness:.96,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}),roadEdgeMat=mat(0xb9b8aa,.8),roadLineMat=mat(0xd8d3bd,.82);
 function openRoad(points,width=13){
  const route=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(p[0],0,p[1])),false,'catmullrom',.18);
- const segments=Math.max(180,points.length*45),verts=[],ids=[],edgeL=[],edgeR=[];
+ // Lower tessellation is sufficient at driving distance and avoids excessive vertex work.
+ const segments=Math.max(120,points.length*28),verts=[],ids=[],edgeVerts=[],edgeIds=[];
  for(let i=0;i<=segments;i++){
   const t=i/segments,p=route.getPointAt(t),tan=route.getTangentAt(t),side=new THREE.Vector3(-tan.z,0,tan.x).normalize();
-  verts.push(p.x+side.x*width/2,.012,p.z+side.z*width/2,p.x-side.x*width/2,.012,p.z-side.z*width/2);
-  edgeL.push(new THREE.Vector3(p.x+side.x*(width/2-.65),.09,p.z+side.z*(width/2-.65)));
-  edgeR.push(new THREE.Vector3(p.x-side.x*(width/2-.65),.09,p.z-side.z*(width/2-.65)));
-  if(i<segments){const n=i*2;ids.push(n,n+1,n+2,n+1,n+3,n+2)}
+  const lx=p.x+side.x*(width/2-.48),lz=p.z+side.z*(width/2-.48),rx=p.x-side.x*(width/2-.48),rz=p.z-side.z*(width/2-.48);
+  verts.push(p.x+side.x*width/2,.018,p.z+side.z*width/2,p.x-side.x*width/2,.018,p.z-side.z*width/2);
+  // Flat edge paint strips replace high-poly TubeGeometry and sit above the road to prevent z-fighting.
+  edgeVerts.push(lx,.026,lz,lx+side.x*.11,.026,lz+side.z*.11,rx,.026,rz,rx-side.x*.11,.026,rz-side.z*.11);
+  if(i<segments){let n=i*2;ids.push(n,n+1,n+2,n+1,n+3,n+2);let e=i*4;edgeIds.push(e,e+1,e+4,e+1,e+5,e+4,e+2,e+6,e+3,e+3,e+6,e+7)}
  }
  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));geo.setIndex(ids);geo.computeVertexNormals();
- const road=new THREE.Mesh(geo,openRoadMat);road.receiveShadow=true;scene.add(road);
- for(const edge of [edgeL,edgeR]){const line=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(edge),segments,.105,5,false),roadEdgeMat);scene.add(line)}
- // Broken center markings make the new roads read clearly at night.
- const dash=new THREE.BoxGeometry(.16,.035,2.8);
- for(let i=5;i<segments-5;i+=13){const p=route.getPointAt(i/segments),t=route.getTangentAt(i/segments),m=new THREE.Mesh(dash,roadLineMat);m.position.set(p.x,.075,p.z);m.rotation.y=Math.atan2(t.x,t.z);scene.add(m)}
+ const road=new THREE.Mesh(geo,openRoadMat);road.frustumCulled=true;scene.add(road);
+ const eg=new THREE.BufferGeometry();eg.setAttribute('position',new THREE.Float32BufferAttribute(edgeVerts,3));eg.setIndex(edgeIds);eg.computeVertexNormals();scene.add(new THREE.Mesh(eg,roadEdgeMat));
+ // Batch all center dashes into one InstancedMesh instead of hundreds of draw calls.
+ const dashGeo=new THREE.BoxGeometry(.13,.025,2.1),dashCount=Math.ceil((segments-10)/18),dashes=new THREE.InstancedMesh(dashGeo,roadLineMat,dashCount),dummy=new THREE.Object3D();let di=0;
+ for(let i=8;i<segments-5;i+=18){const p=route.getPointAt(i/segments),t=route.getTangentAt(i/segments);dummy.position.set(p.x,.044,p.z);dummy.rotation.set(0,Math.atan2(t.x,t.z),0);dummy.updateMatrix();dashes.setMatrixAt(di++,dummy.matrix)}
+ dashes.count=di;dashes.instanceMatrix.needsUpdate=true;scene.add(dashes);
  return route;
 }
 const mountainRoute=openRoad([[76,65],[125,112],[175,158],[205,220],[255,285],[315,330],[365,300],[385,235],[350,175],[300,135],[235,112],[175,120],[125,112]]);
@@ -755,7 +758,7 @@ function valueTune(id){const defaults={brakePressure:100,brakeBalance:70,turbo:1
 
 function tick(t){
  requestAnimationFrame(tick);
- const frameInterval=mobileQuality?1000/40:1000/55;if(t-lastRender<frameInterval)return;lastRender=t;
+ const frameInterval=garageMode||paused?1000/30:(mobileQuality?1000/40:1000/50);if(t-lastRender<frameInterval)return;lastRender=t;
  const dt=Math.min((t-last)/1000,.035);
  last=t;
  if(!paused){

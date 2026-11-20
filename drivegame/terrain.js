@@ -17,9 +17,12 @@ function rawDem(x, z) {
     const ni = _track ? _track.nearestIndexLow(x, z, 10) : -1;
     let baseY = _meanY, dist = 300;
     if (ni >= 0) { baseY = _track.py[ni]; dist = Math.hypot(_track.px[ni] - x, _track.pz[ni] - z); }
-    const n = Math.sin(x * 0.0061 + z * 0.0103) * Math.sin(x * 0.0152 - z * 0.0047)
-            + 0.4 * Math.sin(x * 0.031 + z * 0.027);
-    return baseY - 1.2 + n * Math.min(1, dist / 90) * 11;
+    const broad = Math.sin(x * 0.0028 + z * 0.0037) * 0.55
+                + Math.sin(x * 0.0061 - z * 0.0042) * 0.45;
+    const detail = Math.sin(x * 0.0061 + z * 0.0103) * Math.sin(x * 0.0152 - z * 0.0047)
+                 + 0.4 * Math.sin(x * 0.031 + z * 0.027);
+    const fade = Math.min(1, dist / 75);
+    return baseY - 1.2 + (broad * 16 + detail * 12) * fade;
   }
   const fx = (x - _dem.x0) / _dem.step;
   const fz = (z - _dem.z0) / _dem.step;
@@ -70,8 +73,8 @@ export function demHeight(x, z) {
   const bp = _track.branchPair(x, z, _dem ? 6 : 10);
   if (bp.a < 0) return y;
   const clear = _dem ? 1.6 : 1.2;
-  const start = _dem ? 24 : 80;     // procedural: keep ground below road within 80 m
-  const slope = _dem ? 0.55 : 0.30;
+  const start = _dem ? 24 : 62;     // let larger rolling hills rise beyond the roadside verge
+  const slope = _dem ? 0.55 : 0.36;
   // the cone applies per BRANCH and the lowest wins — where two sections pass
   // close (crossover, parallel legs) neither may have terrain poking onto it
   let ceiling = Infinity;
@@ -135,7 +138,7 @@ export function buildDem(scene, track) {
 
   let hMin = Infinity, hMax = -Infinity;
   if (_dem) { for (const h of _dem.h) { hMin = Math.min(hMin, h); hMax = Math.max(hMax, h); } }
-  else { hMin = _meanY - 12; hMax = _meanY + 18; }
+  else { hMin = _meanY - 28; hMax = _meanY + 30; }
 
   for (let j = 0; j < nz; j++) {
     for (let i = 0; i < nx; i++) {

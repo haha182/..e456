@@ -98,14 +98,14 @@ function finishLoading(){if(loadingScreen)loadingScreen.classList.add('done')}
 setTimeout(finishLoading,6500);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,115,390);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,700);
-const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;document.body.appendChild(renderer.domElement);
+const mobileQuality=innerWidth<900;const renderer=new THREE.WebGLRenderer({antialias:!mobileQuality,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,mobileQuality?1.2:1.5));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=!mobileQuality;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;document.body.appendChild(renderer.domElement);
 // Studio-style image-based lighting adds believable reflections to paint, glass and metal.
 const pmremGenerator=new THREE.PMREMGenerator(renderer);pmremGenerator.compileEquirectangularShader();
 const studioEnvironment=pmremGenerator.fromScene(new RoomEnvironment(),0.04);
 scene.environment=studioEnvironment.texture;scene.environmentIntensity=.72;
 pmremGenerator.dispose();
 scene.add(new THREE.HemisphereLight(0x243b68,0x080b13,.34));
-const moon=new THREE.DirectionalLight(0x9bbcff,.62);moon.position.set(-85,115,65);moon.castShadow=true;moon.shadow.mapSize.set(2048,2048);moon.shadow.camera.left=-155;moon.shadow.camera.right=155;moon.shadow.camera.top=155;moon.shadow.camera.bottom=-155;scene.add(moon);
+const moon=new THREE.DirectionalLight(0x9bbcff,.62);moon.position.set(-85,115,65);moon.castShadow=!mobileQuality;moon.shadow.mapSize.set(1024,1024);moon.shadow.camera.left=-155;moon.shadow.camera.right=155;moon.shadow.camera.top=155;moon.shadow.camera.bottom=-155;scene.add(moon);
 const mat=(color,rough=.7,metal=0)=>new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal,envMapIntensity:metal>.12?1.15:.72});
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(900,900),mat(0x111a1b,.98));ground.rotation.x=-Math.PI/2;ground.position.y=-.12;ground.receiveShadow=true;scene.add(ground);
 const roadMat=mat(0x252a30,.92),lineMat=mat(0xe9e1c8),curbRed=mat(0xd94a43),curbWhite=mat(0xe9e9e5);
@@ -158,7 +158,7 @@ for(let i=0;i<5;i++){const container=new THREE.Mesh(new THREE.BoxGeometry(18,5,7
 
 // Environment: pine-like trees and distant hills
 const trunkMat=mat(0x201d20),leafMat=mat(0x101d1b),leaf2=mat(0x172725);
-for(let i=0;i<145;i++){const a=i*2.399,rad=125+(i%7)*12,x=Math.cos(a)*rad,z=Math.sin(a)*rad;const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.35,.55,3.8,7),trunkMat);trunk.position.set(x,1.8,z);trunk.castShadow=true;scene.add(trunk);const crown=new THREE.Mesh(new THREE.ConeGeometry(2.7,8,7),i%2?leafMat:leaf2);crown.position.set(x,7,z);crown.castShadow=true;scene.add(crown)}
+for(let i=0;i<145;i++){const a=i*2.399,rad=125+(i%7)*12,x=Math.cos(a)*rad,z=Math.sin(a)*rad;const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.35,.55,3.8,7),trunkMat);trunk.position.set(x,1.8,z);trunk.castShadow=false;scene.add(trunk);const crown=new THREE.Mesh(new THREE.ConeGeometry(2.7,8,7),i%2?leafMat:leaf2);crown.position.set(x,7,z);crown.castShadow=false;scene.add(crown)}
 // Distant foothills are dark silhouettes beneath the moonlit mountain range.
 for(let i=0;i<34;i++){const a=i/34*Math.PI*2,r=238+(i%4)*13,h=25+(i*13%22);const hill=new THREE.Mesh(new THREE.ConeGeometry(29+(i%3)*8,h,9),mat(0x111b29,.98));hill.position.set(Math.cos(a)*r,h*.25,Math.sin(a)*r);hill.rotation.y=a*.7;scene.add(hill)}
 // Layered drift-circuit scenery: sky dome, distant ridgelines, cloud banks and trackside details.
@@ -187,7 +187,7 @@ function buildMountain(radius,height,seed,material){
  const topIndex=verts.length/3;verts.push(baseX,height*(.94+Math.sin(seed)*.035),baseZ);
  for(let j=0;j<seg;j++)indices.push((rings.length-1)*seg+j,topIndex,(rings.length-1)*seg+(j+1)%seg);
  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));geo.setIndex(indices);geo.computeVertexNormals();
- const mountain=new THREE.Mesh(geo,material);mountain.position.y=-1;mountain.castShadow=true;mountain.receiveShadow=true;scene.add(mountain);
+ const mountain=new THREE.Mesh(geo,material);mountain.position.y=-1;mountain.castShadow=false;mountain.receiveShadow=false;scene.add(mountain);
 }
 for(let layer=0;layer<3;layer++)for(let i=0;i<25;i++){const a=i/25*Math.PI*2+(layer%2)*.07,r=285+layer*44+(i%3)*12,h=48+(i*19%43)+layer*17;buildMountain(34+layer*9,h,i+layer*29,mountainMats[layer]);}
 const grandstandMat=mat(0x303c45,.88),seatMat=mat(0xb6c2c4,.7,.12);
@@ -202,7 +202,7 @@ for(let i=0;i<18;i++){
   const inward=side.clone().multiplyScalar(-sign);const arm=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,2.05),streetLampMetal);arm.position.set(inward.x*-.92,8.35,inward.z*-.92);arm.rotation.y=Math.atan2(inward.x,inward.z);group.add(arm);
   const head=new THREE.Mesh(new THREE.BoxGeometry(.72,.18,1.05),streetLampMetal);head.position.set(inward.x*1.82,8.28,inward.z*1.82);head.rotation.y=arm.rotation.y;group.add(head);
   const bulb=new THREE.Mesh(new THREE.BoxGeometry(.52,.035,.72),lampGlowMat);bulb.position.set(inward.x*1.82,8.17,inward.z*1.82);bulb.rotation.y=arm.rotation.y;group.add(bulb);
-  const light=new THREE.PointLight(0xffc45f,24,34,1.65);light.position.set(inward.x*1.8,7.95,inward.z*1.8);light.castShadow=false;group.add(light);
+  if(i%3===0){const light=new THREE.PointLight(0xffc45f,24,34,1.65);light.position.set(inward.x*1.8,7.95,inward.z*1.8);light.castShadow=false;group.add(light);}
   const halo=new THREE.Mesh(new THREE.SphereGeometry(.42,10,8),new THREE.MeshBasicMaterial({color:0xffd985,transparent:true,opacity:.16}));halo.position.copy(light.position);group.add(halo);
  }
 }

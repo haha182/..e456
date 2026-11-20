@@ -69,15 +69,21 @@
 <script type="module">
 import * as THREE from 'three';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/FBXLoader.js';
+import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
 const loadingScreen=document.getElementById('loadingScreen');
 function finishLoading(){if(loadingScreen)loadingScreen.classList.add('done')}
 setTimeout(finishLoading,6500);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,115,390);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,700);
-const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;document.body.appendChild(renderer.domElement);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;document.body.appendChild(renderer.domElement);
+// Studio-style image-based lighting adds believable reflections to paint, glass and metal.
+const pmremGenerator=new THREE.PMREMGenerator(renderer);pmremGenerator.compileEquirectangularShader();
+const studioEnvironment=pmremGenerator.fromScene(new RoomEnvironment(),0.04);
+scene.environment=studioEnvironment.texture;scene.environmentIntensity=.72;
+pmremGenerator.dispose();
 scene.add(new THREE.HemisphereLight(0x243b68,0x080b13,.34));
 const moon=new THREE.DirectionalLight(0x9bbcff,.62);moon.position.set(-85,115,65);moon.castShadow=true;moon.shadow.mapSize.set(2048,2048);moon.shadow.camera.left=-155;moon.shadow.camera.right=155;moon.shadow.camera.top=155;moon.shadow.camera.bottom=-155;scene.add(moon);
-const mat=(color,rough=.7,metal=0)=>new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
+const mat=(color,rough=.7,metal=0)=>new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal,envMapIntensity:metal>.12?1.15:.72});
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(900,900),mat(0x111a1b,.98));ground.rotation.x=-Math.PI/2;ground.position.y=-.12;ground.receiveShadow=true;scene.add(ground);
 const roadMat=mat(0x252a30,.92),lineMat=mat(0xe9e1c8),curbRed=mat(0xd94a43),curbWhite=mat(0xe9e9e5);
 const pts=[new THREE.Vector3(0,0,-72),new THREE.Vector3(48,0,-95),new THREE.Vector3(105,0,-58),new THREE.Vector3(112,0,8),new THREE.Vector3(72,0,68),new THREE.Vector3(5,0,91),new THREE.Vector3(-66,0,68),new THREE.Vector3(-112,0,14),new THREE.Vector3(-90,0,-48)];

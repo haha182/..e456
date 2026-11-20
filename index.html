@@ -308,16 +308,43 @@ for(let i=0;i<22;i++){
 }
 // A single straight night highway with a dealership at its end.
 const highwayWorld=new THREE.Group();scene.add(highwayWorld);
-const highwayRoute=new THREE.LineCurve3(new THREE.Vector3(0,0,45),new THREE.Vector3(0,0,-1450));
+const highwayRoute=new THREE.LineCurve3(new THREE.Vector3(0,0,45),new THREE.Vector3(0,0,-4200));
 const roadMat2=new THREE.MeshStandardMaterial({color:0x252a30,map:asphaltTexture,roughness:.96});
-const road2=new THREE.Mesh(new THREE.PlaneGeometry(28,1420),roadMat2);road2.rotation.x=-Math.PI/2;road2.position.set(0,.02,-670);highwayWorld.add(road2);
-const ground2=new THREE.Mesh(new THREE.PlaneGeometry(520,1900),new THREE.MeshBasicMaterial({color:0x080d13}));ground2.rotation.x=-Math.PI/2;ground2.position.set(0,-.12,-690);highwayWorld.add(ground2);
-const stripe2=new THREE.MeshBasicMaterial({color:0xf1ead8}),dash2=new THREE.InstancedMesh(new THREE.BoxGeometry(.18,.025,5.2),stripe2,150),dummy2=new THREE.Object3D();
-for(let i=0;i<150;i++){dummy2.position.set(0,.06,22-i*9.2);dummy2.updateMatrix();dash2.setMatrixAt(i,dummy2.matrix)}dash2.instanceMatrix.needsUpdate=true;highwayWorld.add(dash2);
-const edge2=new THREE.Mesh(new THREE.BoxGeometry(.18,.03,1420),stripe2);edge2.position.set(-13.8,.06,-670);highwayWorld.add(edge2);const edge3=edge2.clone();edge3.position.x=13.8;highwayWorld.add(edge3);
+const road2=new THREE.Mesh(new THREE.PlaneGeometry(28,4100),roadMat2);road2.rotation.x=-Math.PI/2;road2.position.set(0,.02,-2025);highwayWorld.add(road2);
+const ground2=new THREE.Mesh(new THREE.PlaneGeometry(520,4500),new THREE.MeshBasicMaterial({color:0x080d13}));ground2.rotation.x=-Math.PI/2;ground2.position.set(0,-.12,-2040);highwayWorld.add(ground2);
+const stripe2=new THREE.MeshBasicMaterial({color:0xf1ead8}),yellow2=new THREE.MeshBasicMaterial({color:0xf3c94b}),dummy2=new THREE.Object3D();
+for(const x of [-6.8,6.8]){const laneDashes=new THREE.InstancedMesh(new THREE.BoxGeometry(.16,.025,5.2),stripe2,450);for(let i=0;i<450;i++){dummy2.position.set(x,.06,22-i*9.2);dummy2.updateMatrix();laneDashes.setMatrixAt(i,dummy2.matrix)}laneDashes.instanceMatrix.needsUpdate=true;highwayWorld.add(laneDashes)}
+for(const x of [-.22,.22]){const centerDashes=new THREE.InstancedMesh(new THREE.BoxGeometry(.16,.028,5.2),yellow2,450);for(let i=0;i<450;i++){dummy2.position.set(x,.065,22-i*9.2);dummy2.updateMatrix();centerDashes.setMatrixAt(i,dummy2.matrix)}centerDashes.instanceMatrix.needsUpdate=true;highwayWorld.add(centerDashes)}
+const edge2=new THREE.Mesh(new THREE.BoxGeometry(.2,.03,4100),stripe2);edge2.position.set(-13.8,.06,-2025);highwayWorld.add(edge2);const edge3=edge2.clone();edge3.position.x=13.8;highwayWorld.add(edge3);
+// Occasional illuminated roadside fuel stops, spaced along the long highway.
+const fuelStationMat=new THREE.MeshStandardMaterial({color:0x202c36,roughness:.72,metalness:.18}),fuelGlassMat=new THREE.MeshPhysicalMaterial({color:0x83c9db,transparent:true,opacity:.34,roughness:.16}),fuelWhite=new THREE.MeshStandardMaterial({color:0xdce5e9,roughness:.42}),fuelRed=new THREE.MeshStandardMaterial({color:0xc72c32,roughness:.4}),fuelGlow=new THREE.MeshBasicMaterial({color:0xffe2a0}),fuelDark=new THREE.MeshStandardMaterial({color:0x121a21,roughness:.82});
+function buildFuelStation(side,z,index){
+ const station=new THREE.Group();station.position.set(side*25,0,z);station.rotation.y=side<0?Math.PI:0;highwayWorld.add(station);
+ const slab=new THREE.Mesh(new THREE.BoxGeometry(24,.18,34),fuelDark);slab.position.set(0,.02,0);station.add(slab);
+ const shop=new THREE.Group();shop.position.set(side*2,.12,-9);station.add(shop);
+ const shell=new THREE.Mesh(new THREE.BoxGeometry(12,4.5,9),fuelStationMat);shell.position.y=2.25;shop.add(shell);
+ const windows=new THREE.Mesh(new THREE.BoxGeometry(12.04,2.25,.08),fuelGlassMat);windows.position.set(0,2.45,4.56);shop.add(windows);
+ const door=new THREE.Mesh(new THREE.BoxGeometry(1.3,2.7,.12),fuelWhite);door.position.set(-3.7,1.45,4.62);shop.add(door);
+ const canopy=new THREE.Mesh(new THREE.BoxGeometry(17,.38,12),fuelWhite);canopy.position.set(0,4.65,7);station.add(canopy);
+ const fascia=new THREE.Mesh(new THREE.BoxGeometry(17,.28,.22),fuelRed);fascia.position.set(0,4.42,13);station.add(fascia);
+ for(const x of [-5.4,-1.8,1.8,5.4]){
+  const pump=new THREE.Group();pump.position.set(x,.12,7);station.add(pump);
+  const base=new THREE.Mesh(new THREE.BoxGeometry(1.25,1.65,.8),fuelWhite);base.position.y=.85;pump.add(base);
+  const screen=new THREE.Mesh(new THREE.BoxGeometry(.68,.32,.04),fuelDark);screen.position.set(0,1.18,.42);pump.add(screen);
+  const hose=new THREE.Mesh(new THREE.TorusGeometry(.28,.035,6,18,Math.PI),fuelDark);hose.position.set(.43,.8,.42);hose.rotation.z=Math.PI/2;pump.add(hose);
+ }
+ for(const x of [-7,7]){const post=new THREE.Mesh(new THREE.CylinderGeometry(.09,.12,4.2,8),fuelWhite);post.position.set(x,2.45,7);station.add(post)}
+ const signPost=new THREE.Mesh(new THREE.CylinderGeometry(.16,.22,7,8),fuelWhite);signPost.position.set(-9,3.5,-13);station.add(signPost);
+ const sign=new THREE.Mesh(new THREE.BoxGeometry(5.4,2.8,.3),fuelRed);sign.position.set(-9,6.5,-13);station.add(sign);
+ const signText=new THREE.Mesh(new THREE.BoxGeometry(4.3,.18,.08),fuelGlow);signText.position.set(-9,6.75,-12.82);station.add(signText);
+ const canopyLight=new THREE.PointLight(0xffdca0,18,24,1.7);canopyLight.position.set(0,5,7);station.add(canopyLight);
+ const shopLight=new THREE.PointLight(0x9ddfff,8,15,1.8);shopLight.position.set(0,3.2,-9);station.add(shopLight);
+ station.userData.stationIndex=index;return station;
+}
+[buildFuelStation(1,-720,1),buildFuelStation(-1,-1580,2),buildFuelStation(1,-2480,3),buildFuelStation(-1,-3370,4)];
 const poleMat2=new THREE.MeshStandardMaterial({color:0x343d46,metalness:.7,roughness:.38}),bulbMat2=new THREE.MeshBasicMaterial({color:0xffe4b0});
-for(let z=-35;z>-1320;z-=85)for(const side of [-1,1]){const x=side*19,pole=new THREE.Mesh(new THREE.CylinderGeometry(.09,.15,8,8),poleMat2);pole.position.set(x,4,z);highwayWorld.add(pole);const arm=new THREE.Mesh(new THREE.BoxGeometry(2.8,.12,.12),poleMat2);arm.position.set(x-side*1.25,7.85,z);highwayWorld.add(arm);const bulb=new THREE.Mesh(new THREE.BoxGeometry(.65,.14,.48),bulbMat2);bulb.position.set(x-side*2.45,7.7,z);highwayWorld.add(bulb);if(!mobileQuality){const glow=new THREE.PointLight(0xffd09a,26,42,1.5);glow.position.copy(bulb.position);highwayWorld.add(glow)}}
-const dealerBuilding=new THREE.Group();dealerBuilding.position.set(0,0,-1350);highwayWorld.add(dealerBuilding);
+for(let z=-35;z>-4070;z-=85)for(const side of [-1,1]){const x=side*19,pole=new THREE.Mesh(new THREE.CylinderGeometry(.09,.15,8,8),poleMat2);pole.position.set(x,4,z);highwayWorld.add(pole);const arm=new THREE.Mesh(new THREE.BoxGeometry(2.8,.12,.12),poleMat2);arm.position.set(x-side*1.25,7.85,z);highwayWorld.add(arm);const bulb=new THREE.Mesh(new THREE.BoxGeometry(.65,.14,.48),bulbMat2);bulb.position.set(x-side*2.45,7.7,z);highwayWorld.add(bulb);if(!mobileQuality){const glow=new THREE.PointLight(0xffd09a,26,42,1.5);glow.position.copy(bulb.position);highwayWorld.add(glow)}}
+const dealerBuilding=new THREE.Group();dealerBuilding.position.set(0,0,-4100);highwayWorld.add(dealerBuilding);
 const dmat=new THREE.MeshStandardMaterial({color:0x202a33,roughness:.5,metalness:.35}),dglass=new THREE.MeshPhysicalMaterial({color:0x8ab6c8,transparent:true,opacity:.23,roughness:.12}),dfloor=new THREE.MeshStandardMaterial({color:0x353d45,roughness:.76}),dneon=new THREE.MeshBasicMaterial({color:0x64e8e0});
 const dbox=(w,h,d,x,y,z,m)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);dealerBuilding.add(o);return o};
 dbox(62,.35,58,0,-.18,0,dfloor);dbox(62,1,58,0,13,0,dmat);dbox(62,13,1.1,0,6.5,-29,dmat);dbox(1.2,13,58,-31,6.5,0,dmat);dbox(1.2,13,58,31,6.5,0,dmat);
@@ -1057,7 +1084,7 @@ function tick(t){
   const speedBefore=speed;
   // Longitudinal drivetrain: progressive throttle, engine drag, service brake and a small reverse gear.
   if(gas) speed+=(10.5+turbo*.19)*dt;
-  else if(brake&&speed>0) speed=Math.max(0,speed-30*brakePressure*(.82+.18*brakeBias)*dt);
+  else if(brake&&speed>0) speed=Math.max(0,speed-43.5*brakePressure*(.82+.18*brakeBias)*dt);
   else if(brake&&speed<=0) speed-=12*dt;
   else speed-=Math.sign(speed)*Math.min(Math.abs(speed),1.45*dt);
   if(nitro&&gas&&boost>0){speed+=7*dt;boost=Math.max(0,boost-24*dt)}
@@ -1218,8 +1245,8 @@ async function initCarAudio(){
  try{
   const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
   carAudioCtx=new AC();carAudioMaster=carAudioCtx.createGain();carAudioMaster.gain.value=0;carAudioMaster.connect(carAudioCtx.destination);
-  const v8Filter=carAudioCtx.createBiquadFilter();v8Filter.type='lowpass';v8Filter.frequency.value=430;v8Filter.connect(carAudioMaster);
-  for(const spec of [{type:'sawtooth',mult:1,gain:.25},{type:'triangle',mult:2,gain:.075},{type:'sine',mult:.5,gain:.31}]){const osc=carAudioCtx.createOscillator(),gain=carAudioCtx.createGain();osc.type=spec.type;osc.frequency.value=15*spec.mult;gain.gain.value=spec.gain;osc.connect(gain);gain.connect(v8Filter);osc.start();v8Voices.push({osc,gain,mult:spec.mult})}
+  const v8Filter=carAudioCtx.createBiquadFilter();v8Filter.type='lowpass';v8Filter.frequency.value=760;v8Filter.connect(carAudioMaster);
+  for(const spec of [{type:'sawtooth',mult:1,gain:.25},{type:'triangle',mult:2,gain:.075},{type:'sine',mult:.5,gain:.31},{type:'triangle',mult:3,gain:.045},{type:'sine',mult:4,gain:.022}]){const osc=carAudioCtx.createOscillator(),gain=carAudioCtx.createGain();osc.type=spec.type;osc.frequency.value=15*spec.mult;gain.gain.value=spec.gain;osc.connect(gain);gain.connect(v8Filter);osc.start();v8Voices.push({osc,gain,mult:spec.mult})}
   exhaustNoiseBuffer=carAudioCtx.createBuffer(1,Math.floor(carAudioCtx.sampleRate*.18),carAudioCtx.sampleRate);const exhaustNoise=exhaustNoiseBuffer.getChannelData(0);for(let i=0;i<exhaustNoise.length;i++)exhaustNoise[i]=(Math.random()*2-1)*Math.pow(1-i/exhaustNoise.length,1.7);
   tireSquealSource=carAudioCtx.createBufferSource();tireSquealSource.buffer=exhaustNoiseBuffer;tireSquealSource.loop=true;tireSquealFilter=carAudioCtx.createBiquadFilter();tireSquealFilter.type='bandpass';tireSquealFilter.frequency.value=1350;tireSquealFilter.Q.value=.65;tireSquealGain=carAudioCtx.createGain();tireSquealGain.gain.value=0;tireSquealSource.connect(tireSquealFilter);tireSquealFilter.connect(tireSquealGain);tireSquealGain.connect(carAudioMaster);tireSquealSource.start();
   await carAudioCtx.resume();
@@ -1278,7 +1305,7 @@ function updateCarAudio(throttle,vehicleSpeed,slipAngle=0){
  const lifted=lastExhaustThrottle>.68&&throttle<.12;
  if(lifted&&speed>10&&now-lastExhaustPopAt>.58){const count=4+Math.floor(Math.random()*3);for(let i=0;i<count;i++)triggerExhaustPop(((i===0?1.55:1.25)+Math.random()*.3)*profile.pop,i*.082);lastExhaustPopAt=now+.36;lastExhaustCrackleAt=now}
  else if(throttle<.08&&speed>16&&rpm>.32&&now-lastExhaustPopAt>.52&&now-lastExhaustCrackleAt>.25&&Math.random()<.24){triggerExhaustPop((.9+Math.random()*.42)*profile.pop);lastExhaustPopAt=now;lastExhaustCrackleAt=now}
- const v8Base=profile.idle+rpm*(profile.idle*7.6);v8Voices.forEach((v,i)=>{v.osc.frequency.setTargetAtTime(v8Base*v.mult*profile.pitch,now,.075);v.gain.gain.setTargetAtTime(profile.harmonics[i]||.1,now,.12)});
+ const v8Base=profile.idle*3.8+rpm*(profile.idle*7.6);v8Voices.forEach((v,i)=>{v.osc.frequency.setTargetAtTime(v8Base*v.mult*profile.pitch,now,.075);v.gain.gain.setTargetAtTime(profile.harmonics[i]??.025,now,.12)});
  lastExhaustThrottle=throttle;
 }
 const radioStations={

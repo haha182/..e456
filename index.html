@@ -835,59 +835,91 @@ Object.values(extraCarModels).forEach(item=>{item.group.visible=false;carRoot.ad
 const gtiAudioCredit=document.createElement('div');gtiAudioCredit.style.cssText='position:fixed;left:12px;bottom:8px;z-index:40;max-width:min(520px,90vw);padding:5px 8px;border-radius:5px;background:#071018dd;color:#c6d2d8;font:10px/1.4 Arial,sans-serif;display:none';gtiAudioCredit.innerHTML='GTI audio: FiExhaust · <a href="https://commons.wikimedia.org/wiki/File:Volkswagen_Golf_Mk6_with_Fi_Exhaust_-_engine_and_exhaust_sound_(YouTube_n1sqDV2vyZ0).opus" target="_blank" rel="noopener" style="color:#8ed8ef">source</a> · <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener" style="color:#8ed8ef">CC BY 3.0</a> · trimmed for in-game throttle playback';$('garage').appendChild(gtiAudioCredit);
 const dodgeModelCredit=document.createElement('div');dodgeModelCredit.style.cssText='position:fixed;left:12px;bottom:8px;z-index:40;max-width:min(540px,90vw);padding:5px 8px;border-radius:5px;background:#071018dd;color:#c6d2d8;font:10px/1.4 Arial,sans-serif;display:none';dodgeModelCredit.innerHTML='2015 Dodge Challenger R/T model: DisneyCars · <a href="https://sketchfab.com/3d-models/2015-dodge-challenger-rt-tuned-with-armor-34af945791e74afb80bdd860a645ef91" target="_blank" rel="noopener" style="color:#8ed8ef">source</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:#8ed8ef">CC BY 4.0</a>'; $('garage').appendChild(dodgeModelCredit);
 const bmwModelCredit=document.createElement('div');bmwModelCredit.style.cssText='position:fixed;left:12px;bottom:8px;z-index:40;max-width:min(540px,90vw);padding:5px 8px;border-radius:5px;background:#071018dd;color:#c6d2d8;font:10px/1.4 Arial,sans-serif;display:none';bmwModelCredit.innerHTML='BMW M4 3D model: SRT Performance · <a href="https://sketchfab.com/3d-models/bmw-m4-competition-m-package-5c0a2dafb1ad408d9fc9eeef9aee531b" target="_blank" rel="noopener" style="color:#8ed8ef">source</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" style="color:#8ed8ef">CC BY 4.0</a>'; $('garage').appendChild(bmwModelCredit);
-// Lightweight custom Mk6 GTI model: detailed hatchback proportions without a heavy external asset.
+// Detailed procedural Mk6 GTI: rounded body surfacing, proper hatch profile and recognizable GTI trim.
 {
  const g=extraCarModels.gti_2010.group;
- const paint=new THREE.MeshPhysicalMaterial({color:0xb71925,metalness:.48,roughness:.22,clearcoat:1,clearcoatRoughness:.07});paint.name='GTI_BODY_PAINT';
- const glass=new THREE.MeshPhysicalMaterial({color:0x101f2b,metalness:.18,roughness:.12,transparent:true,opacity:.78,clearcoat:1});glass.name='GTI_GLASS';
- const black=new THREE.MeshStandardMaterial({color:0x101316,roughness:.68});
- const rubber=new THREE.MeshStandardMaterial({color:0x090b0d,roughness:.94});rubber.name='GTI_RUBBER';
- const alloy=new THREE.MeshStandardMaterial({color:0xb7c0c5,metalness:.86,roughness:.24});alloy.name='GTI_ALLOY';
- const red=new THREE.MeshStandardMaterial({color:0xb90e18,emissive:0x260000});
- const white=new THREE.MeshStandardMaterial({color:0xdce9f0,emissive:0x607080,emissiveIntensity:.28});
- const addBox=(w,h,d,x,y,z,m,bevel=0)=>{const geo=bevel?new THREE.BoxGeometry(w,h,d):new THREE.BoxGeometry(w,h,d);const mesh=new THREE.Mesh(geo,m);mesh.position.set(x,y,z);mesh.castShadow=!mobileQuality;mesh.receiveShadow=!mobileQuality;g.add(mesh);return mesh};
- // Lower shell, front hood and rear hatch create the Mk6's short, upright proportions.
- addBox(1.78,.55,4.05,0,.73,0,paint);
- addBox(1.72,.27,1.02,0,1.00,-1.47,paint);
- addBox(1.70,.30,.86,0,1.00,1.52,paint);
- addBox(1.48,.12,1.48,0,1.28,.02,paint);
- // Sloped windshield, roof and rear glass.
- const roof=addBox(1.48,.12,1.52,0,1.69,.03,paint);
- const windshield=addBox(1.49,.045,.76,0,1.43,-.82,glass);windshield.rotation.x=-.48;
- const rearGlass=addBox(1.43,.045,.60,0,1.43,.91,glass);rearGlass.rotation.x=.55;
- for(const side of [-1,1]){
-  addBox(.035,.055,1.28,side*.755,1.42,.03,black);
-  addBox(.035,.045,.12,side*.755,1.41,-.76,black);
-  addBox(.035,.045,.12,side*.755,1.41,.78,black);
-  addBox(.13,.20,.24,side*.91,1.17,-.72,paint);
-  const mirror=addBox(.20,.13,.23,side*.98,1.32,-.70,black);
-  // Door handles and side skirts.
-  for(const z of [-.35,.58])addBox(.025,.045,.16,side*.895,1.00,z,alloy);
-  addBox(.055,.12,2.25,side*.89,.48,0,black);
-  // Wheel/tire and five-spoke alloy detail.
-  for(const z of [-1.32,1.30]){
-   const wheelGroup=new THREE.Group();wheelGroup.name='GTI_WHEEL_GROUP';wheelGroup.position.set(side*.91,.48,z);g.add(wheelGroup);
-   const tire=new THREE.Mesh(new THREE.CylinderGeometry(.39,.39,.22,24),rubber);tire.rotation.z=Math.PI/2;tire.castShadow=!mobileQuality;wheelGroup.add(tire);
-   const rim=new THREE.Mesh(new THREE.CylinderGeometry(.265,.265,.235,20),alloy);rim.rotation.z=Math.PI/2;wheelGroup.add(rim);
-   const hub=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.245,16),black);hub.rotation.z=Math.PI/2;wheelGroup.add(hub);
-   for(let s=0;s<5;s++){const spoke=new THREE.Mesh(new THREE.BoxGeometry(.035,.30,.045),alloy);spoke.position.set(side*.125,0,0);spoke.rotation.x=s*Math.PI*2/5;spoke.rotation.z=side*Math.PI/2;wheelGroup.add(spoke)}
+ const paint=new THREE.MeshPhysicalMaterial({color:0xb71925,metalness:.34,roughness:.24,clearcoat:1,clearcoatRoughness:.08});paint.name='GTI_BODY_PAINT';
+ const glass=new THREE.MeshPhysicalMaterial({color:0x101d27,metalness:.12,roughness:.1,transparent:true,opacity:.84,clearcoat:1});glass.name='GTI_GLASS';
+ const black=new THREE.MeshStandardMaterial({color:0x101316,roughness:.62});
+ const rubber=new THREE.MeshStandardMaterial({color:0x080a0c,roughness:.92});rubber.name='GTI_RUBBER';
+ const alloy=new THREE.MeshStandardMaterial({color:0xb9c1c7,metalness:.88,roughness:.22});alloy.name='GTI_ALLOY';
+ const darkAlloy=new THREE.MeshStandardMaterial({color:0x30383e,metalness:.72,roughness:.3});
+ const red=new THREE.MeshStandardMaterial({color:0xc10d1b,emissive:0x260000});
+ const lamp=new THREE.MeshStandardMaterial({color:0xe9f4ff,emissive:0x9dbbd0,emissiveIntensity:.45});
+ const tail=new THREE.MeshStandardMaterial({color:0xe51b25,emissive:0x6c0509,emissiveIntensity:.65});
+ const add=(geo,mat,x=0,y=0,z=0,parent=g)=>{const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);o.castShadow=!mobileQuality;o.receiveShadow=!mobileQuality;parent.add(o);return o};
+ const box=(w,h,d,x,y,z,mat,r=.025)=>{const o=add(new THREE.BoxGeometry(w,h,d),mat,x,y,z);return o};
+ const cyl=(r1,r2,h,mat,x,y,z,rotZ=0)=>{const o=add(new THREE.CylinderGeometry(r1,r2,h,32),mat,x,y,z);o.rotation.z=rotZ;return o};
+ // Smooth lofted lower body: each station is a softly rounded cross-section along the car.
+ const loft=(stations,mat,parent=g)=>{
+  const v=[],idx=[],steps=12;
+  for(const [z,w,b,t] of stations){
+   const h=t-b,ring=[[0,b],[w*.82,b],[w,b+h*.12],[w,t-h*.2],[w*.82,t],[0,t],[-w*.82,t],[-w,t-h*.2],[-w,b+h*.12],[-w*.82,b]];
+   for(const [x,y] of ring)v.push(x,y,z);
   }
-  // GTI red grille stripe, front lamps and rear LED lamps.
-  addBox(.025,.22,.46,side*.73,.91,-2.035,white);
-  addBox(.03,.18,.32,side*.77,.77,2.035,red);
+  const n=10;
+  for(let i=0;i<stations.length-1;i++)for(let j=0;j<n;j++){const a=i*n+j,b=i*n+(j+1)%n,c=(i+1)*n+(j+1)%n,d=(i+1)*n+j;idx.push(a,b,d,b,c,d)}
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(v,3));geo.setIndex(idx);geo.computeVertexNormals();return add(geo,mat,0,0,0,parent);
+ };
+ loft([[-2.08,.76,.48,.79],[-1.88,.88,.43,.91],[-1.48,.91,.40,1.02],[-.9,.91,.39,1.05],[0,.91,.39,1.04],[.9,.91,.39,1.04],[1.48,.90,.40,1.02],[1.88,.86,.43,.94],[2.04,.75,.49,.82]],paint);
+ // Hood, roof and rear hatch create the unmistakable short, upright Mk6 silhouette.
+ loft([[-1.55,.78,1.00,1.10],[-1.24,.78,1.02,1.20],[-.92,.76,1.04,1.31],[-.55,.73,1.05,1.38],[.42,.72,1.05,1.38],[.82,.75,1.04,1.32],[1.22,.75,1.02,1.19],[1.58,.72,.98,1.08]],paint);
+ // Glass panels sit inside the roof pillars instead of being flat floating slabs.
+ const windshield=add(new THREE.PlaneGeometry(1.42,.76),glass,0,1.34,-.79);windshield.rotation.x=-.53;
+ const rearGlass=add(new THREE.PlaneGeometry(1.38,.58),glass,0,1.32,1.22);rearGlass.rotation.x=Math.PI+.56;
+ box(1.42,.075,1.30,0,1.43,.02,paint,.04);
+ // Side windows, pillars, mirrors, handles, door seams and GTI side skirts.
+ for(const side of [-1,1]){
+  const win=add(new THREE.ShapeGeometry(new THREE.Shape().moveTo(-.57,0).lineTo(-.43,.35).lineTo(.40,.35).lineTo(.56,.02).close()),glass,side*.758,1.42,-.02);win.rotation.y=side*Math.PI/2;
+  box(.045,.43,.075,side*.77,1.39,-.48,black);box(.045,.43,.075,side*.77,1.39,.48,black);
+  box(.035,.055,.12,side*.78,1.39,-.78,black);box(.035,.055,.12,side*.78,1.39,.84,black);
+  box(.13,.10,.24,side*.94,1.27,-.72,black);box(.17,.12,.20,side*1.0,1.31,-.72,paint);
+  box(.025,.035,.13,side*.91,1.02,-.32,alloy);box(.025,.035,.13,side*.91,1.02,.62,alloy);
+  box(.09,.14,2.15,side*.88,.48,0,black);
+  // Front and rear wheel arch lips.
+  for(const zc of [-1.30,1.30]){
+   const arc=new THREE.Mesh(new THREE.TorusGeometry(.43,.035,8,32,Math.PI),black);arc.rotation.z=Math.PI;arc.position.set(side*.895,.49,zc);g.add(arc);
+  }
+  for(const z of [-1.30,1.30]){
+   const wheel=new THREE.Group();wheel.name='GTI_WHEEL_GROUP';wheel.position.set(side*.91,.49,z);g.add(wheel);
+   const tire=add(new THREE.CylinderGeometry(.405,.405,.235,32),rubber,0,0,0,wheel);tire.rotation.z=Math.PI/2;
+   const sidewall=add(new THREE.CylinderGeometry(.30,.30,.242,32),darkAlloy,0,0,0,wheel);sidewall.rotation.z=Math.PI/2;
+   const disc=add(new THREE.CylinderGeometry(.245,.245,.246,32),alloy,0,0,0,wheel);disc.rotation.z=Math.PI/2;
+   const hub=add(new THREE.CylinderGeometry(.07,.07,.255,20),black,0,0,0,wheel);hub.rotation.z=Math.PI/2;
+   for(let k=0;k<10;k++){const spoke=add(new THREE.BoxGeometry(.035,.245,.045),alloy,0,0,0,wheel);spoke.position.set(0,Math.cos(k*Math.PI/5)*.135,Math.sin(k*Math.PI/5)*.135);spoke.rotation.x=k*Math.PI/5}
+   box(.035,.13,.12,side*1.035,.52,z,red);
+  }
  }
- addBox(1.34,.16,.055,0,.90,-2.06,black);
- addBox(1.02,.12,.045,0,.91,-2.10,black);
- addBox(.035,.055,.52,0,.91,-2.13,red);
- addBox(.42,.10,.055,0,.61,-2.075,black);
- addBox(1.42,.13,.16,0,.48,2.02,black);
- addBox(1.58,.10,.16,0,.55,2.02,paint);
- // Dual exhaust tips and subtle roof spoiler.
- for(const x of [-.55,.55]){const tip=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.16,16),alloy);tip.rotation.x=Math.PI/2;tip.position.set(x,.43,2.12);g.add(tip)}
- addBox(1.55,.075,.28,0,1.52,1.78,black);
- // GTI grille badge and red front caliper accents.
- addBox(.18,.075,.025,0,.93,-2.145,white);
- g.userData.vehicleHeight=1.9;g.userData.vehicleSize=new THREE.Vector3(2.05,1.9,4.25);g.userData.cameraCenter=new THREE.Vector3(0,.9,0);
+ // Front fascia: black honeycomb grille, red GTI stripe, split lower intake and projector lamps.
+ box(1.45,.22,.055,0,.88,-2.045,black);
+ box(1.35,.035,.065,0,.99,-2.08,red);
+ box(.48,.13,.065,0,.88,-2.09,black);
+ for(const side of [-1,1]){
+  const head=add(new THREE.BoxGeometry(.43,.16,.06),lamp,side*.62,.99,-2.055);head.rotation.z=side*.08;
+  box(.24,.11,.06,side*.69,.69,-2.045,black);
+  const fog=add(new THREE.CircleGeometry(.055,16),lamp,side*.69,.69,-2.085);fog.rotation.y=0;
+ }
+ box(1.55,.12,.08,0,.56,-2.04,black);
+ // VW roundel and red GTI grille badge.
+ const emblem=add(new THREE.CircleGeometry(.105,24),alloy,0,.94,-2.12);emblem.scale.set(1,.78,1);
+ box(.20,.075,.025,0,.82,-2.125,red);
+ // Rear hatch glass surround, wide LED tail lamps, bumper diffuser and twin exhausts.
+ box(1.36,.07,.055,0,1.34,1.78,black);
+ for(const side of [-1,1]){
+  box(.36,.20,.06,side*.64,.88,2.035,red);
+  box(.22,.055,.07,side*.64,.92,2.075,lamp);
+  box(.38,.10,.10,side*.64,.51,2.02,black);
+  const tip=add(new THREE.CylinderGeometry(.075,.075,.15,20),alloy,side*.55,.43,2.12);tip.rotation.x=Math.PI/2;
+ }
+ box(1.55,.14,.12,0,.47,2.02,black);
+ box(1.48,.09,.20,0,.58,2.00,paint);
+ // Roof spoiler and subtle front lip.
+ box(1.48,.07,.28,0,1.49,1.72,black);
+ box(1.58,.065,.24,0,.43,-2.04,black);
+ // Small GTI side badges and rear VW roundel.
+ for(const side of [-1,1])box(.16,.065,.025,side*.91,.91,.12,red);
+ const rearBadge=add(new THREE.CircleGeometry(.09,20),alloy,0,.94,2.075);rearBadge.rotation.y=Math.PI;
+ g.userData.vehicleHeight=1.9;g.userData.vehicleSize=new THREE.Vector3(2.15,1.9,4.35);g.userData.cameraCenter=new THREE.Vector3(0,.91,0);
  g.userData.paintMaterials=[paint];g.userData.glassMaterials=[glass];
 }
 // Separate hood-dump GTI build; cloned meshes share the light base geometry.

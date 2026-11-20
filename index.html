@@ -1085,7 +1085,7 @@ requestAnimationFrame(tick);
 // Recorded engine audio: CC0 racing-car loops from OpenGameArt.
 // https://opengameart.org/content/racing-car-engine-sound-loops
 const ENGINE_SAMPLE_URLS=['https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_1_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_2_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_3_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_4_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_5.wav'];
-let carAudioCtx=null,carAudioMaster=null,engineVoices=[],engineAudioReady=false,engineAudioLoading=false,engineAudioWanted=false,engineThrottleSmooth=0,engineSpeedSmooth=0;
+let carAudioCtx=null,carAudioMaster=null,engineVoices=[],engineAudioReady=false,engineAudioLoading=false,engineAudioWanted=false,engineThrottleSmooth=0,engineSpeedSmooth=0,exhaustNoiseBuffer=null,lastExhaustThrottle=0,lastExhaustPopAt=0,lastExhaustCrackleAt=0;
 async function initCarAudio(){
  engineAudioWanted=true;
  if(engineAudioReady){if(carAudioCtx.state==='suspended')await carAudioCtx.resume();carAudioMaster.gain.setTargetAtTime(.72,carAudioCtx.currentTime,.35);return}
@@ -1094,6 +1094,7 @@ async function initCarAudio(){
  try{
   const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
   carAudioCtx=new AC();carAudioMaster=carAudioCtx.createGain();carAudioMaster.gain.value=0;carAudioMaster.connect(carAudioCtx.destination);
+  exhaustNoiseBuffer=carAudioCtx.createBuffer(1,Math.floor(carAudioCtx.sampleRate*.18),carAudioCtx.sampleRate);const exhaustNoise=exhaustNoiseBuffer.getChannelData(0);for(let i=0;i<exhaustNoise.length;i++)exhaustNoise[i]=(Math.random()*2-1)*Math.pow(1-i/exhaustNoise.length,1.7);
   await carAudioCtx.resume();
   // One failed CDN request must not silence every engine sample.
   const results=await Promise.allSettled(ENGINE_SAMPLE_URLS.map(async url=>{
@@ -1120,8 +1121,26 @@ async function initCarAudio(){
   carAudioCtx=null;carAudioMaster=null;engineVoices=[];engineAudioReady=false;
  }finally{engineAudioLoading=false}
 }
-function stopCarAudio(){engineAudioWanted=false;if(engineAudioReady&&carAudioCtx)carAudioMaster.gain.setTargetAtTime(0,carAudioCtx.currentTime,.25)}
-function updateCarAudio(throttle,vehicleSpeed){if(!engineAudioReady||!carAudioCtx||carAudioCtx.state!=='running'||!engineAudioWanted)return;engineThrottleSmooth+=(throttle-engineThrottleSmooth)*.13;engineSpeedSmooth+=(Math.abs(vehicleSpeed)-engineSpeedSmooth)*.09;const rpm=THREE.MathUtils.clamp(.08+engineThrottleSmooth*.47+Math.min(engineSpeedSmooth/48,.48),0,1),index=rpm*(engineVoices.length-1),lo=Math.floor(index),hi=Math.min(engineVoices.length-1,lo+1),blend=index-lo,now=carAudioCtx.currentTime;engineVoices.forEach((v,i)=>{const weight=i===lo?1-blend:i===hi?blend:0;v.gain.gain.setTargetAtTime(weight*(.42+engineThrottleSmooth*.48),now,.09);v.source.playbackRate.setTargetAtTime((.88+i*.045)*(1+engineThrottleSmooth*.1),now,.12)})}
+function stopCarAudio(){engineAudioWanted=false;if(engineAudioReady&&carAudioCtx)carAudioMaster.gain.setTargetAtTime(0,carAudioCtx.currentTime,.25);lastExhaustThrottle=0}
+function triggerExhaustPop(intensity=1){
+ if(!engineAudioReady||!carAudioCtx||carAudioCtx.state!=='running'||!engineAudioWanted||!exhaustNoiseBuffer)return;
+ const now=carAudioCtx.currentTime,level=THREE.MathUtils.clamp(intensity,.35,1.35);
+ const osc=carAudioCtx.createOscillator(),og=carAudioCtx.createGain(),filter=carAudioCtx.createBiquadFilter();
+ osc.type='sawtooth';osc.frequency.setValueAtTime(112+Math.random()*35,now);osc.frequency.exponentialRampToValueAtTime(43+Math.random()*12,now+.105);
+ og.gain.setValueAtTime(.0001,now);og.gain.exponentialRampToValueAtTime(.24*level,now+.008);og.gain.exponentialRampToValueAtTime(.0001,now+.14);
+ filter.type='lowpass';filter.frequency.setValueAtTime(1050,now);filter.frequency.exponentialRampToValueAtTime(260,now+.13);osc.connect(filter);filter.connect(og);og.connect(carAudioMaster);osc.start(now);osc.stop(now+.15);
+ const noise=carAudioCtx.createBufferSource(),ng=carAudioCtx.createGain(),nf=carAudioCtx.createBiquadFilter();noise.buffer=exhaustNoiseBuffer;nf.type='bandpass';nf.frequency.setValueAtTime(780+Math.random()*600,now);nf.Q.value=.7;ng.gain.setValueAtTime(.0001,now);ng.gain.exponentialRampToValueAtTime(.16*level,now+.004);ng.gain.exponentialRampToValueAtTime(.0001,now+.105);noise.connect(nf);nf.connect(ng);ng.connect(carAudioMaster);noise.start(now);noise.stop(now+.11);
+}
+function updateCarAudio(throttle,vehicleSpeed){
+ if(!engineAudioReady||!carAudioCtx||carAudioCtx.state!=='running'||!engineAudioWanted)return;
+ engineThrottleSmooth+=(throttle-engineThrottleSmooth)*.13;engineSpeedSmooth+=(Math.abs(vehicleSpeed)-engineSpeedSmooth)*.09;
+ const rpm=THREE.MathUtils.clamp(.08+engineThrottleSmooth*.47+Math.min(engineSpeedSmooth/48,.48),0,1),index=rpm*(engineVoices.length-1),lo=Math.floor(index),hi=Math.min(engineVoices.length-1,lo+1),blend=index-lo,now=carAudioCtx.currentTime;
+ engineVoices.forEach((v,i)=>{const weight=i===lo?1-blend:i===hi?blend:0;v.gain.gain.setTargetAtTime(weight*(.42+engineThrottleSmooth*.48),now,.09);v.source.playbackRate.setTargetAtTime((.88+i*.045)*(1+engineThrottleSmooth*.1),now,.12)});
+ const speed=Math.abs(vehicleSpeed),lifted=lastExhaustThrottle>.68&&throttle<.12;
+ if(lifted&&speed>11&&now-lastExhaustPopAt>.24){triggerExhaustPop(.85+Math.min(speed/90,.35));lastExhaustPopAt=now;lastExhaustCrackleAt=now}
+ else if(throttle<.08&&speed>18&&rpm>.35&&now-lastExhaustPopAt>.42&&now-lastExhaustCrackleAt>.24&&Math.random()<.22){triggerExhaustPop(.38+Math.random()*.28);lastExhaustPopAt=now;lastExhaustCrackleAt=now}
+ lastExhaustThrottle=throttle;
+}
 const radioStations={
  drake:{label:'DRAKE RADIO',artist:'Drake',tracks:[
   {id:'xpVfcZ0ZcFM',title:"God's Plan"},{id:'RubBzkZzpUA',title:'Started From the Bottom'},{id:'uxpDa-c-4Mc',title:'Hotline Bling'},{id:'U9BwWKXjVaI',title:'Nice For What'},{id:'JFm7YDVlqnI',title:'Laugh Now Cry Later'},{id:'vcer12OFU2g',title:'One Dance (Live)'},{id:'DRS_PpOrUZ4',title:'In My Feelings'},{id:'xWggTb45brM',title:'Toosie Slide'},{id:'-zzP29emgpg',title:'Take Care'},{id:'COz9lDCFHjw',title:'Passionfruit'},{id:'KnkDL9lkbX8',title:"Hold On, We're Going Home"},{id:'PsW85VbSau0',title:'Controlla'},{id:'7LnBvuzjpr4',title:'Energy'},{id:'lJTRVX9R5EA',title:'Nonstop'},{id:'rIhx2wZ8jnA',title:"I'm Upset"},{id:'U5pzmGX8Ztg',title:'Worst Behavior'}

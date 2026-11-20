@@ -251,7 +251,7 @@ const northForestRoute=openRoad([[76,65],[125,112],[175,158],[205,220],[255,285]
 const forestRoute=openRoad([[-75,65],[-130,115],[-190,155],[-255,190],[-325,170],[-365,105],[-345,35],[-285,-15],[-220,-28],[-165,5],[-130,55]]);
 const industrialRoute=openRoad([[105,-48],[155,-95],[215,-125],[285,-115],[350,-75],[390,-15],[365,45],[305,65],[245,45],[190,5],[155,-35]]);
 // Roadside reflector posts and occasional warm lamps make the routes readable from a distance.
-const reflectorMat=new THREE.MeshBasicMaterial({color:0xffc76b}),openRoadPostMat=mat(0x303943,.5,.65),lampGlowMat=new THREE.MeshBasicMaterial({color:0xffd36a});
+const reflectorMat=new THREE.MeshBasicMaterial({color:0xffe3a1}),openRoadPostMat=mat(0x303943,.5,.65),lampGlowMat=new THREE.MeshBasicMaterial({color:0xfff1ce});
 for(const route of [northForestRoute,forestRoute,industrialRoute]){
  for(let i=3;i<70;i+=4){const p=route.getPointAt(i/72),t=route.getTangentAt(i/72),side=new THREE.Vector3(-t.z,0,t.x).normalize();
   for(const sign of [-1,1]){addWorldCollider(p.x+side.x*7.7*sign,p.z+side.z*7.7*sign,.18,.18);const post=new THREE.Mesh(new THREE.BoxGeometry(.13,.8,.13),openRoadPostMat);post.position.set(p.x+side.x*7.7*sign,.4,p.z+side.z*7.7*sign);scene.add(post);const reflector=new THREE.Mesh(new THREE.BoxGeometry(.16,.12,.035),reflectorMat);reflector.position.set(post.position.x,.72,post.position.z);scene.add(reflector)}
@@ -298,7 +298,7 @@ const signBoard=new THREE.Mesh(new THREE.BoxGeometry(7,2.8,.3),portGlow);signBoa
 
 
 // Environment: pine-like trees and distant hills
-const trunkMat=mat(0x201d20),leafMat=mat(0x101d1b),leaf2=mat(0x172725);
+const trunkMat=mat(0x201d20),leafMat=mat(0xeaf2ff,.98),leaf2=mat(0xeaf2ff,.98);
 // SOLID WORLD COLLISIONS: expanded-AABB car collision with axis sliding.
 function resolveWorldCollision(previous,next){
  if(collisionGridDirty)rebuildCollisionGrid();
@@ -334,7 +334,7 @@ for(let i=0;i<treeCount;i++){
  treeDummy.position.set(x,1.9,z);treeDummy.rotation.y=(i%17)*.37;treeDummy.scale.setScalar(1);treeDummy.updateMatrix();treeTrunks.setMatrixAt(ti,treeDummy.matrix);
  treeDummy.position.set(x,7,z);treeDummy.scale.setScalar(.88+(i%5)*.06);treeDummy.updateMatrix();treeCrowns.setMatrixAt(ti,treeDummy.matrix);
  treeColor.set(i%3===0?0x172a25:(i%3===1?0x10231e:0x1d3028));treeCrowns.setColorAt(ti,treeColor);
- const palette=[0xff1744,0xff8a00,0xffed35,0x35f06b,0x27d9ff,0x3975ff,0xc65bff,0xff4fc8];
+ const palette=[0xffffff,0xf4f8ff,0xe5f2ff,0xffffff,0xf8fbff,0xdcecff,0xffffff,0xf1f7ff];
  for(let ring=0;ring<3;ring++)for(let j=0;j<8;j++){
   const aa=j/8*Math.PI*2+ring*.22,rr=[2.05,1.55,1.02][ring],yy=[4.7,6.25,7.75][ring];
   christmasBulbData.push({position:new THREE.Vector3(x+Math.cos(aa)*rr,yy,z+Math.sin(aa)*rr),color:palette[(j+ring*3+i)%palette.length],phase:(i%5)*.16+ring*.12+j*.025});
@@ -343,7 +343,7 @@ for(let i=0;i<treeCount;i++){
 treeTrunks.count=placedTrees;treeCrowns.count=placedTrees;treeTrunks.instanceMatrix.needsUpdate=true;treeCrowns.instanceMatrix.needsUpdate=true;
 treeTrunks.castShadow=false;treeCrowns.castShadow=false;scene.add(treeTrunks,treeCrowns);
 const christmasBulbs=new THREE.InstancedMesh(new THREE.SphereGeometry(.105,5,4),new THREE.MeshBasicMaterial({color:0xffffff}),christmasBulbData.length),christmasDummy=new THREE.Object3D(),christmasColor=new THREE.Color();
-christmasBulbData.forEach((b,i)=>{christmasDummy.position.copy(b.position);christmasDummy.updateMatrix();christmasBulbs.setMatrixAt(i,christmasDummy.matrix);christmasColor.setHex(b.color).multiplyScalar(.08);christmasBulbs.setColorAt(i,christmasColor)});
+christmasBulbData.forEach((b,i)=>{christmasDummy.position.copy(b.position);christmasDummy.updateMatrix();christmasBulbs.setMatrixAt(i,christmasDummy.matrix);christmasColor.setHex(b.color).multiplyScalar(.92);christmasBulbs.setColorAt(i,christmasColor)});
 christmasBulbs.instanceMatrix.needsUpdate=true;if(christmasBulbs.instanceColor)christmasBulbs.instanceColor.needsUpdate=true;scene.add(christmasBulbs);let christmasBlinkTime=-1;
 const cottageWhite=new THREE.MeshBasicMaterial({color:0xffffff}),cottageWall=mat(0x34404a,.92),cottageRoof=mat(0x18212d,.86),cottageBulbPositions=[];
 // Place the six decorated cabins clear of every drivable road and one another.
@@ -378,7 +378,7 @@ for(let i=0;i<(mobileQuality?9:18);i++){
   const inward=side.clone().multiplyScalar(-sign);const arm=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,2.05),streetLampMetal);arm.position.set(inward.x*-.92,8.35,inward.z*-.92);arm.rotation.y=Math.atan2(inward.x,inward.z);group.add(arm);
   const head=new THREE.Mesh(new THREE.BoxGeometry(.72,.18,1.05),streetLampMetal);head.position.set(inward.x*1.82,8.28,inward.z*1.82);head.rotation.y=arm.rotation.y;group.add(head);
   const bulb=new THREE.Mesh(new THREE.BoxGeometry(.52,.035,.72),lampGlowMat);bulb.position.set(inward.x*1.82,8.17,inward.z*1.82);bulb.rotation.y=arm.rotation.y;group.add(bulb);
-  if(!mobileQuality&&i%3===0){const light=new THREE.PointLight(0xffc45f,66,78,1.4);light.position.set(inward.x*1.8,7.95,inward.z*1.8);light.castShadow=false;group.add(light);}
+  if(i%3===0){const light=new THREE.PointLight(0xffedc2,105,92,1.25);light.position.set(inward.x*1.8,7.95,inward.z*1.8);light.castShadow=false;group.add(light);}
   const halo=new THREE.Mesh(new THREE.SphereGeometry(.42,10,8),new THREE.MeshBasicMaterial({color:0xffd985,transparent:true,opacity:.16}));halo.position.set(inward.x*1.8,7.95,inward.z*1.8);group.add(halo);
  }
 }
@@ -941,7 +941,7 @@ function tick(t){
  if(perfPanel.style.display!=='none'&&t-perfLastUpdate>500){const elapsed=Math.max(1,t-perfWindowStart),fps=Math.round(perfFrames*1000/elapsed),info=renderer.info;perfPanel.textContent='PERFORMANCE  [F3]\nFPS: '+fps+'  |  Frame: '+(1000/Math.max(1,fps)).toFixed(1)+' ms\nResolution scale: '+renderer.getPixelRatio().toFixed(2)+'x\nDraw calls: '+info.render.calls+'\nTriangles: '+info.render.triangles.toLocaleString()+'\nGeometries: '+info.memory.geometries+'  Textures: '+info.memory.textures+'\nWorld colliders: '+worldColliders.length;perfFrames=0;perfWindowStart=t;perfLastUpdate=t}
  const dt=Math.min((t-last)/1000,.035);
  last=t;
- if(!garageMode&&christmasBulbData.length){const blink=Math.floor(t/850);if(blink!==christmasBlinkTime){christmasBlinkTime=blink;for(let i=0;i<christmasBulbData.length;i++){const b=christmasBulbData[i],on=Math.sin(t*.00115+b.phase)>-.12;christmasColor.setHex(b.color).multiplyScalar(on?1:.055);christmasBulbs.setColorAt(i,christmasColor)}if(christmasBulbs.instanceColor)christmasBulbs.instanceColor.needsUpdate=true}}
+ if(!garageMode&&christmasBulbData.length){const blink=Math.floor(t/850);if(blink!==christmasBlinkTime){christmasBlinkTime=blink;for(let i=0;i<christmasBulbData.length;i++){const b=christmasBulbData[i],on=Math.sin(t*.00115+b.phase)>-.12;christmasColor.setHex(b.color).multiplyScalar(on?1:.3);christmasBulbs.setColorAt(i,christmasColor)}if(christmasBulbs.instanceColor)christmasBulbs.instanceColor.needsUpdate=true}}
  if(garageMode){const a=1-Math.exp(-12*dt);camera.position.lerp(garageTargetPosition,a);cameraLook.lerp(garageTargetLook,a);camera.lookAt(cameraLook);if(camera.fov!==48){camera.fov=48;camera.updateProjectionMatrix()}}
  if(!paused){
   const gas=!!(keys.w||keys.arrowup),brake=!!(keys.s||keys.arrowdown);

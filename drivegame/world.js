@@ -16,8 +16,8 @@ function rng(seed) {
   return () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
 }
 
-function asphaltTexture() {
-  const S = 1024;
+function asphaltTexture(size = 1024) {
+  const S = size;
   const c = document.createElement('canvas'); c.width = c.height = S;
   const g = c.getContext('2d');
   g.fillStyle = '#323236'; g.fillRect(0, 0, S, S);
@@ -212,11 +212,11 @@ function buildRailRibbon(track, d, y0, y1, material) {
 // ---------------------------------------------------------------- main
 export function buildWorld(scene, track, opts = {}) {
   const treeFrac = opts.trees != null ? opts.trees : 1;
-  buildDem(scene, track);
+  buildDem(scene, track, opts.terrainStep || 22);
 
   // ---- road
   const roadMat = new THREE.MeshStandardMaterial({
-    map: asphaltTexture(), roughness: 0.94, metalness: 0,
+    map: asphaltTexture(opts.textureSize || 1024), roughness: 0.94, metalness: 0,
   });
   roadMat.map.anisotropy = Math.min(16, (opts.aniso || 8) * 2);
   const road = buildRibbon(track, -ROAD_HALF, ROAD_HALF, 0, roadMat, { vScale: 10 });

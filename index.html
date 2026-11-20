@@ -44,12 +44,24 @@
 #garage .garage-actions button{background:rgba(8,19,27,.88);border:1px solid #69808a;border-radius:3px;letter-spacing:.08em}
 #garage .garage-actions .primary{background:linear-gradient(110deg,#58ded8,#a7f1e8);color:#07171c;border:0}
 @media(max-width:700px){#garage .card{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:48px 9px 64px}#garage .garage-left,#garage .garage-right{padding:10px 11px;max-height:43vh;background:rgba(5,14,21,.86)}#garage label{font-size:10px;margin:8px 0}#garage h2{font-size:24px;right:10px;bottom:8px}}
+/* Minimal live-wallpaper title screen */
+#menu{background:linear-gradient(180deg,rgba(2,8,15,.22),rgba(2,8,15,.58) 68%,rgba(2,8,15,.78));backdrop-filter:none}
+#menu:before{inset:-18%;background:radial-gradient(ellipse at 50% 45%,transparent 18%,rgba(1,7,13,.18) 66%,rgba(1,6,12,.62) 100%),linear-gradient(110deg,transparent 35%,rgba(75,220,225,.06) 50%,transparent 65%);animation:wallpaperGlow 12s ease-in-out infinite alternate;transform:none}
+#menu:after{content:none}
+#menu .card{width:min(620px,94vw);padding:28px 20px;background:transparent;border:0;box-shadow:none;backdrop-filter:none;text-align:center;display:flex;flex-direction:column;align-items:center;gap:28px}
+#menu .card:before{display:none}
+#menu h1{font-size:clamp(44px,10vw,86px);line-height:.98;letter-spacing:-.055em;margin:0;text-transform:none;text-shadow:0 4px 28px #000,0 0 42px rgba(65,211,224,.25)}
+#menu .menu-actions{display:flex;flex-direction:column;align-items:stretch;width:min(270px,78vw);gap:12px}
+#menu .menu-actions button{width:100%;min-height:54px;margin:0;border-radius:8px;letter-spacing:.12em;font-size:12px;background:rgba(5,18,28,.72);border:1px solid rgba(163,209,220,.55);backdrop-filter:blur(10px);box-shadow:0 8px 26px #0006}
+#menu .menu-actions button.primary{background:linear-gradient(110deg,#12c4c2,#2778b5);border:0;color:#04131b}
+@keyframes wallpaperGlow{from{opacity:.72;transform:scale(1) translate3d(-.5%,0,0)}to{opacity:1;transform:scale(1.045) translate3d(.5%,-.4%,0)}}
+@media(max-width:520px){#menu .card{gap:24px;padding:22px 12px}#menu h1{font-size:clamp(42px,12vw,66px)}#menu .menu-actions{width:min(250px,82vw)}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
 <div id="loadingScreen"><div class="loading-panel"><div class="loading-mark">HARRISON MOTORSPORT</div><div class="loading-title">DRIFT WORLD</div><div class="loading-copy">PREPARING THE CIRCUIT</div><div class="loading-track"></div><div class="loading-foot">3D WORLD · GARAGE · TRACK</div></div></div>
-<div id="menu"><div class="card"><div class="eyebrow">HCG // 3D DRIFT WORLD</div><h1>BUILD IT.<br>SLIDE IT.</h1><p>A new 3D driving build. Hit the circuit, throw the car sideways, build drift points and tune your ride.</p><button class="primary" id="start">ENTER THE TRACK</button><button id="openGarage">GARAGE & TUNING</button><p style="font-size:11px">WASD / arrows to drive · Space for handbrake · Shift for boost · R to reset. Touch controls are available on phones.</p></div></div>
+<div id="menu"><div class="card"><h1>Harrison’s<br>Car Game</h1><div class="menu-actions"><button class="primary" id="start">ENTER GAME</button><button id="openGarage">GARAGE &amp; TUNING</button></div></div></div>
 <div id="garage"><div class="card"><button class="garage-back" id="closeGarage">← BACK</button><div class="garage-left">
 <label><span>TURBO: <b id="turboVal">14.3 psi</b></span><input id="turbo" type="range" min="0" max="25" step=".1" value="14.3"></label>
 <label><span>FRONT CAMBER: <b id="frontCamberVal">-5°</b></span><input id="frontCamber" type="range" min="-10" max="2" step=".5" value="-5"></label>

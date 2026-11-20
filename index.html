@@ -1192,7 +1192,7 @@ function tick(t){
   lateralSpeed+=lateralAccel*dt*.16;
 
   vel.copy(forward).multiplyScalar(speed).addScaledVector(side,lateralSpeed);
-  const previousCarPos=carPos.clone();carPos.addScaledVector(vel,dt);resolveWorldCollision(previousCarPos,carPos);resolveTrafficCollision(previousCarPos);if(carPos.distanceToSquared(previousCarPos)<.0001){speed*=.18;vel.multiplyScalar(.12);driftTimer=0;combo=1;}
+  const previousCarPos=carPos.clone();carPos.addScaledVector(vel,dt);resolveWorldCollision(previousCarPos,carPos);resolveTrafficCollision(previousCarPos);const roadSurface=driveGameTrack.query(carPos.x,carPos.z,{},carPos.y);if(roadSurface)carPos.y=roadSurface.y;if(carPos.distanceToSquared(previousCarPos)<.0001){speed*=.18;vel.multiplyScalar(.12);driftTimer=0;combo=1;}
   carRoot.position.copy(carPos);
   carRoot.position.y=carPos.y+.05+Math.sin(t*.012)*.005;
   const motionHeading=Math.atan2(-vel.x,-vel.z);

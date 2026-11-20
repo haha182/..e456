@@ -336,10 +336,10 @@ function addWorldCollider(x,z,halfX,halfZ){worldColliders.push({x,z,halfX,halfZ}
 
 // Collision boundaries follow Drive Game's real guardrail offsets.
 const driveRailColliderPoint=new THREE.Vector3();
-for(let i=0;i<driveGameTrack.n;i+=8){
+for(let i=0;i<driveGameTrack.n;i++){
  for(const side of [-1,1]){
   driveGameTrack.edge(i,side*DRIVE_GAME_RAIL_D,0,driveRailColliderPoint);
-  addWorldCollider(driveRailColliderPoint.x,driveRailColliderPoint.z,.62,.62);
+  addWorldCollider(driveRailColliderPoint.x,driveRailColliderPoint.z,2.65,2.65);
  }
 }
 

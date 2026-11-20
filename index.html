@@ -695,6 +695,47 @@ j7Line([[.25,.67,-.55],[.48,.67,-.57],[.71,.67,-.55]],.009,j7Ambient);
 // Low-output cabin lights give the LED strips a subtle real light spill.
 const j7DashGlow=new THREE.PointLight(0x168ed0,.24,2.8,2);j7DashGlow.position.set(0,1.05,-.58);j7Cabin.add(j7DashGlow);
 const j7FootGlow=new THREE.PointLight(0x0878c4,.16,2.0,2);j7FootGlow.position.set(-.1,.35,.02);j7Cabin.add(j7FootGlow);
+
+/* MK7 cockpit finishing pass: instrument binnacle, real layered controls and trim. */
+const j7GaugeHousing=new THREE.Mesh(new THREE.BoxGeometry(.73,.34,.13),j7Piano);j7GaugeHousing.position.set(-.49,1.13,-.91);j7Cabin.add(j7GaugeHousing);
+const j7GaugeFace=new THREE.MeshBasicMaterial({color:0x050a10});
+for(let g=0;g<2;g++){
+ const gx=-.67+g*.36,gy=1.145;
+ const rim=new THREE.Mesh(new THREE.TorusGeometry(.132,.012,8,40),j7Silver);rim.position.set(gx,gy,-.99);j7Cabin.add(rim);
+ const face=new THREE.Mesh(new THREE.CircleGeometry(.12,40),j7GaugeFace);face.position.set(gx,gy,-.994);j7Cabin.add(face);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(.092,.003,5,36),j7Blue);ring.position.set(gx,gy,-1.0);j7Cabin.add(ring);
+ for(let t=0;t<11;t++){const a=-Math.PI*.78+t*Math.PI*1.56/10;const tick=fpBox(j7Cabin,.006,.022,.006,gx+Math.sin(a)*.105,gy+Math.cos(a)*.105,-1.006,j7Silver);tick.rotation.z=-a}
+ const needle=fpBox(j7Cabin,.006,.078,.008,gx,gy+.035,-1.012,j7Blue);needle.rotation.z=g===0?-.28:.55;
+ const hub=new THREE.Mesh(new THREE.CircleGeometry(.012,16),j7Silver);hub.position.set(gx,gy,-1.018);j7Cabin.add(hub);
+}
+j7Panel(.34,.055,.035,-.49,1.34,-.89,j7Soft);
+j7Line([[-.94,1.25,-.94],[-.83,1.32,-.99],[-.49,1.35,-1.0],[-.15,1.32,-.99],[-.04,1.25,-.94]],.018,j7Leather);
+j7Line([[-.94,1.235,-.965],[-.72,1.29,-1.005],[-.49,1.305,-1.012],[-.26,1.29,-1.005],[-.04,1.235,-.965]],.005,j7Stitch);
+// Physical screen frame, side buttons, and metallic vent thumbwheels.
+j7Panel(.79,.46,.045,.49,1.015,-1.075,j7Silver);
+j7Panel(.755,.425,.04,.49,1.015,-1.105,j7Piano);
+j7Panel(.685,.345,.012,.49,1.025,-1.13,j7Screen);
+for(let k=0;k<3;k++){j7Panel(.018,.25,.012,.105+k*.018,.99,-1.14,j7Silver);j7Panel(.018,.25,.012,.875-k*.018,.99,-1.14,j7Silver)}
+j7Panel(.62,.018,.012,.49,.825,-1.14,j7Blue);
+for(const x of [-.39,-.23,.23,.39]){const vent=new THREE.Mesh(new THREE.CylinderGeometry(.027,.027,.018,20),j7Silver);vent.rotation.x=Math.PI/2;vent.position.set(x,1.105,-1.095);j7Cabin.add(vent)}
+// Realistic stitched steering-wheel rim and three spokes.
+const j7WheelRim=new THREE.Mesh(new THREE.TorusGeometry(.255,.031,12,64),j7Leather);j7WheelRim.position.set(-.49,1.22,-.505);j7Cabin.add(j7WheelRim);
+const j7WheelStitch=new THREE.MeshBasicMaterial({color:0x9b8a7c});
+for(let i=0;i<48;i++){const a=i/48*Math.PI*2;const bead=new THREE.Mesh(new THREE.SphereGeometry(.0038,5,5),j7WheelStitch);bead.position.set(-.49+Math.cos(a)*.282,1.22+Math.sin(a)*.282,-.505);j7Cabin.add(bead)}
+for(const [x,y,rz] of [[0,-.11,0],[-.13,.045,.65],[.13,.045,-.65]]){const spoke=fpBox(j7Cabin,.055,.19,.035,-.49+x,1.22+y,-.505,j7Silver);spoke.rotation.z=rz}
+const j7WheelBadge=new THREE.Mesh(new THREE.CylinderGeometry(.062,.062,.022,32),j7Piano);j7WheelBadge.rotation.x=Math.PI/2;j7WheelBadge.position.set(-.49,1.22,-.535);j7Cabin.add(j7WheelBadge);
+const j7WheelMark=new THREE.Mesh(new THREE.CircleGeometry(.036,32),j7Silver);j7WheelMark.position.set(-.49,1.22,-.55);j7Cabin.add(j7WheelMark);
+// Lower console detailing and cup-holder chrome rings.
+for(let i=0;i<2;i++){const ring=new THREE.Mesh(new THREE.TorusGeometry(.083,.009,8,32),j7Silver);ring.position.set(.35+i*.26,.602,.03);ring.rotation.x=Math.PI/2;j7Cabin.add(ring);const well=new THREE.Mesh(new THREE.CircleGeometry(.075,24),j7Piano);well.rotation.x=-Math.PI/2;well.position.set(.35+i*.26,.596,.03);j7Cabin.add(well)}
+j7Panel(.075,.055,.28,.18,.60,.13,j7Leather);
+j7Panel(.42,.018,.42,.48,.685,.49,j7Piano);
+j7Line([[.29,.655,.34],[.48,.66,.35],[.67,.655,.34]],.005,j7Stitch);
+// Door pull trim and speaker grille slats.
+for(const side of [-1,1]){
+ const handle=new THREE.Mesh(new THREE.TorusGeometry(.075,.009,7,24),j7Silver);handle.position.set(side*.99,1.34,-.12);handle.rotation.y=Math.PI/2;handle.scale.set(1,.48,1);j7Cabin.add(handle);
+ for(let k=0;k<7;k++)fpBox(j7Cabin,.006,.006,.22,side*1.005,.98,.57+k*.014,j7Silver);
+}
+
 let cockpitLookYaw=0,cockpitLookPitch=0,cockpitPointerDown=false,cockpitPointerX=0,cockpitPointerY=0;
 function updateFirstPersonCockpit(){firstPersonCockpit.visible=cameraMode===3&&!garageMode;fpWheel.rotation.z=-steerAngle*1.55;}
 
@@ -817,8 +858,8 @@ function tick(t){
   const speedRatio=Math.min(Math.abs(speed)/55,1);
   let desiredCam,desiredLook,targetFov;
   if(cameraMode===3){
-   desiredCam=carRoot.localToWorld(new THREE.Vector3(-.49,1.56,-.06));
-   desiredLook=carRoot.localToWorld(new THREE.Vector3(-.49+Math.sin(cockpitLookYaw)*15,1.48+Math.sin(cockpitLookPitch)*15,-Math.cos(cockpitLookYaw)*15));
+   desiredCam=carRoot.localToWorld(new THREE.Vector3(-.49,1.34,-.06));
+   desiredLook=carRoot.localToWorld(new THREE.Vector3(-.49+Math.sin(cockpitLookYaw)*15,1.30+Math.sin(cockpitLookPitch)*15,-Math.cos(cockpitLookYaw)*15));
    targetFov=66+speedRatio*2;
   }else{
    // Three distinct follow distances, with extra room at high speed.

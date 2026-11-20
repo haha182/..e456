@@ -308,7 +308,7 @@ for(let i=0;i<22;i++){
 }
 // A single straight night highway with a dealership at its end.
 const highwayWorld=new THREE.Group();scene.add(highwayWorld);
-const highwayRoute=new THREE.CatmullRomCurve3([new THREE.Vector3(0,0,45),new THREE.Vector3(0,0,-1450)],false,'catmullrom',0);
+const highwayRoute=new THREE.LineCurve3(new THREE.Vector3(0,0,45),new THREE.Vector3(0,0,-1450));
 const roadMat2=new THREE.MeshStandardMaterial({color:0x252a30,map:asphaltTexture,roughness:.96});
 const road2=new THREE.Mesh(new THREE.PlaneGeometry(28,1420),roadMat2);road2.rotation.x=-Math.PI/2;road2.position.set(0,.02,-670);highwayWorld.add(road2);
 const ground2=new THREE.Mesh(new THREE.PlaneGeometry(520,1900),new THREE.MeshBasicMaterial({color:0x080d13}));ground2.rotation.x=-Math.PI/2;ground2.position.set(0,-.12,-690);highwayWorld.add(ground2);
@@ -323,8 +323,9 @@ const dbox=(w,h,d,x,y,z,m)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d)
 dbox(62,.35,58,0,-.18,0,dfloor);dbox(62,1,58,0,13,0,dmat);dbox(62,13,1.1,0,6.5,-29,dmat);dbox(1.2,13,58,-31,6.5,0,dmat);dbox(1.2,13,58,31,6.5,0,dmat);
 dbox(20,12,1,-21,6,28,dmat);dbox(20,12,1,21,6,28,dmat);dbox(8,9,.35,0,4.5,28.4,dglass);
 for(const x of [-4.1,4.1])dbox(.18,9,.5,x,4.5,28.2,dneon);
-for(const x of [-27,-18,-9,0,9,18,27])dbox(8.5,8,.22,x,6.5,28.55,dglass);
+for(const x of [-25,-17,17,25])dbox(7,8,.22,x,6.5,28.55,dglass);
 dbox(62,.45,58,0,13.5,0,dmat);dbox(26,3,.5,0,16,29.1,dneon);
+const signCanvas=document.createElement('canvas');signCanvas.width=1024;signCanvas.height=160;const signCtx=signCanvas.getContext('2d');signCtx.fillStyle='#07151c';signCtx.fillRect(0,0,1024,160);signCtx.fillStyle='#a8ffff';signCtx.font='bold 66px Arial';signCtx.textAlign='center';signCtx.fillText('HIGHWAY MOTORSPORT',512,72);signCtx.font='bold 34px Arial';signCtx.fillText('DEALERSHIP  |  SALES  |  PERFORMANCE',512,125);const signTexture=new THREE.CanvasTexture(signCanvas);const signFace=new THREE.Mesh(new THREE.PlaneGeometry(25,2.6),new THREE.MeshBasicMaterial({map:signTexture,transparent:true}));signFace.position.set(0,16,29.38);dealerBuilding.add(signFace);
 for(const x of [-19,-7,7,19]){dbox(8,.38,13,x,.22,-4,dmat);dbox(7.4,.07,12.4,x,.45,-4,dneon)}
 for(const x of [-22,22]){const light=new THREE.PointLight(0x8beaff,115,40,1.4);light.position.set(x,10,4);dealerBuilding.add(light)}
 trafficCars.forEach((car,i)=>{car.route=highwayRoute;car.closed=false;car.u=.035+i*.041;car.lane=i%2===0?-7.2:7.2;car.targetLane=car.lane;car.allowedLanes=[car.lane];car.direction=1;car.speed=(19+(i%7)*2.7)/highwayRoute.getLength();car.group.position.set(car.lane,0,20-car.u*highwayRoute.getLength());highwayWorld.add(car.group)});
@@ -332,7 +333,7 @@ let onFoot=false,playerHeading=0;const playerPos=new THREE.Vector3(),playerAvata
 const playerBody=new THREE.Mesh(new THREE.CapsuleGeometry(.32,.85,4,8),new THREE.MeshStandardMaterial({color:0x25394b,roughness:.8}));playerBody.position.y=.95;playerAvatar.add(playerBody);
 const playerHead=new THREE.Mesh(new THREE.SphereGeometry(.24,12,10),new THREE.MeshStandardMaterial({color:0xc58d6a,roughness:.86}));playerHead.position.y=1.62;playerAvatar.add(playerHead);
 for(const x of [-.14,.14]){const leg=new THREE.Mesh(new THREE.BoxGeometry(.16,.58,.2),new THREE.MeshStandardMaterial({color:0x171d26}));leg.position.set(x,.36,0);playerAvatar.add(leg)}
-function toggleOnFoot(){if(paused||garageMode)return;if(!onFoot){onFoot=true;speed=0;vel.set(0,0,0);playerPos.copy(carPos).add(new THREE.Vector3(2.4,0,0));playerHeading=heading;playerAvatar.position.copy(playerPos);playerAvatar.visible=true;toast('ON FOOT - WASD TO WALK - E NEAR CAR TO DRIVE')}else if(playerPos.distanceTo(carPos)<7){onFoot=false;playerAvatar.visible=false;carRoot.visible=true;heading=playerHeading;carRoot.rotation.y=heading;toast('BACK IN CAR')}else toast('WALK BACK TO YOUR CAR TO GET IN')}
+function toggleOnFoot(){if(paused||garageMode)return;if(onFoot&&Math.abs(playerPos.x)<27&&playerPos.distanceTo(dealerBuilding.position)<38){openGarage();toast('DEALERSHIP SHOWROOM');return}if(!onFoot){onFoot=true;speed=0;vel.set(0,0,0);playerPos.copy(carPos).add(new THREE.Vector3(2.4,0,0));playerHeading=heading;playerAvatar.position.copy(playerPos);playerAvatar.visible=true;toast('ON FOOT - WASD TO WALK - E NEAR CAR TO DRIVE')}else if(playerPos.distanceTo(carPos)<7){onFoot=false;playerAvatar.visible=false;carRoot.visible=true;heading=playerHeading;carRoot.rotation.y=heading;toast('BACK IN CAR')}else toast('WALK BACK TO YOUR CAR TO GET IN')}
 let trafficNearMisses=0,trafficRewardFlash=0;
 function updateTraffic(dt){
  if(paused||garageMode||onFoot)return;

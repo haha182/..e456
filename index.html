@@ -1434,7 +1434,7 @@ requestAnimationFrame(tick);
 // Recorded engine audio: CC0 racing-car loops from OpenGameArt.
 // https://opengameart.org/content/racing-car-engine-sound-loops
 const ENGINE_SAMPLE_URLS=['https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_1_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_2_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_3_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_4_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_5.wav'];
-const CAR_AUDIO_PROFILES={lexus_lfa:{idle:15,pitch:1.18,harmonics:[.34,.15,.29],pop:1.62,shift:1.38},gti_2010:{idle:12.5,pitch:1.04,harmonics:[.34,.25,.22],pop:1.8,shift:1.3},gti_2010_hood_dump:{idle:12.5,pitch:1.08,harmonics:[.42,.30,.26],pop:1.8,shift:1.38},bmw_m4:{idle:13.5,pitch:1.02,harmonics:[.38,.21,.18],pop:1.25,shift:1.22}};
+const CAR_AUDIO_PROFILES={lexus_lfa:{idle:15,pitch:1.18,harmonics:[.34,.15,.29],pop:1.62,shift:1.38},gti_2010:{idle:12.5,pitch:1.04,harmonics:[.34,.25,.22],pop:1.8,shift:1.3},gti_2010_hood_dump:{idle:12.5,pitch:1.08,harmonics:[.42,.30,.26],pop:1.8,shift:1.38},bmw_m4:{idle:13.5,pitch:1.02,harmonics:[.38,.21,.18],pop:1.25,shift:1.22},dodge_challenger_2015:{idle:13.2,pitch:.88,harmonics:[.48,.24,.16],pop:1.48,shift:1.3}};
 function currentCarAudioProfile(){return CAR_AUDIO_PROFILES[$('carStyle')?.value]||CAR_AUDIO_PROFILES.lexus_lfa}
 let carAudioCtx=null,carAudioMaster=null,engineVoices=[],v8Voices=[],engineAudioReady=false,engineAudioLoading=false,engineAudioWanted=false,engineThrottleSmooth=0,engineSpeedSmooth=0,audioGear=1,audioGearShiftAt=0,exhaustNoiseBuffer=null,tireSquealSource=null,tireSquealGain=null,tireSquealFilter=null,lastExhaustThrottle=0,lastExhaustPopAt=0,lastExhaustCrackleAt=0,exhaustFlameUntil=0;
 let lfaRecordingBuffer=null,gtiRecordingBuffer=null,audioShiftDip=0,lastLFARevAt=0,lastGTIRevAt=0;
@@ -1637,11 +1637,11 @@ renderer.domElement.addEventListener('pointerup',()=>cockpitPointerDown=false);r
 $('cameraBtn').onclick=changeCamera;$('garageBtn').onclick=openGarage;
 // Single-car garage: the Lexus LFA is permanently unlocked as the starter car.
 let dealerCash=Number(localStorage.hcg_cash??150000);
-localStorage.hcgStyle=localStorage.hcgStyle||'lexus_lfa';localStorage.hcg_ownedCars='["lexus_lfa","gti_2010"]';
+localStorage.hcgStyle=localStorage.hcgStyle||'lexus_lfa';localStorage.hcg_ownedCars='["lexus_lfa","gti_2010","gti_2010_hood_dump","bmw_m4","dodge_challenger_2015"]';
 function updateDealerUI(){
  const cash=$('dealerCash');if(cash)cash.textContent='$'+dealerCash.toLocaleString('en-US');
  const driveCash=$('driveCash');if(driveCash)driveCash.textContent='CASH '+dealerCash.toLocaleString('en-US');
- const msg=$('dealerMessage');if(msg)msg.textContent='YOUR CARS: LEXUS LFA + GTI STREET + GTI HOOD DUMP + BMW M4 · ALL UNLOCKED';
+ const msg=$('dealerMessage');if(msg)msg.textContent='YOUR CARS: LEXUS LFA + GTI STREET + GTI HOOD DUMP + BMW M4 + DODGE CHALLENGER · ALL FREE';
  const choice=$('carStyle')?.value||'lexus_lfa',label=extraCarModels[choice]?.label||'SELECTED VEHICLE';
  const active=$('dealerPanel')?.querySelector('.garage-current-car strong');if(active)active.textContent=label.toUpperCase();
  document.querySelectorAll('#dealerCarChoices [data-car-choice]').forEach(b=>{const selected=b.dataset.carChoice===choice;b.classList.toggle('active',selected);b.setAttribute('aria-pressed',selected?'true':'false')});

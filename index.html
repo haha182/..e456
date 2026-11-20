@@ -370,7 +370,7 @@ let speed=0,slip=0,heading=0,score=0,points=0,boost=100,steerAngle=0,paused=true
 carRoot.position.copy(carPos);carRoot.position.y=0;
 const $=id=>document.getElementById(id);
 function toast(s){$('toast').textContent=s;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',1800)}
-function reset(){carPos=curve.getPointAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=0;carRoot.position.copy(carPos);carRoot.rotation.y=0}
+function reset(){carPos=curve.getPointAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=0;steerAngle=0;driftAngle=0;driftTimer=0;combo=1;keys={};carRoot.position.copy(carPos);carRoot.rotation.set(0,0,0);$('speed').textContent='0';$('combo').textContent='x1';const arc=$('speedArc');if(arc)arc.style.strokeDashoffset='270'}
 function changeCamera(){cameraMode=(cameraMode+1)%4;if(cameraMode===3){cockpitLookYaw=0;cockpitLookPitch=0}cockpitPointerDown=false;toast(["Chase camera","Close camera","High camera","First-person cockpit — drag mouse to look"][cameraMode]);if(cameraMode===3)updateFirstPersonCockpit()}
 const bmwDetails=new THREE.Group();carRoot.add(bmwDetails);
 const kidneyMat=mat(0x080d12,.38,.72),kidneyTrim=mat(0x9ba6aa,.3,.8);

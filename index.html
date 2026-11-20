@@ -537,7 +537,7 @@ function setWorldTime(mode){
  renderer.toneMappingExposure=p.exposure;
  ground.material.color.setHex(currentWorldTime==='day'?0x34402f:currentWorldTime==='sunset'?0x211a20:currentWorldTime==='galaxy'?0x090719:0x080d13);
  if(skyDome){skyDome.material.uniforms.top.value.setHex(p.top);skyDome.material.uniforms.horizon.value.setHex(p.horizon);skyDome.material.needsUpdate=true}
- const selector=$('worldTimeSelect');if(selector&&selector.value!==currentWorldTime)selector.value=currentWorldTime;
+ const selector=document.getElementById('worldTimeSelect');if(selector&&selector.value!==currentWorldTime)selector.value=currentWorldTime;
 }
 $('worldTimeSelect').addEventListener('change',e=>{setWorldTime(e.target.value);toast('WORLD LIGHTING · '+e.target.value.toUpperCase())});
 setWorldTime('night');

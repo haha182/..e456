@@ -754,20 +754,8 @@ const mMark=new THREE.Mesh(new THREE.BoxGeometry(.075,.018,.012),new THREE.MeshB
 for(const x of [-.48,.48]){const seat=new THREE.Mesh(new THREE.BoxGeometry(.55,.72,.62),leatherMat);seat.position.set(x,.83,.66);e46Cabin.add(seat);const headrest=new THREE.Mesh(new THREE.BoxGeometry(.38,.25,.20),leatherMat);headrest.position.set(x,1.30,.78);e46Cabin.add(headrest)}
 const shifter=new THREE.Mesh(new THREE.CylinderGeometry(.025,.035,.20,12),trimMat);shifter.position.set(.15,.88,.05);e46Cabin.add(shifter);
 function applyE46Paint(){e46Paint.color.copy(paintMat.color)}
-// Load the CC0 Spectral GT RS GLB from its original public repository.
-const spectralLoader=new GLTFLoader();
-spectralLoader.load('https://raw.githubusercontent.com/JaronKBragg7337/spectral-gt-rs/main/spectral_gt_rs_game_ready.glb',gltf=>{
- const model=gltf.scene;model.rotation.y=Math.PI/2;model.updateMatrixWorld(true);
- let bounds=new THREE.Box3().setFromObject(model),dims=bounds.getSize(new THREE.Vector3());
- const longest=Math.max(dims.x,dims.z);if(!longest)throw new Error('Spectral GT model has no measurable geometry');
- model.scale.setScalar(4.65/longest);model.updateMatrixWorld(true);bounds.setFromObject(model);const center=bounds.getCenter(new THREE.Vector3());model.position.x-=center.x;model.position.z-=center.z;model.position.y-=bounds.min.y;
- const spectralWheels=[];
- model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(Array.isArray(o.material))o.material=o.material.map(m=>m.clone());else if(o.material)o.material=o.material.clone();}if(/wheel|tire/i.test(o.name)&&!(/wheel|tire/i.test(o.parent?.name||''))){spectralWheels.push({node:o,position:o.position.clone(),worldPosition:o.getWorldPosition(new THREE.Vector3()),rotation:o.rotation.clone()})}});
- spectralModel.add(model);spectralModel.userData.wheels=spectralWheels;spectralModel.userData.paintMaterials=[];model.traverse(o=>{if(!o.isMesh)return;const materials=Array.isArray(o.material)?o.material:[o.material];for(const m of materials){if(!m||!m.color)continue;const n=(m.name+' '+o.name).toLowerCase();if(/paint|body|exterior|shell|fender|hood|bumper|door/.test(n)&&!/glass|window|rubber|tire|wheel|trim/.test(n))spectralModel.userData.paintMaterials.push(m)}});
- spectralClips=gltf.animations||[];spectralMixer=spectralClips.length?new THREE.AnimationMixer(model):null;
- const steeringClip=spectralClips.find(a=>a.name.toLowerCase().includes('steering'));if(steeringClip&&spectralMixer)spectralMixer.clipAction(steeringClip).play();
- spectralReady=true;applyStyle('spectral_gt');applyTune();finishLoading();if($('garageStatus'))$('garageStatus').textContent='SPECTRAL GT RS READY';toast('Spectral GT RS loaded');
-},undefined,error=>{console.error('Spectral GT RS load failed:',error);if($('garageStatus'))$('garageStatus').textContent='CAR MODEL FAILED TO LOAD — RELOAD TO RETRY';finishLoading();toast('Spectral GT download failed — check connection');});
+// Skip the unused Spectral GT network preload. The chosen car loads on demand.
+finishLoading();
 // Additional original CC0 cars from Innerscene's public-domain library.
 const extraCarLoader=new GLTFLoader();extraCarLoader.setMeshoptDecoder(MeshoptDecoder);
 // 2012 Lexus LFA Nürburgring Package, Ddiaz Design, CC BY-NC-SA 4.0.
@@ -1566,7 +1554,7 @@ function updateDealerUI(){
  document.querySelectorAll('#dealerCarChoices [data-car-choice]').forEach(b=>{const selected=b.dataset.carChoice===choice;b.classList.toggle('active',selected);b.setAttribute('aria-pressed',selected?'true':'false')});
 }
 $('carStyle').value=['gti_2010','gti_2010_hood_dump','bmw_m4'].includes(localStorage.hcgStyle)?localStorage.hcgStyle:'lexus_lfa';
-applyStyle();
+// Load the selected vehicle only when the player starts driving or opens the garage.
 $('carStyle').addEventListener('change',()=>{localStorage.hcgStyle=$('carStyle').value;applyStyle();updateDealerUI()});
 document.querySelectorAll('[data-car-choice]').forEach(button=>button.addEventListener('click',()=>{
  const choice=button.dataset.carChoice;if(!extraCarModels[choice])return;

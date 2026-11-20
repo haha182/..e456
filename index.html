@@ -1540,7 +1540,7 @@ function closeGarage(){
  $('garage').style.display='none';
  if(garageMode){
   garageMode=false;garageCameraReady=false;garageFramingKey='';for(const [object,wasVisible] of garageVisibilitySnapshot)object.visible=wasVisible;garageVisibilitySnapshot.length=0;showroom.visible=false;applyStyle($('carStyle').value);updateFirstPersonCockpit();
-  adaptivePixelRatio=Math.min(adaptivePixelRatio,devicePixelRatioCap);applyAdaptivePixelRatio();setWorldTime(currentWorldTime);scene.fog=new THREE.Fog(0x091323,175,500);renderer.setClearColor(0x050914,1);
+  adaptivePixelRatio=Math.min(adaptivePixelRatio,devicePixelRatioCap);applyAdaptivePixelRatio();scene.fog=new THREE.Fog(0x091323,175,500);setWorldTime(currentWorldTime);renderer.setClearColor(0x050914,1);
   $('ui').style.display=garageWasPlaying?'block':'none';$('help').style.display=garageWasPlaying?'block':'none';$('touch').style.display=touchControls&&garageWasPlaying?'flex':'none';$('driveActions').style.display=garageWasPlaying?'block':'none';$('carRadio').style.display=garageWasPlaying?'block':'none';
   if(garageWasPlaying){$('ui').style.display='block'}else{$('menu').style.display='grid'}
   carPos.copy(garagePos);heading=garageHeading;carRoot.position.copy(carPos);carRoot.rotation.y=heading;

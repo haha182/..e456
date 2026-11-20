@@ -601,7 +601,7 @@ function applyCustomizations(){
    for(const m of mats){
     if(!m||!m.color)continue;
     const n=((m.name||'')+' '+(o.name||'')).toLowerCase();
-    if(inWheel||/wheel|rim|alloy/i.test(n))m.color.set(rimColor);
+    if((inWheel&&!/rubber|tire/i.test(n))||/wheel|rim|alloy/i.test(n))m.color.set(rimColor);
     if(/glass|window|windshield|windscreen/.test(n)||m.name==='GTI_GLASS'){
      if(!m.userData.hcgTintBase)m.userData.hcgTintBase=m.color.clone();
      m.color.copy(m.userData.hcgTintBase).lerp(tintColor,tint/100);
@@ -825,7 +825,7 @@ const bmwModelCredit=document.createElement('div');bmwModelCredit.style.cssText=
  const paint=new THREE.MeshPhysicalMaterial({color:0xb71925,metalness:.48,roughness:.22,clearcoat:1,clearcoatRoughness:.07});paint.name='GTI_BODY_PAINT';
  const glass=new THREE.MeshPhysicalMaterial({color:0x101f2b,metalness:.18,roughness:.12,transparent:true,opacity:.78,clearcoat:1});glass.name='GTI_GLASS';
  const black=new THREE.MeshStandardMaterial({color:0x101316,roughness:.68});
- const rubber=new THREE.MeshStandardMaterial({color:0x090b0d,roughness:.94});
+ const rubber=new THREE.MeshStandardMaterial({color:0x090b0d,roughness:.94});rubber.name='GTI_RUBBER';
  const alloy=new THREE.MeshStandardMaterial({color:0xb7c0c5,metalness:.86,roughness:.24});alloy.name='GTI_ALLOY';
  const red=new THREE.MeshStandardMaterial({color:0xb90e18,emissive:0x260000});
  const white=new THREE.MeshStandardMaterial({color:0xdce9f0,emissive:0x607080,emissiveIntensity:.28});
@@ -878,7 +878,7 @@ const bmwModelCredit=document.createElement('div');bmwModelCredit.style.cssText=
 {
  const base=extraCarModels.gti_2010.group,hood=extraCarModels.gti_2010_hood_dump.group;
  for(const child of base.children)hood.add(child.clone());
- hood.userData.vehicleHeight=base.userData.vehicleHeight;hood.userData.vehicleSize=base.userData.vehicleSize.clone();hood.userData.cameraCenter=base.userData.cameraCenter.clone();
+ hood.userData.vehicleHeight=base.userData.vehicleHeight;hood.userData.vehicleSize=base.userData.vehicleSize.clone();hood.userData.cameraCenter=base.userData.cameraCenter.clone();hood.userData.paintMaterials=base.userData.paintMaterials;hood.userData.glassMaterials=base.userData.glassMaterials;
  const rim=new THREE.Mesh(new THREE.TorusGeometry(.105,.026,8,24),new THREE.MeshStandardMaterial({color:0x9da8ae,metalness:.82,roughness:.25}));rim.rotation.x=Math.PI/2;rim.position.set(0,1.145,-1.62);hood.add(rim);
  const hole=new THREE.Mesh(new THREE.CircleGeometry(.083,24),new THREE.MeshBasicMaterial({color:0x030608,side:THREE.DoubleSide}));hole.rotation.x=-Math.PI/2;hole.position.set(0,1.148,-1.62);hood.add(hole);
  const collar=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.035,24),new THREE.MeshStandardMaterial({color:0x22292d,metalness:.8,roughness:.3}));collar.position.set(0,1.125,-1.62);hood.add(collar);

@@ -462,8 +462,8 @@ function applyStyle(){
   if(!longest)throw Error('Downloaded car model contains no measurable geometry');
   model.scale.setScalar(4.65/longest);model.updateMatrixWorld(true);bounds.setFromObject(model);const center=bounds.getCenter(new THREE.Vector3());model.position.x-=center.x;model.position.z-=center.z;model.position.y-=bounds.min.y;
   model.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false;if(Array.isArray(o.material))o.material=o.material.map(m=>m.clone());else if(o.material)o.material=o.material.clone()}});
-  item.group.add(model);item.ready=true;item.loading=false;item.group.visible=true;applyTune();$('carLabel').textContent=item.label.toUpperCase();if(status)status.textContent=item.label.toUpperCase()+' READY';toast(item.label+' loaded');
- },undefined,error=>{item.loading=false;console.error(item.label+' load failed:',error);$('carLabel').textContent='CAR DOWNLOAD FAILED';if(status)status.textContent='MODEL DOWNLOAD FAILED — SELECT ANOTHER CAR';toast('Could not download '+item.label+'; your other cars are still available')});
+  item.group.add(model);item.ready=true;item.loading=false;const isSelected=$('carStyle').value===choice;item.group.visible=isSelected;applyTune();if(isSelected){$('carLabel').textContent=item.label.toUpperCase();if(status)status.textContent=item.label.toUpperCase()+' READY';toast(item.label+' loaded')}
+ },undefined,error=>{item.loading=false;console.error(item.label+' load failed:',error);if($('carStyle').value===choice){$('carLabel').textContent='CAR DOWNLOAD FAILED';if(status)status.textContent='MODEL DOWNLOAD FAILED — SELECT ANOTHER CAR';toast('Could not download '+item.label+'; your other cars are still available')}});
 }
 
 // REBUILT BMW E46 M3: replace the placeholder silhouette with a complete, separate model.
@@ -987,7 +987,7 @@ const radioStations={
   {id:'bd5l5NtzoWc',title:'Gët Busy'},{id:'QfKBrsRBncI',title:'On tha line'},{id:'1xcvWmN0Pe4',title:'If We Being Rëal'},{id:'NzXGXMgdGOI',title:'Flawlëss'},{id:'7Qe6qcNuyYY',title:'Talk'},{id:'QqzXvvdk3bQ',title:'COMË N GO'},{id:'Vq8EYreJaMs',title:'Nun id change'},{id:'Udi5-qWw4Dw',title:'Monëy Twerk'},{id:'oXS8DxRYvbU',title:'Breathe'},{id:'htcVW-nLV7E',title:'No morë talk'}
  ]}, 
  christmas:{label:'CHRISTMAS RADIO',artist:'Christmas Mix · 2026 Hits',tracks:[
-  {id:'nUsrYVxrDwI',title:'Choosin’ Texas · Ella Langley'},{id:'DPEodkHzH-s',title:'Housewife · Tate McRae'},{id:'0UPDBODtxzw',title:'Dracula · Tame Impala & JENNIE'},{id:'E8gmARGvPlI',title:'Last Christmas · Wham!'},{id:'yXQViqx6GMY',title:'All I Want for Christmas Is You · Mariah Carey'},{id:'3JWTaaS7LdU',title:'Rockin’ Around the Christmas Tree · Brenda Lee'},{id:'aAkMkVFwAoo',title:'Santa Tell Me · Ariana Grande'},{id:'2HkJHApgKqw',title:'Underneath the Tree · Kelly Clarkson'},{id:'j9jbdgZidu8',title:'Mistletoe · Justin Bieber'},{id:'aLSG4kA8V0g',title:'Jingle Bell Rock · Bobby Helms'}
+  {id:'nUsrYVxrDwI',title:'Choosin’ Texas · Ella Langley'},{id:'DPEodkHzH-s',title:'Housewife · Tate McRae'},{id:'0UPDBODtxzw',title:'Dracula · Tame Impala & JENNIE'},{id:'ngyaXb9BohU',title:'Stupid Song · Olivia Rodrigo'},{id:'ljAH6jNaApU',title:'BbY WOW · KAROL G, Judeline & rusowsky'},{id:'E8gmARGvPlI',title:'Last Christmas · Wham!'},{id:'yXQViqx6GMY',title:'All I Want for Christmas Is You · Mariah Carey'},{id:'3JWTaaS7LdU',title:'Rockin’ Around the Christmas Tree · Brenda Lee'},{id:'aAkMkVFwAoo',title:'Santa Tell Me · Ariana Grande'},{id:'2HkJHApgKqw',title:'Underneath the Tree · Kelly Clarkson'},{id:'j9jbdgZidu8',title:'Mistletoe · Justin Bieber'},{id:'aLSG4kA8V0g',title:'Jingle Bell Rock · Bobby Helms'}
  ]}
 
 };

@@ -136,7 +136,7 @@ const ground=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),mat(0x111a1b,.98)
 const asphaltCanvas=document.createElement('canvas');asphaltCanvas.width=256;asphaltCanvas.height=256;
 const asphaltCtx=asphaltCanvas.getContext('2d');asphaltCtx.fillStyle='#30343a';asphaltCtx.fillRect(0,0,256,256);
 let asphaltSeed=918273;for(let i=0;i<18000;i++){asphaltSeed=(asphaltSeed*1664525+1013904223)>>>0;const x=asphaltSeed&255;asphaltSeed=(asphaltSeed*1664525+1013904223)>>>0;const y=asphaltSeed&255;const v=asphaltSeed&31;asphaltCtx.fillStyle=v<16?'rgba(5,8,12,.20)':'rgba(190,196,202,.10)';asphaltCtx.fillRect(x,y,1+(v%2),1+(v%2))}
-const asphaltTexture=new THREE.CanvasTexture(asphaltCanvas);asphaltTexture.wrapS=asphaltTexture.wrapT=THREE.RepeatWrapping;asphaltTexture.repeat.set(2,42);asphaltTexture.colorSpace=THREE.SRGBColorSpace;asphaltTexture.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+const asphaltTexture=new THREE.CanvasTexture(asphaltCanvas);asphaltTexture.wrapS=asphaltTexture.wrapT=THREE.RepeatWrapping;asphaltTexture.repeat.set(1,1);asphaltTexture.colorSpace=THREE.SRGBColorSpace;asphaltTexture.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
 const roadMat=new THREE.MeshStandardMaterial({color:0x777b80,map:asphaltTexture,roughness:.96}),lineMat=mat(0xf0e9d4),curbRed=mat(0xd94a43),curbWhite=mat(0xe9e9e5);
 const pts=[new THREE.Vector3(0,0,-72),new THREE.Vector3(48,0,-95),new THREE.Vector3(105,0,-58),new THREE.Vector3(112,0,8),new THREE.Vector3(72,0,68),new THREE.Vector3(5,0,91),new THREE.Vector3(-66,0,68),new THREE.Vector3(-112,0,14),new THREE.Vector3(-90,0,-48)];
 const curve=new THREE.CatmullRomCurve3(pts,true,'catmullrom',.22);

@@ -376,12 +376,12 @@ for(const side of [-1,1]){
 // Instanced roadside trees: natural forest framing without hundreds of separate draw calls.
 const driveTreeCount=210;
 const driveTrunks=new THREE.InstancedMesh(driveTrunkGeo,driveTreeTrunkMat,driveTreeCount);
-const driveCanopies=driveTreeLeafMats.map(m=>new THREE.InstancedMesh(driveCanopyGeo,m,driveTreeCount));
+const driveCanopies=driveTreeLeafMats.map(m=>new THREE.InstancedMesh(driveCanopyGeo,m,Math.ceil(driveTreeCount/3)));
 for(let i=0;i<driveTreeCount;i++){
  const t=driveRand(),side=driveRand()<.5?-1:1,offset=17+driveRand()*37,p=curve.getPointAt(t),tan=curve.getTangentAt(t),right=new THREE.Vector3(-tan.z,0,tan.x).normalize();
  const x=p.x+right.x*side*offset,z=p.z+right.z*side*offset,scale=.72+driveRand()*.8;
  driveDummy.position.set(x,1.05*scale,z);driveDummy.scale.set(scale,scale,scale);driveDummy.rotation.y=driveRand()*Math.PI*2;driveDummy.updateMatrix();driveTrunks.setMatrixAt(i,driveDummy.matrix);
- driveDummy.position.set(x,3.1*scale,z);driveDummy.scale.set(scale,scale,scale);driveDummy.rotation.y=driveRand()*Math.PI*2;driveDummy.updateMatrix();driveCanopies[i%3].setMatrixAt(i,driveDummy.matrix);
+ driveDummy.position.set(x,3.1*scale,z);driveDummy.scale.set(scale,scale,scale);driveDummy.rotation.y=driveRand()*Math.PI*2;driveDummy.updateMatrix();driveCanopies[i%3].setMatrixAt(Math.floor(i/3),driveDummy.matrix);
 }
 driveTrunks.instanceMatrix.needsUpdate=true;driveTreeWorldAdd();
 function driveTreeWorldAdd(){driveRailWorld.add(driveTrunks,...driveCanopies)}
@@ -839,7 +839,7 @@ carRoot.position.copy(carPos);carRoot.position.y=0;
 function shiftManualGear(delta){if(!manualMode)return;const next=THREE.MathUtils.clamp(manualGear+delta,0,6),caps=[18,29,42,57,74,96];if(next===manualGear)return;if(delta<0&&next>0&&Math.abs(speed)>caps[next-1]*.96){toast('DOWNSHIFT BLOCKED · TOO FAST');return}manualGear=next;manualShiftLockUntil=performance.now()+180;audioGear=manualGear;audioShiftDip=1;$('manualBtn').textContent='MANUAL '+(manualGear===0?'N':manualGear);toast(manualGear===0?'NEUTRAL · ENGINE DISCONNECTED':'GEAR '+manualGear+' · '+(delta>0?'UPSHIFT':'DOWNSHIFT'))}
 const $=id=>document.getElementById(id);
 function toast(s){$('toast').textContent=s;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',1800)}
-function reset(){carPos=curve.getPointAt(.03);const resetTangent=curve.getTangentAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=Math.atan2(-resetTangent.x,-resetTangent.z);steerAngle=0;driftAngle=0;driftTimer=0;combo=1;keys={};carRoot.position.copy(carPos);carRoot.rotation.set(0,0,0);$('speed').textContent='0';$('combo').textContent='x1';const arc=$('speedArc');if(arc)arc.style.strokeDashoffset='270'}
+function reset(){carPos=curve.getPointAt(.03);const resetTangent=curve.getTangentAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=Math.atan2(-resetTangent.x,-resetTangent.z);steerAngle=0;driftAngle=0;driftTimer=0;combo=1;keys={};carRoot.position.copy(carPos);carRoot.rotation.set(0,heading,0);$('speed').textContent='0';$('combo').textContent='x1';const arc=$('speedArc');if(arc)arc.style.strokeDashoffset='270'}
 function changeCamera(){cameraMode=cameraMode===3?0:3;cameraSnap=true;if(cameraMode===3){cockpitLookYaw=0;cockpitLookPitch=0}cockpitPointerDown=false;toast(cameraMode===3?'First-person cockpit — drag mouse to look':'Close chase camera');updateFirstPersonCockpit()}
 const bmwDetails=new THREE.Group();carRoot.add(bmwDetails);
 const kidneyMat=mat(0x080d12,.38,.72),kidneyTrim=mat(0x9ba6aa,.3,.8);

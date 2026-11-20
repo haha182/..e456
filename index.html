@@ -1146,8 +1146,12 @@ function appendEndlessRoad(){
 }
 function updateEndlessRoads(position,heading){
  if(!endlessRoadActive||!endlessRoadEnd)return;
+ let nearest=Infinity;
+ for(const chunk of endlessRoadChunks){
+  nearest=Math.min(nearest,position.distanceToSquared(chunk.start),position.distanceToSquared(chunk.end));
+ }
+ if(nearest>650*650){resetEndlessRoads(position,heading);return}
  const dx=position.x-endlessRoadEnd.x,dz=position.z-endlessRoadEnd.z;
- if(dx*dx+dz*dz>650*650){resetEndlessRoads(position,heading);return}
  if(dx*dx+dz*dz<330*330)appendEndlessRoad();
 }
 
@@ -1480,7 +1484,7 @@ function start(){
   setWorldTime(currentWorldTime);renderer.setClearColor(scene.background,1);
   carPos.copy(curve.getPointAt(.03));const spawnTangent=curve.getTangentAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=Math.atan2(-spawnTangent.x,-spawnTangent.z);steerAngle=0;driftAngle=0;driftTimer=0;combo=1;score=0;points=0;boost=100;keys={};cameraMode=0;cockpitLookYaw=0;cockpitLookPitch=0;cockpitPointerDown=false;lastRender=0;camera.fov=65;camera.updateProjectionMatrix();
   $('speed').textContent='0';$('score').textContent='0';$('combo').textContent='x1';$('speedArc').style.strokeDashoffset='270';
-  carRoot.visible=true;restoreTreeVisibility(carRoot,true);applyStyle($('carStyle').value);carRoot.position.copy(carPos);carRoot.rotation.set(0,heading,0);
+  carRoot.visible=true;restoreTreeVisibility(carRoot,true);applyStyle($('carStyle').value);carRoot.position.copy(carPos);carRoot.rotation.set(0,heading,0);resetEndlessRoads(carPos,heading);
   camera.position.set(carPos.x+Math.sin(heading)*6.1,carPos.y+2.85,carPos.z+Math.cos(heading)*6.1);
   cameraLook.set(carPos.x,carPos.y+1.5,carPos.z-2.15);camera.fov=56;camera.updateProjectionMatrix();camera.lookAt(cameraLook);cameraSnap=true;
   $('menu').style.display='none';$('garage').style.display='none';

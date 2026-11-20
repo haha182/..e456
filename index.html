@@ -257,7 +257,7 @@ let startupFailsafe=0;
 startupFailsafe=setTimeout(()=>{if(!introFinished)showGameError('Startup is taking longer than expected. Check your connection, then reload the game.');},25000);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,175,500);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,950);
-const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const isChromeOS=/CrOS/i.test(navigator.userAgent);const touchControls=matchMedia('(pointer:coarse)').matches&&navigator.maxTouchPoints>0;const renderer=new THREE.WebGLRenderer({antialias:!mobileQuality,powerPreference:'high-performance',precision:'highp'});renderer.setPixelRatio(isChromeOS ? 0.78 :(mobileQuality?Math.min(devicePixelRatio,1.12):Math.min(devicePixelRatio,1.35)));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=!mobileQuality||isChromeOS;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;document.body.appendChild(renderer.domElement);
+const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const isChromeOS=/CrOS/i.test(navigator.userAgent);const touchControls=matchMedia('(pointer:coarse)').matches&&navigator.maxTouchPoints>0;const renderer=new THREE.WebGLRenderer({antialias:!mobileQuality,powerPreference:'high-performance',precision:'highp'});renderer.setPixelRatio(isChromeOS ? 0.78 :(mobileQuality?Math.min(devicePixelRatio,1.12):Math.min(devicePixelRatio,1.35)));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=!mobileQuality&&!isChromeOS;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.24;document.body.appendChild(renderer.domElement);
 // Optional live performance diagnostics: press F3 while driving to show/hide.
 const perfPanel=document.createElement('div');perfPanel.id='perfPanel';perfPanel.style.cssText='position:fixed;left:12px;top:12px;z-index:30;display:none;padding:9px 11px;background:#06111ddd;border:1px solid #6d879966;border-radius:8px;color:#dff3ff;font:12px/1.55 ui-monospace,monospace;pointer-events:none;white-space:pre;';perfPanel.textContent='PERFORMANCE';document.body.appendChild(perfPanel);
 let perfFrames=0,perfWindowStart=performance.now(),perfLastUpdate=0;
@@ -288,8 +288,8 @@ window.addEventListener('keydown',e=>{if(e.code==='F3'&&!e.repeat){perfPanel.sty
   else setTimeout(buildStudioReflections,isChromeOS?3200:1800);
  }
 }
-const hemiLight=new THREE.HemisphereLight(0x506d9b,0x111923,isChromeOS?.48:.42);scene.add(hemiLight);
-const moon=new THREE.DirectionalLight(0xc6d9ff,isChromeOS?1.05:.92);moon.position.set(-85,115,65);moon.castShadow=!mobileQuality||isChromeOS;moon.shadow.mapSize.set(isChromeOS?512:1024,isChromeOS?512:1024);moon.shadow.camera.left=-155;moon.shadow.camera.right=155;moon.shadow.camera.top=155;moon.shadow.camera.bottom=-155;scene.add(moon);
+const hemiLight=new THREE.HemisphereLight(0x506d9b,0x111923,isChromeOS?.62:.52);scene.add(hemiLight);
+const moon=new THREE.DirectionalLight(0xc6d9ff,isChromeOS?1.12:1.02);moon.position.set(-85,115,65);moon.castShadow=!mobileQuality&&!isChromeOS;moon.shadow.mapSize.set(isChromeOS?512:1024,isChromeOS?512:1024);moon.shadow.camera.left=-155;moon.shadow.camera.right=155;moon.shadow.camera.top=155;moon.shadow.camera.bottom=-155;scene.add(moon);
 // Visible moon disc and soft halo, placed ahead of the highway horizon.
 const moonDisc=new THREE.Mesh(new THREE.SphereGeometry(13,32,24),new THREE.MeshBasicMaterial({color:0xf4f1dc}));moonDisc.position.set(DRIVE_GAME_CENTER.x-115,DRIVE_GAME_CENTER.y+205,DRIVE_GAME_CENTER.z-590);scene.add(moonDisc);
 const moonHalo=new THREE.Mesh(new THREE.SphereGeometry(19,24,18),new THREE.MeshBasicMaterial({color:0xc6d9ff,transparent:true,opacity:.12,depthWrite:false}));moonHalo.position.copy(moonDisc.position);scene.add(moonHalo);
@@ -299,7 +299,7 @@ const ground=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),new THREE.MeshBas
 const driveGameTrack=new DriveGameTrack(DRIVE_GAME_TRACK);
 const pts=DRIVE_GAME_TRACK.points.map(p=>new THREE.Vector3(p[0],p[1],p[2]));
 const curve=new THREE.CatmullRomCurve3(pts,true,'centripetal');
-const driveGameWorld=buildDriveGameWorld(scene,driveGameTrack,{trees:isChromeOS?.09:(mobileQuality?.12:.16),aniso:isChromeOS?2:(mobileQuality?2:4),nord:true});
+const driveGameWorld=buildDriveGameWorld(scene,driveGameTrack,{trees:isChromeOS?.055:(mobileQuality?.10:.16),aniso:isChromeOS?2:(mobileQuality?2:4),textureSize:isChromeOS?512:1024,terrainStep:isChromeOS?34:22,nord:true});
 driveGameWorld.streetlights.group.visible=true;
 // Drive Game's buildWorld() now supplies the textured road, curbs, grass aprons,
  // PBR guardrails, rail posts, forest, signs, road furniture and night lamps.
@@ -392,7 +392,7 @@ function setWorldTime(mode){
  const presets={
   day:{bg:0x83c9f2,fog:0x9bc9df,top:0x2877bd,horizon:0xc7e7f4,hemi:1.05,moon:1.45,hemiSky:0xb9e7ff,hemiGround:0x526044,light:0xfff0d7,stars:0,exposure:1.22},
   sunset:{bg:0xf18b59,fog:0xd98b70,top:0x542c65,horizon:0xffa06b,hemi:.72,moon:1.05,hemiSky:0xffa477,hemiGround:0x302334,light:0xff9b62,stars:.08,exposure:1.16},
-  night:{bg:0x050914,fog:0x091323,top:0x02040d,horizon:0x101d32,hemi:.42,moon:.92,hemiSky:0x243b68,hemiGround:0x080b13,light:0xb9d0ff,stars:.94,exposure:1.18},
+  night:{bg:0x050914,fog:0x091323,top:0x02040d,horizon:0x101d32,hemi:.54,moon:1.08,hemiSky:0x243b68,hemiGround:0x080b13,light:0xb9d0ff,stars:.94,exposure:1.26},
   galaxy:{bg:0x08051d,fog:0x100b2d,top:0x08031f,horizon:0x38205e,hemi:.42,moon:.58,hemiSky:0x594b9c,hemiGround:0x090719,light:0xb7a5ff,stars:1,exposure:1.18}
  };
  const p=presets[currentWorldTime];

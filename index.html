@@ -320,49 +320,13 @@ for(let i=0;i<driveGameTrack.n;i++){
 
 // Drive Game's Nürburgring world replaces the old highway, generated side roads,
  // procedural highway traffic, and unused roadside dealership props.
-const trafficCars=[];
-const highwayWorld=new THREE.Group();scene.add(highwayWorld);
 let onFoot=false,playerHeading=0;const playerPos=new THREE.Vector3(),playerAvatar=new THREE.Group();playerAvatar.visible=false;scene.add(playerAvatar);
 const playerBody=new THREE.Mesh(new THREE.CapsuleGeometry(.32,.85,4,8),new THREE.MeshStandardMaterial({color:0x25394b,roughness:.8}));playerBody.position.y=.95;playerAvatar.add(playerBody);
 const playerHead=new THREE.Mesh(new THREE.SphereGeometry(.24,12,10),new THREE.MeshStandardMaterial({color:0xc58d6a,roughness:.86}));playerHead.position.y=1.62;playerAvatar.add(playerHead);
 for(const x of [-.14,.14]){const leg=new THREE.Mesh(new THREE.BoxGeometry(.16,.58,.2),new THREE.MeshStandardMaterial({color:0x171d26}));leg.position.set(x,.36,0);playerAvatar.add(leg)}
 function toggleOnFoot(){if(paused||garageMode)return;if(!onFoot){onFoot=true;speed=0;vel.set(0,0,0);playerPos.copy(carPos).add(new THREE.Vector3(2.4,0,0));playerHeading=heading;playerAvatar.position.copy(playerPos);playerAvatar.visible=true;toast('ON FOOT - WASD TO WALK - E NEAR CAR TO DRIVE')}else if(playerPos.distanceTo(carPos)<7){onFoot=false;playerAvatar.visible=false;carRoot.visible=true;heading=playerHeading;carRoot.rotation.y=heading;toast('BACK IN CAR')}else toast('WALK BACK TO YOUR CAR TO GET IN')}
-let trafficNearMisses=0,trafficRewardFlash=0;
-function updateTraffic(dt){
- if(paused||garageMode||onFoot)return;
- for(const car of trafficCars){
-  car.hitCooldown=Math.max(0,car.hitCooldown-dt);car.passCooldown=Math.max(0,car.passCooldown-dt);car.laneChangeTimer-=dt;if(car.laneChangeTimer<=0){car.laneIndex=((car.laneIndex??0)+1+Math.floor(Math.random()*car.allowedLanes.length))%car.allowedLanes.length;car.targetLane=car.allowedLanes[car.laneIndex];car.laneChangeTimer=8+Math.random()*9}car.lane+=(car.targetLane-car.lane)*Math.min(1,dt*.55);
-  car.u+=car.direction*car.speed*dt;
-  if(car.closed)car.u=(car.u%1+1)%1;
-  else if(car.u>1)car.u-=.96;
-  else if(car.u<0)car.u+=.96;
-  const p=car.route.getPointAt(car.u),t=car.route.getTangentAt(car.u),dx=t.x*car.direction,dz=t.z*car.direction;
-  car.group.position.set(p.x-t.z*car.lane,.015,p.z+t.x*car.lane);car.group.rotation.y=Math.atan2(-dx,-dz);
-  const wheelSpin=car.direction*car.speed*car.route.getLength()*dt/.38;
-  for(const wheel of car.wheels)wheel.rotation.x+=wheelSpin;
-  const gap=Math.hypot(car.group.position.x-carPos.x,car.group.position.z-carPos.z);
-  if(gap>2.7&&gap<5.8&&Math.abs(speed)>18&&car.passCooldown<=0){
-   const reward=125+Math.floor(Math.random()*126);dealerCash+=reward;trafficNearMisses++;trafficRewardFlash=1.5;car.passCooldown=2.4;
-   localStorage.hcg_cash=String(dealerCash);updateDealerUI();score+=180;
-   toast('CLOSE PASS  +$'+reward.toLocaleString('en-US'));
-  }
- }
-}
-
 // Impact-camera feedback adapted from the MIT-licensed Velocity Rush racing project:
 // https://github.com/prashant371/velocity-rush (camera shake concept; integrated into this game's camera loop).
-function resolveTrafficCollision(previousPosition){
- for(const car of trafficCars){
-  if(car.hitCooldown>0)continue;
-  const dx=carPos.x-car.group.position.x,dz=carPos.z-car.group.position.z;
-  if(dx*dx+dz*dz<7.2){
-   carPos.copy(previousPosition);speed*=.28;vel.multiplyScalar(.22);car.hitCooldown=1.35;collisionShake=Math.max(collisionShake,.34);driftTimer=0;combo=1;
-   toast('TRAFFIC COLLISION  ·  SLOW DOWN');return true;
-  }
- }
- return false;
-}
-
 // SOLID WORLD COLLISIONS: expanded-AABB car collision with axis sliding.
 function resolveWorldCollision(previous,next){
  if(collisionGridDirty)rebuildCollisionGrid();
@@ -1108,7 +1072,6 @@ function tick(t){
  if(perfPanel.style.display!=='none'&&t-perfLastUpdate>500){const elapsed=Math.max(1,t-perfWindowStart),fps=Math.round(perfFrames*1000/elapsed),info=renderer.info;perfPanel.textContent='PERFORMANCE  [F3]\nFPS: '+fps+'  |  Frame: '+(1000/Math.max(1,fps)).toFixed(1)+' ms\nResolution scale: '+renderer.getPixelRatio().toFixed(2)+'x\nDraw calls: '+info.render.calls+'\nTriangles: '+info.render.triangles.toLocaleString()+'\nGeometries: '+info.memory.geometries+'  Textures: '+info.memory.textures+'\nWorld colliders: '+worldColliders.length;perfFrames=0;perfWindowStart=t;perfLastUpdate=t}
  const dt=Math.min((t-last)/1000,.035);
  last=t;
- updateTraffic(dt);
  
  if(garageMode){const garageCamAlpha=1-Math.exp(-12*dt);camera.position.lerp(garageTargetPosition,garageCamAlpha);cameraLook.lerp(garageTargetLook,garageCamAlpha);camera.lookAt(cameraLook);if(camera.fov!==48){camera.fov=48;camera.updateProjectionMatrix()}}
  if(!paused&&!onFoot){
@@ -1167,7 +1130,6 @@ function tick(t){
   lateralSpeed+=lateralAccel*dt*.16;
 
   vel.copy(forward).multiplyScalar(speed).addScaledVector(side,lateralSpeed);
-  const previousCarPos=carPos.clone();carPos.addScaledVector(vel,dt);resolveWorldCollision(previousCarPos,carPos);resolveTrafficCollision(previousCarPos);const roadSurface=driveGameTrack.query(carPos.x,carPos.z,{},carPos.y);if(roadSurface)carPos.y=roadSurface.y;if(carPos.distanceToSquared(previousCarPos)<.0001){speed*=.18;vel.multiplyScalar(.12);driftTimer=0;combo=1;}
   carRoot.position.copy(carPos);
   carRoot.position.y=carPos.y+.05+Math.sin(t*.012)*.005;
   const motionHeading=Math.atan2(-vel.x,-vel.z);
@@ -1418,8 +1380,6 @@ function start(){
  try{
   initCarAudio();
   garageMode=false;restoreTreeVisibility(scene,true);showroom.visible=false;
-  for(const object of scene.children)object.visible=(object!==carRoot&&object!==showroom&&object!==highwayWorld&&object!==playerAvatar&&object!==ground);
-  highwayWorld.visible=false;ground.visible=false;driveGameWorld.streetlights.group.visible=true;playerAvatar.visible=false;onFoot=false;
   scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,220,900);
   setWorldTime(currentWorldTime);renderer.setClearColor(scene.background,1);
   carPos.copy(curve.getPointAt(.03));const spawnTangent=curve.getTangentAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=Math.atan2(-spawnTangent.x,-spawnTangent.z);steerAngle=0;driftAngle=0;driftTimer=0;combo=1;score=0;points=0;boost=100;keys={};cameraMode=0;cockpitLookYaw=0;cockpitLookPitch=0;cockpitPointerDown=false;lastRender=0;camera.fov=65;camera.updateProjectionMatrix();

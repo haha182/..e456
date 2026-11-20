@@ -260,7 +260,7 @@ const perfPanel=document.createElement('div');perfPanel.id='perfPanel';perfPanel
 let perfFrames=0,perfWindowStart=performance.now(),perfLastUpdate=0;
 // Adaptive render resolution: preserve full quality when the GPU has headroom,
 // then lower pixel density gradually during sustained slow frames instead of stuttering.
-const devicePixelRatioCap=isChromeOS?.78:(mobileQuality?Math.min(devicePixelRatio,.9):Math.min(devicePixelRatio,1.2));
+const devicePixelRatioCap=isChromeOS? .78:(mobileQuality?Math.min(devicePixelRatio,.9):Math.min(devicePixelRatio,1.2));
 let adaptivePixelRatio=devicePixelRatioCap,qualitySampleStart=performance.now(),qualitySampleFrames=0;
 function applyAdaptivePixelRatio(){
  const garageCap=garageMode?Math.min(devicePixelRatioCap,.78):devicePixelRatioCap;
@@ -275,7 +275,7 @@ window.addEventListener('keydown',e=>{if(e.code==='F3'&&!e.repeat){perfPanel.sty
  if(!isChromeOS){
   const pmremGenerator=new THREE.PMREMGenerator(renderer);pmremGenerator.compileEquirectangularShader();
   const studioEnvironment=pmremGenerator.fromScene(new RoomEnvironment(),0.04);
-  scene.environment=studioEnvironment.texture;scene.environmentIntensity=mobileQuality?.48:1.0;
+  scene.environment=studioEnvironment.texture;scene.environmentIntensity=mobileQuality? .48:1.0;
   pmremGenerator.dispose();
  }else{scene.environmentIntensity=.32}
 }
@@ -724,7 +724,7 @@ for(let i=0;i<2;i++){const gauge=new THREE.Mesh(new THREE.CircleGeometry(.085,32
 const wheelGroup=new THREE.Group();wheelGroup.position.set(-.52,1.22,-.43);wheelGroup.rotation.x=.18;e46Cabin.add(wheelGroup);
 const steering=new THREE.Mesh(new THREE.TorusGeometry(.235,.025,10,48),leatherMat);wheelGroup.add(steering);
 const wheelHub=new THREE.Mesh(new THREE.CylinderGeometry(.065,.065,.045,24),trimMat);wheelHub.rotation.x=Math.PI/2;wheelGroup.add(wheelHub);
-for(let i=0;i<3;i++){const spoke=new THREE.Mesh(new THREE.BoxGeometry(.025,.20,.035),trimMat);spoke.position.y=i===0?.115:-.06;spoke.rotation.z=i===0?0:(i===1?.82:-.82);wheelGroup.add(spoke)}
+for(let i=0;i<3;i++){const spoke=new THREE.Mesh(new THREE.BoxGeometry(.025,.20,.035),trimMat);spoke.position.y=i===0? .115:-.06;spoke.rotation.z=i===0?0:(i===1? .82:-.82);wheelGroup.add(spoke)}
 const mMark=new THREE.Mesh(new THREE.BoxGeometry(.075,.018,.012),new THREE.MeshBasicMaterial({color:0x3c9bd4}));mMark.position.set(0,-.16,.028);wheelGroup.add(mMark);
 for(const x of [-.48,.48]){const seat=new THREE.Mesh(new THREE.BoxGeometry(.55,.72,.62),leatherMat);seat.position.set(x,.83,.66);e46Cabin.add(seat);const headrest=new THREE.Mesh(new THREE.BoxGeometry(.38,.25,.20),leatherMat);headrest.position.set(x,1.30,.78);e46Cabin.add(headrest)}
 const shifter=new THREE.Mesh(new THREE.CylinderGeometry(.025,.035,.20,12),trimMat);shifter.position.set(.15,.88,.05);e46Cabin.add(shifter);
@@ -840,7 +840,7 @@ function fpLimb(parent,a,b,r1,r2,material){const va=new THREE.Vector3(...a),vb=n
 // Forearms extend from the driver's lap to the 9-and-3 positions.
 fpLimb(firstPersonCockpit,[-.93,1.02,.30],[-.70,1.32,-.43],.105,.078,fpSleeve);
 fpLimb(firstPersonCockpit,[-.05,1.02,.30],[-.28,1.32,-.43],.105,.078,fpSleeve);
-function fpHand(x,y){const hand=new THREE.Group();hand.position.set(x,y,.018);fpWheel.add(hand);const palm=new THREE.Mesh(new THREE.SphereGeometry(.071,12,9),fpSkin);palm.scale.set(1,.72,.48);hand.add(palm);for(let f=0;f<4;f++){const finger=fpLimb(hand,[(f-1.5)*.027,-.025,.012],[(f-1.5)*.031,-.105,.012],.014,.011,fpSkin);finger.rotation.z=(f-1.5)*-.08}const thumb=fpLimb(hand,[x<0?.045:-.045,.005,.015],[x<0?.095:-.095,-.045,.015],.018,.014,fpSkin);return hand}
+function fpHand(x,y){const hand=new THREE.Group();hand.position.set(x,y,.018);fpWheel.add(hand);const palm=new THREE.Mesh(new THREE.SphereGeometry(.071,12,9),fpSkin);palm.scale.set(1,.72,.48);hand.add(palm);for(let f=0;f<4;f++){const finger=fpLimb(hand,[(f-1.5)*.027,-.025,.012],[(f-1.5)*.031,-.105,.012],.014,.011,fpSkin);finger.rotation.z=(f-1.5)*-.08}const thumb=fpLimb(hand,[x<0? .045:-.045,.005,.015],[x<0? .095:-.095,-.045,.015],.018,.014,fpSkin);return hand}
 fpHand(-.205,.105);fpHand(.205,.105);
 const fpColumn=new THREE.Mesh(new THREE.CylinderGeometry(.045,.06,.34,12),fpDashMat);fpColumn.rotation.x=Math.PI/2;fpColumn.position.set(-.49,1.22,-.29);firstPersonCockpit.add(fpColumn);
 const fpHood=fpBox(firstPersonCockpit,1.82,.075,1.02,0,.79,-1.58,paintMat);fpHood.rotation.x=-.035;
@@ -876,7 +876,7 @@ let fpScreenLast=0;
 function drawFirstPersonScreen(now){
  if(!fpScreenCtx||now-fpScreenLast<90)return;fpScreenLast=now;
  const ctx=fpScreenCtx,w=512,h=256,gear=manualMode?'M'+manualGear:'D';
- const cap=[18,29,42,57,74,96][manualGear-1],throttleHeld=!!(keys.w||keys.arrowup),rpm=manualMode?Math.min(1,Math.abs(speed)/cap+(throttleHeld?.22:0)):Math.min(1,.12+Math.abs(speed)/100+(throttleHeld?.16:0));
+ const cap=[18,29,42,57,74,96][manualGear-1],throttleHeld=!!(keys.w||keys.arrowup),rpm=manualMode?Math.min(1,Math.abs(speed)/cap+(throttleHeld? .22:0)):Math.min(1,.12+Math.abs(speed)/100+(throttleHeld? .16:0));
  ctx.fillStyle='#06131b';ctx.fillRect(0,0,w,h);
  ctx.strokeStyle='#174452';ctx.lineWidth=3;ctx.strokeRect(8,8,w-16,h-16);
  ctx.fillStyle='#54e9ef';ctx.font='bold 22px Arial';ctx.fillText('HARRISON PERFORMANCE',22,38);
@@ -1279,7 +1279,7 @@ async function initCarAudio(){
   buffers.forEach((buffer,i)=>{
    const source=carAudioCtx.createBufferSource(),gain=carAudioCtx.createGain();source.buffer=buffer;source.loop=true;
    const isLFA=buffer===lfaRecordingBuffer;if(isLFA){source.loopStart=Math.min(1.8,Math.max(0,buffer.duration-.5));source.loopEnd=Math.min(buffer.duration,source.loopStart+7.2)}
-   source.playbackRate.value=isLFA?.62:(recordedV8Buffers.length?.72+i*.035:.78+i*.025);gain.gain.value=isLFA?.32:(i===0?.34:0);
+   source.playbackRate.value=isLFA? .62:(recordedV8Buffers.length? .72+i*.035:.78+i*.025);gain.gain.value=isLFA? .32:(i===0? .34:0);
    source.connect(gain);gain.connect(carAudioMaster);source.start(0,isLFA?source.loopStart:0);engineVoices.push({source,gain,isLFARecording:isLFA,isRecordedV8:!isLFA&&recordedV8Buffers.length>0});
   });
   // Dedicated recorded Lexus 1LR-GUE V10 loop; GTI continues using its separate engine bed.
@@ -1316,8 +1316,8 @@ function updateCarAudio(throttle,vehicleSpeed,slipAngle=0){
  else if(audioGear<8&&speed>gearLimits[audioGear]&&now-audioGearShiftAt>.72){audioGear++;audioGearShiftAt=now;audioShiftDip=1}
  else if(audioGear>1&&speed<gearLimits[audioGear-1]*.58&&throttle<.18&&now-audioGearShiftAt>.85){audioGear--;audioGearShiftAt=now;audioShiftDip=.55}
  const gearStart=manualMode?0:gearLimits[audioGear-1],gearEnd=manualMode?(manualGear===0?1:manualCaps[manualGear-1]):gearLimits[audioGear],gearProgress=manualMode&&manualGear===0?engineThrottleSmooth:THREE.MathUtils.clamp((speed-gearStart)/Math.max(1,gearEnd-gearStart),0,1);
- audioShiftDip=Math.max(0,audioShiftDip-Math.min(1,audioShiftDip)*.10);const idleHold=speed<1.2&&throttle<.04;const rpm=idleHold?.045:THREE.MathUtils.clamp(.045+gearProgress*.78+engineThrottleSmooth*.20-audioShiftDip*.20,0,1),index=rpm*(engineVoices.length-1),lo=Math.floor(index),hi=Math.min(engineVoices.length-1,lo+1),blend=index-lo;
- const isLFASelected=$('carStyle')?.value==='lexus_lfa',isGTISelected=$('carStyle')?.value.startsWith('gti_2010');engineVoices.forEach((v,i)=>{if(v.isLFARecording){const shiftLevel=1-audioShiftDip*.68;v.gain.gain.setTargetAtTime(isLFASelected?(.62+engineThrottleSmooth*.82)*shiftLevel:0,now,audioShiftDip>.15?.055:.22);v.source.playbackRate.setTargetAtTime(.43+rpm*.88,now,audioShiftDip>.15?.065:.20)}else if(v.isRecordedV8){const loaded=i===0,level=loaded?(.20+engineThrottleSmooth*.40):(.10+(1-engineThrottleSmooth)*.20);v.gain.gain.setTargetAtTime(isLFASelected||isGTISelected?0:level,now,.12);v.source.playbackRate.setTargetAtTime((loaded?.70:.66)*(1+rpm*.34)*Math.min(profile.pitch,1.02),now,.12)}else{const weight=i===lo?1-blend:i===hi?blend:0;v.gain.gain.setTargetAtTime(weight*(isGTISelected?.045:.12+engineThrottleSmooth*.12),now,.11);v.source.playbackRate.setTargetAtTime((.68+i*.032)*(1+rpm*.34)*Math.min(profile.pitch,1.02),now,.11)}});
+ audioShiftDip=Math.max(0,audioShiftDip-Math.min(1,audioShiftDip)*.10);const idleHold=speed<1.2&&throttle<.04;const rpm=idleHold? .045:THREE.MathUtils.clamp(.045+gearProgress*.78+engineThrottleSmooth*.20-audioShiftDip*.20,0,1),index=rpm*(engineVoices.length-1),lo=Math.floor(index),hi=Math.min(engineVoices.length-1,lo+1),blend=index-lo;
+ const isLFASelected=$('carStyle')?.value==='lexus_lfa',isGTISelected=$('carStyle')?.value.startsWith('gti_2010');engineVoices.forEach((v,i)=>{if(v.isLFARecording){const shiftLevel=1-audioShiftDip*.68;v.gain.gain.setTargetAtTime(isLFASelected?(.62+engineThrottleSmooth*.82)*shiftLevel:0,now,audioShiftDip>.15? .055:.22);v.source.playbackRate.setTargetAtTime(.43+rpm*.88,now,audioShiftDip>.15? .065:.20)}else if(v.isRecordedV8){const loaded=i===0,level=loaded?(.20+engineThrottleSmooth*.40):(.10+(1-engineThrottleSmooth)*.20);v.gain.gain.setTargetAtTime(isLFASelected||isGTISelected?0:level,now,.12);v.source.playbackRate.setTargetAtTime((loaded? .70:.66)*(1+rpm*.34)*Math.min(profile.pitch,1.02),now,.12)}else{const weight=i===lo?1-blend:i===hi?blend:0;v.gain.gain.setTargetAtTime(weight*(isGTISelected? .045:.12+engineThrottleSmooth*.12),now,.11);v.source.playbackRate.setTargetAtTime((.68+i*.032)*(1+rpm*.34)*Math.min(profile.pitch,1.02),now,.11)}});
  // The continuous LFA V10 loop now supplies the rev sound in neutral and follows engine RPM in every gear.
  if($('carStyle')?.value.startsWith('gti_2010')&&gtiRecordingBuffer&&throttle>.72&&lastExhaustThrottle<.18&&now-lastGTIRevAt>1.35){const one=carAudioCtx.createBufferSource(),level=carAudioCtx.createGain();one.buffer=gtiRecordingBuffer;level.gain.value=.68;one.connect(level);level.connect(carAudioMaster);one.start(now,Math.min(2.0,Math.max(0,gtiRecordingBuffer.duration-2.4)),Math.min(2.4,gtiRecordingBuffer.duration));lastGTIRevAt=now;const whistle=carAudioCtx.createOscillator(),whistleGain=carAudioCtx.createGain(),whistleFilter=carAudioCtx.createBiquadFilter();whistle.type='sine';whistle.frequency.setValueAtTime(1250,now);whistle.frequency.exponentialRampToValueAtTime(3650,now+.42);whistleFilter.type='bandpass';whistleFilter.frequency.value=3000;whistleFilter.Q.value=5;whistleGain.gain.setValueAtTime(.0001,now);whistleGain.gain.exponentialRampToValueAtTime(.11,now+.08);whistleGain.gain.exponentialRampToValueAtTime(.0001,now+.52);whistle.connect(whistleFilter);whistleFilter.connect(whistleGain);whistleGain.connect(carAudioMaster);whistle.start(now);whistle.stop(now+.54)}
  const lifted=lastExhaustThrottle>.78&&throttle<.07;
@@ -1327,7 +1327,7 @@ function updateCarAudio(throttle,vehicleSpeed,slipAngle=0){
   if(Math.random()<.94)triggerExhaustPop(1.55*profile.pop,.19);
   lastExhaustPopAt=now;lastExhaustCrackleAt=now;
  }
- const isGTI=$('carStyle')?.value.startsWith('gti_2010');const v8Base=(isGTI?27+rpm*178:38+rpm*205)*profile.pitch;v8Voices.forEach((v,i)=>{const gtiShape=[.17,.075,.035,.018,.009],lfaShape=[.34,.15,.29,.045,.02],shape=isGTI?gtiShape:lfaShape;const harmonicGain=(shape[i]??.015)*(i===0?.56:.32)*(i===0?1.0:.78+engineThrottleSmooth*.42);v.osc.frequency.setTargetAtTime(v8Base*v.mult,now,.075);v.gain.gain.setTargetAtTime(harmonicGain,now,.12)});
+ const isGTI=$('carStyle')?.value.startsWith('gti_2010');const v8Base=(isGTI?27+rpm*178:38+rpm*205)*profile.pitch;v8Voices.forEach((v,i)=>{const gtiShape=[.17,.075,.035,.018,.009],lfaShape=[.34,.15,.29,.045,.02],shape=isGTI?gtiShape:lfaShape;const harmonicGain=(shape[i]?? .015)*(i===0? .56:.32)*(i===0?1.0:.78+engineThrottleSmooth*.42);v.osc.frequency.setTargetAtTime(v8Base*v.mult,now,.075);v.gain.gain.setTargetAtTime(harmonicGain,now,.12)});
  lastExhaustThrottle=throttle;
 }
 const radioStations={

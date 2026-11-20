@@ -156,7 +156,7 @@ function openRoad(points,width=13){
   verts.push(p.x+side.x*width/2,.018,p.z+side.z*width/2,p.x-side.x*width/2,.018,p.z-side.z*width/2);
   // Flat edge paint strips replace high-poly TubeGeometry and sit above the road to prevent z-fighting.
   edgeVerts.push(lx,.026,lz,lx+side.x*.11,.026,lz+side.z*.11,rx,.026,rz,rx-side.x*.11,.026,rz-side.z*.11);
-  if(i<segments){let n=i*2;ids.push(n,n+1,n+2,n+1,n+3,n+2);let e=i*4;edgeIds.push(e,e+1,e+4,e+1,e+5,e+4,e+2,e+6,e+3,e+3,e+6,e+7)}
+  if(i<segments){let n=i*2;ids.push(n,n+2,n+1,n+1,n+2,n+3);let e=i*4;edgeIds.push(e,e+1,e+4,e+1,e+5,e+4,e+2,e+6,e+3,e+3,e+6,e+7)}
  }
  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));geo.setIndex(ids);geo.computeVertexNormals();
  const road=new THREE.Mesh(geo,openRoadMat);road.frustumCulled=true;scene.add(road);

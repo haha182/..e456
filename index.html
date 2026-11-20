@@ -683,6 +683,9 @@ for(const side of [-1,1]){
  const foot=new THREE.Mesh(new THREE.PlaneGeometry(.48,.34),new THREE.MeshBasicMaterial({color:0x0879bd,transparent:true,opacity:.10,side:THREE.DoubleSide}));foot.rotation.x=-Math.PI/2;foot.position.set(side*.48,.205,-.23);j7Cabin.add(foot);
 }
 j7Line([[.25,.67,-.55],[.48,.67,-.57],[.71,.67,-.55]],.009,j7Ambient);
+// Low-output cabin lights give the LED strips a subtle real light spill.
+const j7DashGlow=new THREE.PointLight(0x168ed0,.24,2.8,2);j7DashGlow.position.set(0,1.05,-.58);j7Cabin.add(j7DashGlow);
+const j7FootGlow=new THREE.PointLight(0x0878c4,.16,2.0,2);j7FootGlow.position.set(-.1,.35,.02);j7Cabin.add(j7FootGlow);
 let cockpitLookYaw=0,cockpitLookPitch=0,cockpitPointerDown=false,cockpitPointerX=0,cockpitPointerY=0;
 function updateFirstPersonCockpit(){firstPersonCockpit.visible=cameraMode===3&&!garageMode;fpWheel.rotation.z=-steerAngle*1.55;}
 

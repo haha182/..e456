@@ -335,7 +335,7 @@ for(const x of [-.14,.14]){const leg=new THREE.Mesh(new THREE.BoxGeometry(.16,.5
 function toggleOnFoot(){if(paused||garageMode)return;if(!onFoot){onFoot=true;speed=0;vel.set(0,0,0);playerPos.copy(carPos).add(new THREE.Vector3(2.4,0,0));playerHeading=heading;playerAvatar.position.copy(playerPos);playerAvatar.visible=true;toast('ON FOOT - WASD TO WALK - E NEAR CAR TO DRIVE')}else if(playerPos.distanceTo(carPos)<7){onFoot=false;playerAvatar.visible=false;carRoot.visible=true;heading=playerHeading;carRoot.rotation.y=heading;toast('BACK IN CAR')}else toast('WALK BACK TO YOUR CAR TO GET IN')}
 let trafficNearMisses=0,trafficRewardFlash=0;
 function updateTraffic(dt){
- if(paused||garageMode)return;
+ if(paused||garageMode||onFoot)return;
  for(const car of trafficCars){
   car.hitCooldown=Math.max(0,car.hitCooldown-dt);car.passCooldown=Math.max(0,car.passCooldown-dt);car.laneChangeTimer-=dt;if(car.laneChangeTimer<=0){car.targetLane=car.allowedLanes[car.targetLane===car.allowedLanes[0]?1:0];car.laneChangeTimer=8+Math.random()*9}car.lane+=(car.targetLane-car.lane)*Math.min(1,dt*.55);
   car.u+=car.direction*car.speed*dt;
@@ -1041,9 +1041,9 @@ function tick(t){
  const dt=Math.min((t-last)/1000,.035);
  last=t;
  updateTraffic(dt);
- if(!garageMode&&christmasBulbData.length){const blink=Math.floor(t/850);if(blink!==christmasBlinkTime){christmasBlinkTime=blink;for(let i=0;i<christmasBulbData.length;i++){const b=christmasBulbData[i],on=Math.sin(t*.00115+b.phase)>-.12;christmasColor.setHex(b.color).multiplyScalar(on?1:.3);christmasBulbs.setColorAt(i,christmasColor)}if(christmasBulbs.instanceColor)christmasBulbs.instanceColor.needsUpdate=true}}
+ if(false&&!garageMode&&christmasBulbData.length){const blink=Math.floor(t/850);if(blink!==christmasBlinkTime){christmasBlinkTime=blink;for(let i=0;i<christmasBulbData.length;i++){const b=christmasBulbData[i],on=Math.sin(t*.00115+b.phase)>-.12;christmasColor.setHex(b.color).multiplyScalar(on?1:.3);christmasBulbs.setColorAt(i,christmasColor)}if(christmasBulbs.instanceColor)christmasBulbs.instanceColor.needsUpdate=true}}
  if(garageMode){const a=1-Math.exp(-12*dt);camera.position.lerp(garageTargetPosition,a);cameraLook.lerp(garageTargetLook,a);camera.lookAt(cameraLook);if(camera.fov!==48){camera.fov=48;camera.updateProjectionMatrix()}}
- if(!paused){
+ if(!paused&&!onFoot){
   const gas=!!(keys.w||keys.arrowup),brake=!!(keys.s||keys.arrowdown);
   const left=!!(keys.a||keys.arrowleft),right=!!(keys.d||keys.arrowright);
   const hand=!!keys[' '],nitro=!!keys.shift;
@@ -1138,7 +1138,7 @@ function tick(t){
   const arc=$('speedArc');if(arc)arc.style.strokeDashoffset=String(270-Math.min(1,shownSpeed/200)*270);
   $('score').textContent=score.toLocaleString();$('combo').textContent='x'+combo;
  }
- if(!garageMode){
+ if(!garageMode&&!onFoot){
   const forwardCam=new THREE.Vector3(-Math.sin(heading),0,-Math.cos(heading)),rightCam=new THREE.Vector3(Math.cos(heading),0,-Math.sin(heading));
   const speedRatio=Math.min(Math.abs(speed)/55,1);
   let desiredCam,desiredLook,targetFov;
@@ -1179,6 +1179,14 @@ function tick(t){
   }
   else if(cameraMode===0||cameraMode===1){const speedShake=Math.min(Math.abs(speed)/65,1);camera.position.y+=Math.sin(t*.009)*.018*speedShake}
   updateFirstPersonCockpit();
+ }
+ if(!paused&&onFoot){
+  const fw=(keys.w||keys.arrowup)?1:0,bk=(keys.s||keys.arrowdown)?1:0,lf=(keys.a||keys.arrowleft)?1:0,rt=(keys.d||keys.arrowright)?1:0;
+  const mx=rt-lf,mz=bk-fw;
+  if(mx||mz){const mag=Math.hypot(mx,mz);playerPos.x+=mx/mag*7.2*dt;playerPos.z+=mz/mag*7.2*dt;playerHeading=Math.atan2(-mx,-mz);playerAvatar.rotation.y=playerHeading}
+  playerAvatar.position.copy(playerPos);
+  const walkCam=new THREE.Vector3(playerPos.x+Math.sin(playerHeading)*5,3.1,playerPos.z+Math.cos(playerHeading)*5),walkLook=new THREE.Vector3(playerPos.x,1.35,playerPos.z-2);
+  camera.position.lerp(walkCam,1-Math.exp(-7*dt));cameraLook.lerp(walkLook,1-Math.exp(-8*dt));camera.lookAt(cameraLook);
  }
  if(spectralMixer&&!paused)spectralMixer.update(dt);
  const flameLeft=exhaustFlameUntil-performance.now();exhaustFlames.forEach((flame,i)=>{flame.visible=flameLeft>0;if(flameLeft>0){const flicker=.82+Math.sin(t*.11+i*2.4)*.18;flame.scale.set(flicker,flicker,flicker*(.8+Math.min(flameLeft/145,.6)))}});
@@ -1322,9 +1330,11 @@ function start(){
  try{
   initCarAudio();
   garageMode=false;restoreTreeVisibility(scene,true);showroom.visible=false;
+  for(const object of scene.children)object.visible=(object===carRoot||object===showroom||object===moon||object===hemiLight||object===highwayWorld||object===playerAvatar);
+  highwayWorld.visible=true;playerAvatar.visible=false;onFoot=false;
   scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,175,500);
   renderer.setClearColor(0x050914,1);
-  carPos=curve.getPointAt(.03);const spawnTangent=curve.getTangentAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=Math.atan2(-spawnTangent.x,-spawnTangent.z);steerAngle=0;driftAngle=0;driftTimer=0;combo=1;score=0;points=0;boost=100;keys={};cameraMode=0;cockpitLookYaw=0;cockpitLookPitch=0;cockpitPointerDown=false;lastRender=0;camera.fov=65;camera.updateProjectionMatrix();
+  carPos.set(0,0,0);const spawnTangent=new THREE.Vector3(0,0,-1);vel.set(0,0,0);speed=0;slip=0;heading=Math.atan2(-spawnTangent.x,-spawnTangent.z);steerAngle=0;driftAngle=0;driftTimer=0;combo=1;score=0;points=0;boost=100;keys={};cameraMode=0;cockpitLookYaw=0;cockpitLookPitch=0;cockpitPointerDown=false;lastRender=0;camera.fov=65;camera.updateProjectionMatrix();
   $('speed').textContent='0';$('score').textContent='0';$('combo').textContent='x1';$('speedArc').style.strokeDashoffset='270';
   carRoot.visible=true;restoreTreeVisibility(carRoot,true);applyStyle($('carStyle').value);carRoot.position.copy(carPos);carRoot.rotation.set(0,0,0);
   camera.position.set(carPos.x,carPos.y+7.2,carPos.z+12);
@@ -1387,7 +1397,7 @@ $('buyCar').addEventListener('click',()=>{
  dealerCash-=price;ownedCars.add(id);localStorage.hcg_cash=String(dealerCash);localStorage.hcg_ownedCars=JSON.stringify([...ownedCars]);$('carStyle').value=id;localStorage.hcgStyle=id;updateDealerUI();applyStyle();$('dealerMessage').textContent='PURCHASE COMPLETE — '+carLabels[id]+' added to your garage';
 });
 $('carStyle').value=ownedCars.has(localStorage.hcgStyle)&&extraCarModels[localStorage.hcgStyle]?localStorage.hcgStyle:'hot_hatch';localStorage.hcgStyle=$('carStyle').value;applyStyle();$('carStyle').addEventListener('change',()=>{if(!ownedCars.has($('carStyle').value)){$('carStyle').value=localStorage.hcgStyle;toast('Buy that car in the shop first');return}localStorage.hcgStyle=$('carStyle').value;applyStyle()});updateDealerUI();applyTune();if(localStorage.hcgPower)$('turbo').value=localStorage.hcgPower;setGarageValues();updateTuneLabels();for(const id of ['bodyKit','spoilerStyle','rimFinish','neonColor','windowTint'])$(id).addEventListener('input',()=>{localStorage['hcg_'+id]=$(id).value;applyCustomizations()});for(const id of ['bodyKit','spoilerStyle','rimFinish'])$(id).addEventListener('change',()=>{localStorage['hcg_'+id]=$(id).value;applyCustomizations()});if(localStorage.hcgPaint){$('paint').value=localStorage.hcgPaint;paintMat.color.set(localStorage.hcgPaint);applyTune()}
-const controlKeys=new Set(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' ','shift']);addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=true;e.preventDefault()}if(k==='c')changeCamera();if(k==='r')reset();if(e.key==='Escape'){if(garageMode)closeGarage();paused=true;stopCarAudio();stopRadio();$('garage').style.display='none';$('menu').style.display='grid';$('ui').style.display='none';$('help').style.display='none';$('touch').style.display='none';$('driveActions').style.display='none';$('carRadio').style.display='none'}});addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=false;e.preventDefault()}});addEventListener('blur',()=>{for(const k of controlKeys)keys[k]=false});
+const controlKeys=new Set(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' ','shift']);addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=true;e.preventDefault()}if(k==='e')toggleOnFoot();if(k==='c'&&!onFoot)changeCamera();if(k==='r')reset();if(e.key==='Escape'){if(garageMode)closeGarage();paused=true;stopCarAudio();stopRadio();$('garage').style.display='none';$('menu').style.display='grid';$('ui').style.display='none';$('help').style.display='none';$('touch').style.display='none';$('driveActions').style.display='none';$('carRadio').style.display='none'}});addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=false;e.preventDefault()}});addEventListener('blur',()=>{for(const k of controlKeys)keys[k]=false});
 function bind(id,k){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;el.setPointerCapture(e.pointerId)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,()=>keys[k]=false))}
 bind('left','a');bind('right','d');bind('gas','w');bind('brake','s');bind('hand',' ');bind('boost','shift');
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(isChromeOS?.96:(mobileQuality?Math.min(devicePixelRatio,.90):Math.min(devicePixelRatio,1)));renderer.setSize(innerWidth,innerHeight);if(garageMode)setGarageCamera()});

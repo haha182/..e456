@@ -80,7 +80,6 @@ const moon=new THREE.DirectionalLight(0x9bbcff,.62);moon.position.set(-85,115,65
 const mat=(color,rough=.7,metal=0)=>new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(900,900),mat(0x111a1b,.98));ground.rotation.x=-Math.PI/2;ground.position.y=-.12;ground.receiveShadow=true;scene.add(ground);
 const roadMat=mat(0x252a30,.92),lineMat=mat(0xe9e1c8),curbRed=mat(0xd94a43),curbWhite=mat(0xe9e9e5);
-const roadMat=mat(0x252a30,.92),lineMat=mat(0xe9e1c8),curbRed=mat(0xd94a43),curbWhite=mat(0xe9e9e5);
 const pts=[new THREE.Vector3(0,0,-72),new THREE.Vector3(48,0,-95),new THREE.Vector3(105,0,-58),new THREE.Vector3(112,0,8),new THREE.Vector3(72,0,68),new THREE.Vector3(5,0,91),new THREE.Vector3(-66,0,68),new THREE.Vector3(-112,0,14),new THREE.Vector3(-90,0,-48)];
 const curve=new THREE.CatmullRomCurve3(pts,true,'catmullrom',.22);
 function ribbon(width,y,material,segments=420){const verts=[],idx=[];for(let i=0;i<=segments;i++){const t=i/segments,p=curve.getPointAt(t),tan=curve.getTangentAt(t),side=new THREE.Vector3(-tan.z,0,tan.x).normalize();verts.push(p.x+side.x*width/2,y,p.z+side.z*width/2,p.x-side.x*width/2,y,p.z-side.z*width/2);if(i<segments){let a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setIndex(idx);g.computeVertexNormals();const m=new THREE.Mesh(g,material);m.receiveShadow=true;scene.add(m);return m}
@@ -126,7 +125,7 @@ for(const x of [-19,19]){const rail=new THREE.Mesh(new THREE.BoxGeometry(.25,1.5
 const overlookLamp=new THREE.PointLight(0xffbd58,38,65);overlookLamp.position.set(0,9,0);overlook.add(overlookLamp);
 const yard=new THREE.Group();yard.position.set(330,0,-95);scene.add(yard);
 const yardMat=mat(0x303a43,.9,.2);
-for(let i=0;i<5;i++){const container=new THREE.Mesh(new THREE.BoxGeometry(18,5,7),i%2?mat(0x34464c,.85,.25):yardMat);container.position.set((i-2)*20,2.5,0);yard.add(container);for(let z=-3;z<=3;z+=1.5){const rib=new THREE.Mesh(new THREE.BoxGeometry(17.8,.07,.07),streetLampMetal);rib.position.set((i-2)*20,2.5,z);yard.add(rib)}}
+for(let i=0;i<5;i++){const container=new THREE.Mesh(new THREE.BoxGeometry(18,5,7),i%2?mat(0x34464c,.85,.25):yardMat);container.position.set((i-2)*20,2.5,0);yard.add(container);for(let z=-3;z<=3;z+=1.5){const rib=new THREE.Mesh(new THREE.BoxGeometry(17.8,.07,.07),yardMat);rib.position.set((i-2)*20,2.5,z);yard.add(rib)}}
 
 // Environment: pine-like trees and distant hills
 const trunkMat=mat(0x201d20),leafMat=mat(0x101d1b),leaf2=mat(0x172725);

@@ -347,7 +347,7 @@ function addStreetlights(scene, track) {
   const heads = new THREE.InstancedMesh(new THREE.BoxGeometry(0.5, 0.22, 1.05), headMat, lamps.length);
   // soft, slightly-blotchy radial cookie — no hard disc edge
   const poolMat = new THREE.MeshBasicMaterial({
-    map: lampPoolTexture(), color: 0xffc27a, transparent: true, opacity: 0.7,
+    map: lampPoolTexture(), color: 0xffd18a, transparent: true, opacity: 0.82,
     blending: THREE.AdditiveBlending, depthWrite: false,
     polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4,
   });
@@ -381,7 +381,7 @@ function addStreetlights(scene, track) {
       right.set(qy.rx * cr, sr, qy.rz * cr).normalize();
       normal.set(qy.nx, qy.ny, qy.nz).normalize();
       poolPos.addScaledVector(normal, 0.04);
-      const alongR = (11.0 + r() * 2.5) * dim, acrossR = (3.2 + r() * 0.7) * dim;
+      const alongR = (18.0 + r() * 3.0) * dim, acrossR = (5.2 + r() * 1.0) * dim;
       xA.copy(right).multiplyScalar(acrossR);
       yA.copy(tangent).multiplyScalar(alongR);
       m.makeBasis(xA, yA, normal); m.setPosition(poolPos);

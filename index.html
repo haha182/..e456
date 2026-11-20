@@ -151,7 +151,7 @@ body>canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;touch-action
 <label><span>BODY PAINT</span><input id="paint" type="color" value="#bfc7ce"></label><label><span>YOUR CAR</span><select id="carStyle"><option value="hot_hatch">Sport Hot Hatch</option><option value="roadster">Convertible Roadster</option><option value="grand_tourer">Grand Tourer Coupe</option><option value="compact_suv">Performance Compact SUV</option><option value="coupe">Modern Two-Door Coupe</option><option value="mid_engine">Mid-Engine Supercar</option><option value="jdm_coupe">90s JDM Coupe</option></select></label></div>
 <h2>TUNING</h2><div class="garage-actions"><button class="primary" id="saveGarage">SAVE BUILD</button></div></div></div>
 <div id="ui"><div class="cockpit"><div class="cockpit-brand" aria-hidden="true"><b id="carLabel">SPECTRAL GT RS</b></div><div class="speed-cluster"><svg viewBox="0 0 220 145" aria-hidden="true" style="display:none"><path id="speedArc" d="M24 119 A86 86 0 0 1 196 119" fill="none" stroke="#56e8e2" stroke-width="5" stroke-dasharray="270" stroke-dashoffset="270"/></svg><div class="speed-readout"><b id="speed">0</b><span>KM/H</span></div></div><div class="drift-cluster" aria-hidden="true"><b id="score">0</b><span><b id="combo">x1</b></span></div></div></div>
-<div id="help">WASD / arrows: drive & steer<br>SPACE: handbrake · SHIFT: boost · R: reset<br>C: change camera · First-person: drag to look</div><div id="driveActions" style="position:fixed;right:12px;top:72px;z-index:4;pointer-events:auto"><button id="cameraBtn">CAMERA</button><button id="radioBtn">RADIO</button><button id="garageBtn">GARAGE</button></div>
+<div id="help">WASD / arrows: drive & steer<br>SPACE: handbrake · SHIFT: boost · R: reset<br>C: toggle close / first-person · First-person: drag to look</div><div id="driveActions" style="position:fixed;right:12px;top:72px;z-index:4;pointer-events:auto"><button id="cameraBtn">CAMERA</button><button id="radioBtn">RADIO</button><button id="garageBtn">GARAGE</button></div>
 <div id="touch"><button id="left" aria-label="Steer left">◀</button><button id="right" aria-label="Steer right">▶</button><button id="gas" aria-label="Accelerate">▲</button><button id="brake" aria-label="Brake and reverse">▼</button><button id="hand" aria-label="Handbrake">DRIFT</button><button id="boost" aria-label="Nitro boost">BOOST</button></div>
 <div id="toast"></div><div id="carRadio"><div class="radio-head"><span><i class="radio-dot"></i> <b id="radioStationTitle">DRAKE RADIO</b></span><button id="radioClose" aria-label="Close radio">×</button></div><select id="radioStation" aria-label="Choose radio station"><option value="drake">Drake Radio</option><option value="rickross">Rick Ross Radio</option><option value="jcole">J. Cole Radio</option><option value="yeat">Yeat Radio</option><option value="christmas">Christmas Radio 🎄</option></select><div class="spotify-now"><img id="radioArt" alt="Current Drake track artwork" src="https://i.ytimg.com/vi/xpVfcZ0ZcFM/hqdefault.jpg"><div class="spotify-track"><div class="spotify-kicker">NOW PLAYING</div><div id="radioTrackTitle">God’s Plan</div><div class="spotify-artist" id="radioArtistName">Drake</div></div><div id="ytPlayer" aria-label="YouTube music video player"></div></div><div class="radio-status" id="radioStatus">DRAKE MIX · READY TO PLAY</div><div class="radio-controls"><button id="radioToggle" class="primary">▶</button><button id="radioPrev" aria-label="Previous song">|◀</button><button id="radioNext" aria-label="Shuffle next song">▶|</button><span class="radio-volume">VOL</span><input id="radioVolume" type="range" min="0" max="100" value="35" aria-label="Radio volume"></div><div class="spotify-footer"><span class="spotify-equalizer">▂ ▅ ▃ ▆ ▄</span><span>SHUFFLE ON</span><span>YOUTUBE</span></div></div>
 <script type="module">
@@ -499,7 +499,7 @@ carRoot.position.copy(carPos);carRoot.position.y=0;
 const $=id=>document.getElementById(id);
 function toast(s){$('toast').textContent=s;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',1800)}
 function reset(){carPos=curve.getPointAt(.03);const resetTangent=curve.getTangentAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=Math.atan2(-resetTangent.x,-resetTangent.z);steerAngle=0;driftAngle=0;driftTimer=0;combo=1;keys={};carRoot.position.copy(carPos);carRoot.rotation.set(0,0,0);$('speed').textContent='0';$('combo').textContent='x1';const arc=$('speedArc');if(arc)arc.style.strokeDashoffset='270'}
-function changeCamera(){cameraMode=(cameraMode+1)%4;cameraSnap=true;if(cameraMode===3){cockpitLookYaw=0;cockpitLookPitch=0}cockpitPointerDown=false;toast(["Chase camera","Close camera","High camera","First-person cockpit — drag mouse to look"][cameraMode]);if(cameraMode===3)updateFirstPersonCockpit()}
+function changeCamera(){cameraMode=cameraMode===3?0:3;cameraSnap=true;if(cameraMode===3){cockpitLookYaw=0;cockpitLookPitch=0}cockpitPointerDown=false;toast(cameraMode===3?'First-person cockpit — drag mouse to look':'Close chase camera');updateFirstPersonCockpit()}
 const bmwDetails=new THREE.Group();carRoot.add(bmwDetails);
 const kidneyMat=mat(0x080d12,.38,.72),kidneyTrim=mat(0x9ba6aa,.3,.8);
 for(const x of [-.235,.235]){const surround=new THREE.Mesh(new THREE.BoxGeometry(.34,.29,.055),kidneyTrim);surround.position.set(x,.73,-2.325);bmwDetails.add(surround);const kidney=new THREE.Mesh(new THREE.BoxGeometry(.285,.245,.06),kidneyMat);kidney.position.set(x,.73,-2.36);bmwDetails.add(kidney);for(let j=0;j<5;j++){const slat=new THREE.Mesh(new THREE.BoxGeometry(.018,.21,.025),kidneyTrim);slat.position.set(x-.1+j*.05,.73,-2.395);bmwDetails.add(slat)}}
@@ -1070,21 +1070,21 @@ function tick(t){
    const fpPitch=cockpitLookPitch+Math.min(.035,fpSpeed*.035);
    const fpAim=new THREE.Vector3(-.49+Math.sin(fpYaw)*24,1.53+Math.sin(fpPitch)*24,-.22-Math.cos(fpYaw)*24);
    desiredLook=carRoot.localToWorld(fpAim);
-   targetFov=76+fpSpeed*1.5;
+   targetFov=84+fpSpeed*1.2;
   }else{
-   // Three distinct follow distances, with extra room at high speed.
+   // Single close chase camera, kept tightly locked to the car.
    const selectedExtra=extraCarModels[$('carStyle')?.value];const vehicleHeight=selectedExtra?.ready?Math.max(1.1,Math.min(2.7,selectedExtra.group.userData.vehicleHeight||1.5)):1.5;const sizeBoost=Math.max(0,vehicleHeight-1.5);const localCenter=selectedExtra?.ready&&selectedExtra.group.userData.cameraCenter?selectedExtra.group.userData.cameraCenter:new THREE.Vector3(0,vehicleHeight*.5,0);const vehicleCenter=carRoot.position.clone().add(new THREE.Vector3(0,localCenter.y,0));
-   const distance=(cameraMode===0?9.8:cameraMode===1?7.0:15.2)+speedRatio*(cameraMode===0?2.0:cameraMode===1?1.25:2.4)+sizeBoost*1.25;
-   const height=(cameraMode===0?4.5:cameraMode===1?3.25:cameraMode===2?12.5:4)+speedRatio*(cameraMode===0?.9:cameraMode===1?.5:cameraMode===2?.8:0)+sizeBoost*.8;
+   const distance=6.1+speedRatio*.75+sizeBoost*.7;
+   const height=2.85+speedRatio*.35+sizeBoost*.45;
    const sideOffset=Math.max(-.9,Math.min(.9,steerAngle*.3));
    desiredCam=vehicleCenter.clone().addScaledVector(forwardCam,-(cameraMode===1?7.0:distance)).addScaledVector(rightCam,sideOffset);desiredCam.y+=height;
-   const lookAhead=(cameraMode===2?4.8:3.5)+speedRatio*3.0;
+   const lookAhead=2.15+speedRatio*1.25;
    const lookHeight=Math.max(1.0,vehicleHeight*.56);
    desiredLook=vehicleCenter.clone().addScaledVector(forwardCam,lookAhead);desiredLook.y+=cameraMode===2?Math.max(1,lookHeight):lookHeight;
-   targetFov=(cameraMode===0?65:cameraMode===1?62:60)+speedRatio*(cameraMode===2?4:8);
+   targetFov=66+speedRatio*5;
   }
-  const camAlpha=1-Math.exp(-(cameraMode===3?11:7.2)*dt);
-  if(cameraSnap){camera.position.copy(desiredCam);cameraLook.copy(desiredLook);cameraSnap=false}else{camera.position.lerp(desiredCam,camAlpha);cameraLook.lerp(desiredLook,1-Math.exp(-(cameraMode===3?13:8.4)*dt))}
+  const camAlpha=1-Math.exp(-(cameraMode===3?15:19)*dt);
+  if(cameraSnap){camera.position.copy(desiredCam);cameraLook.copy(desiredLook);cameraSnap=false}else{camera.position.lerp(desiredCam,camAlpha);cameraLook.lerp(desiredLook,1-Math.exp(-(cameraMode===3?18:22)*dt))}
   camera.up.set(0,1,0);camera.lookAt(cameraLook);
   const nextFov=camera.fov+(targetFov-camera.fov)*(1-Math.exp(-3.8*dt));if(Math.abs(nextFov-camera.fov)>.025){camera.fov=nextFov;camera.updateProjectionMatrix()}
   if(cameraMode===3){
@@ -1113,8 +1113,8 @@ async function initCarAudio(){
  try{
   const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
   carAudioCtx=new AC();carAudioMaster=carAudioCtx.createGain();carAudioMaster.gain.value=0;carAudioMaster.connect(carAudioCtx.destination);
-  const v8Filter=carAudioCtx.createBiquadFilter();v8Filter.type='lowpass';v8Filter.frequency.value=680;v8Filter.connect(carAudioMaster);
-  for(const spec of [{type:'sawtooth',mult:1,gain:.17},{type:'triangle',mult:2,gain:.075},{type:'sine',mult:.5,gain:.2}]){const osc=carAudioCtx.createOscillator(),gain=carAudioCtx.createGain();osc.type=spec.type;osc.frequency.value=39*spec.mult;gain.gain.value=spec.gain;osc.connect(gain);gain.connect(v8Filter);osc.start();v8Voices.push({osc,gain,mult:spec.mult})}
+  const v8Filter=carAudioCtx.createBiquadFilter();v8Filter.type='lowpass';v8Filter.frequency.value=540;v8Filter.connect(carAudioMaster);
+  for(const spec of [{type:'sawtooth',mult:1,gain:.21},{type:'triangle',mult:2,gain:.09},{type:'sine',mult:.5,gain:.27}]){const osc=carAudioCtx.createOscillator(),gain=carAudioCtx.createGain();osc.type=spec.type;osc.frequency.value=28*spec.mult;gain.gain.value=spec.gain;osc.connect(gain);gain.connect(v8Filter);osc.start();v8Voices.push({osc,gain,mult:spec.mult})}
   exhaustNoiseBuffer=carAudioCtx.createBuffer(1,Math.floor(carAudioCtx.sampleRate*.18),carAudioCtx.sampleRate);const exhaustNoise=exhaustNoiseBuffer.getChannelData(0);for(let i=0;i<exhaustNoise.length;i++)exhaustNoise[i]=(Math.random()*2-1)*Math.pow(1-i/exhaustNoise.length,1.7);
   await carAudioCtx.resume();
   // One failed CDN request must not silence every engine sample.
@@ -1157,7 +1157,7 @@ function updateCarAudio(throttle,vehicleSpeed){
  engineThrottleSmooth+=(throttle-engineThrottleSmooth)*.13;engineSpeedSmooth+=(Math.abs(vehicleSpeed)-engineSpeedSmooth)*.09;
  const speed=Math.abs(vehicleSpeed),now=carAudioCtx.currentTime;
  const gearLimits=[0,9,18,28,39,51,64,77,92];
- if(audioGear<8&&speed>gearLimits[audioGear]&&now-audioGearShiftAt>.42){audioGear++;audioGearShiftAt=now}
+ if(audioGear<8&&speed>gearLimits[audioGear]&&now-audioGearShiftAt>.42){audioGear++;audioGearShiftAt=now;triggerExhaustPop(1.8,.015);triggerExhaustPop(1.55,.095);triggerExhaustPop(1.3,.18)}
  else if(audioGear>1&&speed<gearLimits[audioGear-1]*.72&&now-audioGearShiftAt>.55){audioGear--;audioGearShiftAt=now}
  const gearStart=gearLimits[audioGear-1],gearEnd=gearLimits[audioGear],gearProgress=THREE.MathUtils.clamp((speed-gearStart)/Math.max(1,gearEnd-gearStart),0,1);
  const rpm=THREE.MathUtils.clamp(.12+gearProgress*.72+engineThrottleSmooth*.16,0,1),index=rpm*(engineVoices.length-1),lo=Math.floor(index),hi=Math.min(engineVoices.length-1,lo+1),blend=index-lo;
@@ -1165,7 +1165,7 @@ function updateCarAudio(throttle,vehicleSpeed){
  const lifted=lastExhaustThrottle>.68&&throttle<.12;
  if(lifted&&speed>10&&now-lastExhaustPopAt>.58){const count=4+Math.floor(Math.random()*3);for(let i=0;i<count;i++)triggerExhaustPop((i===0?1.55:1.18)+Math.random()*.3,i*.085);lastExhaustPopAt=now+.36;lastExhaustCrackleAt=now}
  else if(throttle<.08&&speed>16&&rpm>.32&&now-lastExhaustPopAt>.52&&now-lastExhaustCrackleAt>.25&&Math.random()<.24){triggerExhaustPop(.72+Math.random()*.42);lastExhaustPopAt=now;lastExhaustCrackleAt=now}
- const v8Base=34+rpm*118;v8Voices.forEach(v=>v.osc.frequency.setTargetAtTime(v8Base*v.mult,now,.075));
+ const v8Base=28+rpm*145;v8Voices.forEach(v=>v.osc.frequency.setTargetAtTime(v8Base*v.mult,now,.075));
  lastExhaustThrottle=throttle;
 }
 const radioStations={

@@ -898,7 +898,7 @@ function start(){
   camera.position.set(carPos.x,carPos.y+7.2,carPos.z+12);
   cameraLook.set(carPos.x,carPos.y+1.4,carPos.z-4);camera.lookAt(cameraLook);
   $('menu').style.display='none';$('garage').style.display='none';
-  $('ui').style.display='block';$('help').style.display='block';$('touch').style.display='';$('carRadio').style.display='block';
+  $('ui').style.display='block';$('help').style.display='block';$('touch').style.display=mobileQuality?'flex':'none';$('carRadio').style.display='block';
   $('driveActions').style.display='block';
   renderer.render(scene,camera);
   paused=false;last=performance.now();
@@ -924,7 +924,7 @@ function closeGarage(){
  if(garageMode){
   garageMode=false;restoreTreeVisibility(scene,true);showroom.visible=false;
   scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,145,560);renderer.setClearColor(0x050914,1);
-  $('ui').style.display='block';$('help').style.display='block';$('touch').style.display='';$('driveActions').style.display=garageWasPlaying?'block':'none';$('carRadio').style.display=garageWasPlaying?'block':'none';
+  $('ui').style.display='block';$('help').style.display='block';$('touch').style.display=mobileQuality&&garageWasPlaying?'flex':'none';$('driveActions').style.display=garageWasPlaying?'block':'none';$('carRadio').style.display=garageWasPlaying?'block':'none';
   if(garageWasPlaying){$('ui').style.display='block'}else{$('menu').style.display='grid'}
   carPos.copy(garagePos);heading=garageHeading;carRoot.position.copy(carPos);carRoot.rotation.y=heading;
   camera.position.set(carPos.x+Math.sin(heading)*12,carPos.y+7.2,carPos.z+Math.cos(heading)*12);

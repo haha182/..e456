@@ -246,8 +246,19 @@ import { MeshoptDecoder } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examp
 
 const gameError=document.getElementById('gameError');
 function showGameError(message){if(gameError){gameError.textContent=message;gameError.style.display='block'}}
-addEventListener('error',e=>{console.error(e.error||e.message);showGameError('A game error occurred. Reload the page and try again. '+(e.message||''))});
-addEventListener('unhandledrejection',e=>{console.error(e.reason);showGameError('A game resource failed to load. Check your connection and reload.')});
+addEventListener('error',e=>{
+ const err=e.error,detail=(err&&err.message)||e.message||'Unknown browser error';
+ const location=e.filename?('\n'+e.filename.split('/').slice(-2).join('/')+':'+(e.lineno||0)+':'+(e.colno||0)):'';
+ const stack=err&&err.stack?('\n'+String(err.stack).split('\n').slice(0,4).join('\n')):'';
+ console.error('Game startup/runtime error:',err||e);
+ showGameError('GAME ERROR: '+detail+location+stack);
+},true);
+addEventListener('unhandledrejection',e=>{
+ const reason=e.reason,detail=(reason&&reason.message)||String(reason||'Unknown rejected operation');
+ const stack=reason&&reason.stack?('\n'+String(reason.stack).split('\n').slice(0,4).join('\n')):'';
+ console.error('Game resource/promise failure:',reason);
+ showGameError('RESOURCE ERROR: '+detail+stack);
+});
 const loadingScreen=document.getElementById('loadingScreen');
 let introFinished=false,introTimer=0;
 function finishIntro(){if(introFinished)return;introFinished=true;clearTimeout(introTimer);const intro=document.getElementById('introScreen');if(intro){intro.classList.add('exit');setTimeout(()=>{intro.style.display='none'},600)}const menu=document.getElementById('menu');if(menu)menu.style.display='grid'}

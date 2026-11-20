@@ -1333,7 +1333,7 @@ async function initCarAudio(){
    buffers.push(buffer);
   }
   buffers.forEach((buffer,i)=>{
-   const source=carAudioCtx.createBufferSource(),gain=carAudioCtx.createGain();source.buffer=buffer;source.loop=true;
+   const source=carAudioCtx.createBufferSource(),gain=carAudioCtx.createGain();source.buffer=buffer;source.loop=!lfaRecordingBuffer;
    source.playbackRate.value=lfaRecordingBuffer?.48:(recordedV8Buffers.length?.72+i*.035:.78+i*.025);gain.gain.value=i===0?.34:0;
    source.connect(gain);gain.connect(carAudioMaster);source.start();engineVoices.push({source,gain,isLFARecording:!!lfaRecordingBuffer,isRecordedV8:!lfaRecordingBuffer&&recordedV8Buffers.length>0});
   });

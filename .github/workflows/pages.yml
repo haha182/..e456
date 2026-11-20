@@ -30,18 +30,39 @@ jobs:
       - name: Install locked dependencies
         working-directory: horizon-remade
         run: npm ci
-      - name: Customize welcome screen
+      - name: Apply Harrison's game branding
         working-directory: horizon-remade
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p = Path("src/ui/menus.js")
-          s = p.read_text()
-          old = "h('div', { class: 'dialog-kicker' }, `WELCOME TO THE ${FESTIVAL_NAME.toUpperCase()}`),"
-          new = "h('div', { class: 'dialog-kicker' }, \"WELCOME TO HARRISON'S GAME\"),"
+          config = Path("src/config.js")
+          s = config.read_text()
+          old = "export const FESTIVAL_NAME = 'Horizon Isla Festival';"
+          new = "export const FESTIVAL_NAME = \"Harrison's Game\";"
           if old not in s:
-              raise SystemExit("Expected welcome screen text was not found; stopping build.")
-          p.write_text(s.replace(old, new, 1))
+              raise SystemExit("Expected festival name was not found; stopping build.")
+          config.write_text(s.replace(old, new, 1))
+
+          game = Path("src/game/game.js")
+          s = game.read_text()
+          old = """    if (!this.save.data.name) {
+          const def = 'Driver' + Math.floor(1000 + Math.random() * 9000);
+          this.menus.askName(def, (name) => {
+            this.save.data.name = name;
+            this.save.write(true);
+            if (this.net.state === 'connected') this.net.rename(name);
+            else if (this.settings.online) this.net.connect();
+            this.enterFreeRoam(true);
+          });
+        } else this.enterFreeRoam();"""
+          new = """    this.save.data.name = "Harrison";
+        this.save.write(true);
+        if (this.net.state === 'connected') this.net.rename("Harrison");
+        else if (this.settings.online) this.net.connect();
+        this.enterFreeRoam(!this.save.data.firstRun);"""
+          if old not in s:
+              raise SystemExit("Expected name-entry flow was not found; stopping build.")
+          game.write_text(s.replace(old, new, 1))
           PY
       - name: Run upstream game tests
         working-directory: horizon-remade

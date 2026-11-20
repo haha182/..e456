@@ -360,7 +360,7 @@ carRoot.position.copy(carPos);carRoot.position.y=0;
 const $=id=>document.getElementById(id);
 function toast(s){$('toast').textContent=s;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',1800)}
 function reset(){carPos=curve.getPointAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=0;carRoot.position.copy(carPos);carRoot.rotation.y=0}
-function changeCamera(){cameraMode=(cameraMode+1)%4;toast(["Chase camera","Close camera","High camera","First-person cockpit"][cameraMode]);if(cameraMode===3)updateFirstPersonCockpit()}
+function changeCamera(){cameraMode=(cameraMode+1)%4;if(cameraMode===3){cockpitLookYaw=0;cockpitLookPitch=0}cockpitPointerDown=false;toast(["Chase camera","Close camera","High camera","First-person cockpit — drag mouse to look"][cameraMode]);if(cameraMode===3)updateFirstPersonCockpit()}
 const bmwDetails=new THREE.Group();carRoot.add(bmwDetails);
 const kidneyMat=mat(0x080d12,.38,.72),kidneyTrim=mat(0x9ba6aa,.3,.8);
 for(const x of [-.235,.235]){const surround=new THREE.Mesh(new THREE.BoxGeometry(.34,.29,.055),kidneyTrim);surround.position.set(x,.73,-2.325);bmwDetails.add(surround);const kidney=new THREE.Mesh(new THREE.BoxGeometry(.285,.245,.06),kidneyMat);kidney.position.set(x,.73,-2.36);bmwDetails.add(kidney);for(let j=0;j<5;j++){const slat=new THREE.Mesh(new THREE.BoxGeometry(.018,.21,.025),kidneyTrim);slat.position.set(x-.1+j*.05,.73,-2.395);bmwDetails.add(slat)}}
@@ -596,6 +596,94 @@ const fpColumn=new THREE.Mesh(new THREE.CylinderGeometry(.045,.06,.34,12),fpDash
 const fpConsole=fpBox(firstPersonCockpit,.42,.36,.62,.48,.83,-.28,fpDashMat);fpConsole.rotation.x=-.12;for(let i=0;i<3;i++){const b=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.025,16),fpTrim);b.rotation.x=Math.PI/2;b.position.set(.34+i*.13,.91,-.61);firstPersonCockpit.add(b)}
 for(const side of [-1,1]){const pillar=fpBox(firstPersonCockpit,.075,.62,.10,side*.99,1.68,-.62,fpLeather);pillar.rotation.z=side*.13;fpBox(firstPersonCockpit,.22,.12,.12,side*1.01,1.57,-.27,fpDashMat);fpBox(firstPersonCockpit,.18,.075,.018,side*1.01,1.575,-.337,fpGlass)}
 fpBox(firstPersonCockpit,2.04,.10,.12,0,2.00,-.48,fpLeather);const fpHood=fpBox(firstPersonCockpit,1.82,.075,1.02,0,.79,-1.58,paintMat);fpHood.rotation.x=-.035;
+
+// MK7 Jetta-inspired cabin detailing: stitched soft-touch dash, door cards, seats and center stack.
+const j7Cabin=new THREE.Group();j7Cabin.name='MK7_JETTA_CABIN_DETAILS';firstPersonCockpit.add(j7Cabin);
+const j7Black=new THREE.MeshStandardMaterial({color:0x111416,roughness:.88});
+const j7Soft=new THREE.MeshStandardMaterial({color:0x202326,roughness:.94});
+const j7Leather=new THREE.MeshStandardMaterial({color:0x17191b,roughness:.82});
+const j7Silver=new THREE.MeshStandardMaterial({color:0x899196,metalness:.78,roughness:.27});
+const j7Piano=new THREE.MeshStandardMaterial({color:0x090d10,metalness:.38,roughness:.19});
+const j7Screen=new THREE.MeshStandardMaterial({color:0x07151b,emissive:0x063c4b,emissiveIntensity:.55,roughness:.18,metalness:.12});
+const j7Blue=new THREE.MeshStandardMaterial({color:0x39bfff,emissive:0x159bdc,emissiveIntensity:1.25,roughness:.3});
+const j7Stitch=new THREE.MeshBasicMaterial({color:0xb7a99a});
+const j7Ambient=new THREE.MeshBasicMaterial({color:0x25bfff});
+function j7Panel(w,h,d,x,y,z,m,r=0){const o=fpBox(j7Cabin,w,h,d,x,y,z,m);if(r)o.rotation.x=r;return o}
+function j7Line(points,r,material,parent=j7Cabin){const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));const mesh=new THREE.Mesh(new THREE.TubeGeometry(curve,Math.max(12,points.length*5),r,5,false),material);parent.add(mesh);return mesh}
+// Soft upper dashboard and layered passenger fascia.
+j7Panel(1.94,.18,.19,0,1.255,-.91,j7Soft);
+j7Panel(1.88,.055,.035,0,1.19,-1.02,j7Piano);
+j7Line([[-.91,1.29,-.98],[-.55,1.305,-1.005],[0,1.31,-1.01],[.55,1.305,-1.005],[.91,1.29,-.98]],.008,j7Stitch);
+j7Panel(.84,.49,.075,.49,1.00,-.98,j7Soft);
+j7Panel(.73,.39,.025,.49,1.015,-1.03,j7Piano);
+j7Panel(.66,.32,.012,.49,1.02,-1.05,j7Screen);
+j7Panel(.58,.012,.009,.49,1.175,-1.06,j7Blue);
+j7Panel(.13,.018,.012,.49,.86,-1.06,j7Blue);
+// Center air vents with individual slats and metallic surrounds.
+for(const x of [-.12,.12]){
+ j7Panel(.205,.105,.035,x,1.105,-1.045,j7Piano);
+ j7Panel(.19,.012,.012,x,1.16,-1.067,j7Silver);
+ for(let k=0;k<4;k++)j7Panel(.17,.006,.009,x,1.09+k*.018,-1.069,j7Silver);
+}
+j7Panel(.055,.105,.018,0,1.105,-1.055,j7Silver);
+// Climate panel, rotary knobs and tactile buttons.
+j7Panel(.56,.25,.075,.48,.72,-.82,j7Piano);
+for(let i=0;i<3;i++){
+ const knob=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.035,24),j7Silver);knob.rotation.x=Math.PI/2;knob.position.set(.29+i*.19,.73,-.87);j7Cabin.add(knob);
+ const center=new THREE.Mesh(new THREE.CircleGeometry(.026,20),j7Blue);center.position.set(.29+i*.19,.73,-.892);j7Cabin.add(center);
+}
+for(let i=0;i<5;i++)j7Panel(.055,.025,.012,.27+i*.105,.585,-.87,i===2?j7Blue:j7Silver);
+// Gear selector, leather boot, cup holders and armrest.
+j7Panel(.48,.12,.86,.48,.53,-.13,j7Soft);
+j7Panel(.24,.035,.28,.48,.61,-.32,j7Piano);
+const shifter=new THREE.Group();shifter.position.set(.48,.62,-.27);j7Cabin.add(shifter);
+const boot=new THREE.Mesh(new THREE.CylinderGeometry(.09,.14,.13,16),j7Leather);shifter.add(boot);
+const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.025,.03,.19,12),j7Silver);shaft.position.y=.13;shifter.add(shaft);
+const knob=new THREE.Mesh(new THREE.SphereGeometry(.075,16,12),j7Leather);knob.scale.set(1,.72,1);knob.position.y=.25;shifter.add(knob);
+j7Panel(.25,.035,.32,.48,.59,.28,j7Leather);
+j7Panel(.38,.075,.48,.48,.63,.75,j7Soft);
+// Door cards: padded armrests, grab handles, speaker grilles and stitched seams.
+for(const side of [-1,1]){
+ const x=side*.91;
+ j7Panel(.13,.58,1.45,x,1.16,.17,j7Leather);
+ j7Panel(.15,.19,1.24,side*.925,1.32,.18,j7Soft);
+ j7Panel(.045,.045,.66,side*.99,1.19,.16,j7Piano);
+ j7Line([[side*.99,1.42,-.48],[side*.99,1.43,.05],[side*.99,1.42,.72],[side*.99,1.39,.83]],.006,j7Stitch);
+ j7Line([[side*.99,1.05,-.48],[side*.99,1.02,.05],[side*.99,1.02,.72]],.007,j7Ambient);
+ const speaker=new THREE.Mesh(new THREE.CircleGeometry(.13,24),j7Piano);speaker.position.set(side*.99,.98,.69);speaker.rotation.y=side*Math.PI/2;j7Cabin.add(speaker);
+ for(let k=0;k<5;k++){const slat=fpBox(j7Cabin,.008,.008,.19,side*1.0,.98,.69);slat.rotation.y=side*Math.PI/2;slat.rotation.z=k*.08-.16}
+ // Window switch cluster and door pull.
+ j7Panel(.18,.035,.24,side*.91,1.28,.43,j7Piano);
+ for(let k=0;k<3;k++)j7Panel(.035,.012,.11,side*(.85+k*.045),1.305,.42,j7Silver);
+}
+// Front seats with sculpted bolsters, headrests and contrast double stitching.
+for(const side of [-1,1]){
+ const seat=new THREE.Group();seat.position.set(side*.49,.02,.58);j7Cabin.add(seat);
+ const base=new THREE.Mesh(new THREE.BoxGeometry(.67,.18,.72),j7Leather);base.position.set(0,.28,0);seat.add(base);
+ const back=new THREE.Mesh(new THREE.BoxGeometry(.67,.88,.22),j7Leather);back.position.set(0,.78,.24);back.rotation.x=-.09;seat.add(back);
+ for(const sx of [-1,1]){
+  const bolster=new THREE.Mesh(new THREE.BoxGeometry(.12,.76,.28),j7Soft);bolster.position.set(sx*.285,.79,.22);bolster.rotation.x=-.09;seat.add(bolster);
+  j7Line([[sx*.29,.48,.075],[sx*.29,.72,.065],[sx*.29,.98,.08],[sx*.29,1.12,.11]],.006,j7Stitch,seat);
+  j7Line([[sx*.22,.44,-.29],[sx*.22,.34,-.08],[sx*.22,.34,.18]],.005,j7Stitch,seat);
+ }
+ const insert=new THREE.Mesh(new THREE.BoxGeometry(.34,.62,.025),j7Soft);insert.position.set(0,.81,.105);seat.add(insert);
+ const headrest=new THREE.Mesh(new THREE.BoxGeometry(.34,.24,.2),j7Leather);headrest.position.set(0,1.34,.29);seat.add(headrest);
+ for(let k=0;k<4;k++){const seam=fpBox(seat,.006,.48,.008,(k-1.5)*.075,.81,.09,j7Stitch)}
+ for(const sx of [-.23,.23]){const rail=fpBox(seat,.045,.06,.72,sx,.12,0,j7Silver)}
+}
+// Floor, footwell, pedals and passenger glovebox.
+j7Panel(1.72,.06,1.38,0,.17,.52,j7Black);
+for(let i=0;i<3;i++){const pedal=fpBox(j7Cabin,.12,.16,.025,-.72+i*.17,.35,-.22,j7Silver);pedal.rotation.x=-.18}
+j7Panel(.78,.25,.09,.53,.91,-.48,j7Soft);
+j7Line([[.16,.99,-.54],[.5,1.0,-.55],[.88,.99,-.54]],.006,j7Stitch);
+// Ambient LED light pipes: dash, doors, center tunnel and footwells.
+j7Line([[-.94,1.22,-.96],[-.55,1.235,-1.0],[0,1.24,-1.01],[.55,1.235,-1.0],[.94,1.22,-.96]],.012,j7Ambient);
+for(const side of [-1,1]){
+ j7Line([[side*.99,1.38,-.47],[side*.99,1.39,0],[side*.99,1.37,.66]],.012,j7Ambient);
+ const foot=new THREE.Mesh(new THREE.PlaneGeometry(.48,.34),new THREE.MeshBasicMaterial({color:0x0879bd,transparent:true,opacity:.10,side:THREE.DoubleSide}));foot.rotation.x=-Math.PI/2;foot.position.set(side*.48,.205,-.23);j7Cabin.add(foot);
+}
+j7Line([[.25,.67,-.55],[.48,.67,-.57],[.71,.67,-.55]],.009,j7Ambient);
+let cockpitLookYaw=0,cockpitLookPitch=0,cockpitPointerDown=false,cockpitPointerX=0,cockpitPointerY=0;
 function updateFirstPersonCockpit(){firstPersonCockpit.visible=cameraMode===3&&!garageMode;fpWheel.rotation.z=-steerAngle*1.55;}
 
 // Apply garage tuning to the selected car and driving physics.
@@ -718,7 +806,7 @@ function tick(t){
   let desiredCam,desiredLook,targetFov;
   if(cameraMode===3){
    desiredCam=carRoot.localToWorld(new THREE.Vector3(-.49,1.56,-.06));
-   desiredLook=carRoot.localToWorld(new THREE.Vector3(-.49,1.48,-22));
+   desiredLook=carRoot.localToWorld(new THREE.Vector3(-.49+Math.sin(cockpitLookYaw)*15,1.48+Math.sin(cockpitLookPitch)*15,-Math.cos(cockpitLookYaw)*15));
    targetFov=66+speedRatio*2;
   }else{
    // Three distinct follow distances, with extra room at high speed.
@@ -831,6 +919,10 @@ function closeGarage(){
  }
  if(garageWasPlaying){initCarAudio();paused=false;last=performance.now()}
 }function saveGarage(){const ids=['turbo','frontCamber','rearCamber','frontOffset','rearOffset','brakeBalance','frontHeight','rearHeight','brakePressure','bodyKit','spoilerStyle','rimFinish','neonColor','windowTint'];for(const id of ids)localStorage['hcg_'+id]=$(id).value;paintMat.color.set($('paint').value);localStorage.hcgPaint=$('paint').value;localStorage.hcgPower=$('turbo').value;localStorage.hcg_turbo=$('turbo').value;localStorage.hcgStyle=$('carStyle').value;applyStyle(localStorage.hcgStyle);applyTune();applyCustomizations();closeGarage();toast('Custom build saved')}function updateTuneLabels(){for(const id of ['turbo','frontCamber','rearCamber','frontOffset','rearOffset','brakeBalance','frontHeight','rearHeight','brakePressure'])$(id).addEventListener('input',()=>{const v=$(id).value;$(id+'Val').textContent=({turbo:v+' psi',frontCamber:v+'°',rearCamber:v+'°',frontOffset:v+' cm',rearOffset:v+' cm',brakeBalance:v+'%',frontHeight:(+v>0?'+':'')+v+' cm',rearHeight:(+v>0?'+':'')+v+' cm',brakePressure:v+'%'})[id];localStorage['hcg_'+id]=v;if(id==='turbo')localStorage.hcg_turbo=v;applyTune()})}$('garage').addEventListener('pointerdown',e=>{if(!garageMode||e.target.closest('button,input,select,label'))return;garageDragging=true;garageLastX=e.clientX;garageLastY=e.clientY;$('garage').setPointerCapture(e.pointerId);$('garage').style.cursor='grabbing'});$('garage').addEventListener('pointermove',e=>{if(!garageDragging)return;const dx=e.clientX-garageLastX,dy=e.clientY-garageLastY;garageLastX=e.clientX;garageLastY=e.clientY;garageOrbitYaw-=dx*.009;garageOrbitPitch=THREE.MathUtils.clamp(garageOrbitPitch+dy*.007,-.12,1.05);setGarageCamera()});const stopGarageDrag=()=>{garageDragging=false;$('garage').style.cursor='grab'};$('garage').addEventListener('pointerup',stopGarageDrag);$('garage').addEventListener('pointercancel',stopGarageDrag);$('garage').addEventListener('wheel',e=>{if(!garageMode)return;e.preventDefault();garageOrbitRadius=THREE.MathUtils.clamp(garageOrbitRadius+e.deltaY*.012,6.2,19);setGarageCamera()},{passive:false});$('start').onclick=start;$('openGarage').onclick=openGarage;$('closeGarage').onclick=closeGarage;$('saveGarage').onclick=saveGarage;
+// Mouse-look is active only in the first-person cockpit camera.
+renderer.domElement.addEventListener('pointerdown',e=>{if(cameraMode!==3||garageMode)return;cockpitPointerDown=true;cockpitPointerX=e.clientX;cockpitPointerY=e.clientY;renderer.domElement.setPointerCapture?.(e.pointerId)});
+renderer.domElement.addEventListener('pointermove',e=>{if(!cockpitPointerDown||cameraMode!==3)return;const dx=e.clientX-cockpitPointerX,dy=e.clientY-cockpitPointerY;cockpitPointerX=e.clientX;cockpitPointerY=e.clientY;cockpitLookYaw=THREE.MathUtils.clamp(cockpitLookYaw-dx*.0035,-1.32,1.32);cockpitLookPitch=THREE.MathUtils.clamp(cockpitLookPitch-dy*.003,-.48,.48)});
+renderer.domElement.addEventListener('pointerup',()=>cockpitPointerDown=false);renderer.domElement.addEventListener('pointercancel',()=>cockpitPointerDown=false);
 $('cameraBtn').onclick=changeCamera;$('garageBtn').onclick=openGarage;$('carStyle').value=localStorage.hcgStyle||'spectral_gt';applyStyle();$('carStyle').addEventListener('change',()=>{localStorage.hcgStyle=$('carStyle').value;applyStyle()});applyTune();if(localStorage.hcgPower)$('turbo').value=localStorage.hcgPower;setGarageValues();updateTuneLabels();for(const id of ['bodyKit','spoilerStyle','rimFinish','neonColor','windowTint'])$(id).addEventListener('input',()=>{localStorage['hcg_'+id]=$(id).value;applyCustomizations()});for(const id of ['bodyKit','spoilerStyle','rimFinish'])$(id).addEventListener('change',()=>{localStorage['hcg_'+id]=$(id).value;applyCustomizations()});if(localStorage.hcgPaint){$('paint').value=localStorage.hcgPaint;paintMat.color.set(localStorage.hcgPaint);applyTune()}
 const controlKeys=new Set(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' ','shift']);addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=true;e.preventDefault()}if(k==='c')changeCamera();if(k==='r')reset();if(e.key==='Escape'){paused=true;$('menu').style.display='grid'}});addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=false;e.preventDefault()}});addEventListener('blur',()=>{for(const k of controlKeys)keys[k]=false});
 function bind(id,k){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;el.setPointerCapture(e.pointerId)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,()=>keys[k]=false))}

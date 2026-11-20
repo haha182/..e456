@@ -146,7 +146,7 @@ const industrialRoute=openRoad([[105,-48],[155,-95],[215,-125],[285,-115],[350,-
 const reflectorMat=new THREE.MeshBasicMaterial({color:0xffc76b}),openRoadPostMat=mat(0x303943,.5,.65);
 for(const route of [mountainRoute,forestRoute,industrialRoute]){
  for(let i=3;i<70;i+=4){const p=route.getPointAt(i/72),t=route.getTangentAt(i/72),side=new THREE.Vector3(-t.z,0,t.x).normalize();
-  for(const sign of [-1,1]){const post=new THREE.Mesh(new THREE.BoxGeometry(.13,.8,.13),openRoadPostMat);post.position.set(p.x+side.x*7.7,.4,p.z+side.z*7.7);scene.add(post);const reflector=new THREE.Mesh(new THREE.BoxGeometry(.16,.12,.035),reflectorMat);reflector.position.set(post.position.x,.72,post.position.z);scene.add(reflector)}
+  for(const sign of [-1,1]){addWorldCollider(p.x+side.x*7.7*sign,p.z+side.z*7.7*sign,.18,.18);const post=new THREE.Mesh(new THREE.BoxGeometry(.13,.8,.13),openRoadPostMat);post.position.set(p.x+side.x*7.7*sign,.4,p.z+side.z*7.7*sign);scene.add(post);const reflector=new THREE.Mesh(new THREE.BoxGeometry(.16,.12,.035),reflectorMat);reflector.position.set(post.position.x,.72,post.position.z);scene.add(reflector)}
  }
 }
 // A remote mountain overlook and a small industrial yard give the roads destinations to discover.
@@ -181,7 +181,7 @@ const craneBeam=new THREE.Mesh(new THREE.BoxGeometry(70,.9,.9),portRoof);craneBe
 const serviceStop=new THREE.Group();serviceStop.position.set(-360,0,-85);scene.add(serviceStop);
 addWorldCollider(-360,-85,11.2,7.7);\nconst shop=new THREE.Mesh(new THREE.BoxGeometry(22,6,15),mat(0x465158,.9,.08));shop.position.y=3;serviceStop.add(shop);
 const canopy=new THREE.Mesh(new THREE.BoxGeometry(27,.65,18),portRoof);canopy.position.set(0,6.4,1);serviceStop.add(canopy);
-for(const x of [-8,0,8]){const pump=new THREE.Mesh(new THREE.BoxGeometry(1.3,2.4,1.1),mat(0xc7c9c2,.45,.3));pump.position.set(x,1.2,13);serviceStop.add(pump);const screen=new THREE.Mesh(new THREE.BoxGeometry(.7,.45,.08),portGlow);screen.position.set(x,1.8,13.58);serviceStop.add(screen)}
+for(const x of [-8,0,8]){addWorldCollider(-360+x,-72, .8,.8);const pump=new THREE.Mesh(new THREE.BoxGeometry(1.3,2.4,1.1),mat(0xc7c9c2,.45,.3));pump.position.set(x,1.2,13);serviceStop.add(pump);const screen=new THREE.Mesh(new THREE.BoxGeometry(.7,.45,.08),portGlow);screen.position.set(x,1.8,13.58);serviceStop.add(screen)}
 const signPost=new THREE.Mesh(new THREE.BoxGeometry(.35,8,.35),portRoof);signPost.position.set(15,4,0);serviceStop.add(signPost);
 const signBoard=new THREE.Mesh(new THREE.BoxGeometry(7,2.8,.3),portGlow);signBoard.position.set(15,8.8,0);serviceStop.add(signBoard);
 
@@ -237,7 +237,7 @@ function buildMountain(radius,height,seed,material){
 const mountainLayers=mobileQuality?1:3,mountainsPerLayer=mobileQuality?8:25;
 for(let layer=0;layer<mountainLayers;layer++)for(let i=0;i<mountainsPerLayer;i++){const a=i/mountainsPerLayer*Math.PI*2+(layer%2)*.07,r=285+layer*44+(i%3)*12,h=48+(i*19%43)+layer*17;buildMountain(34+layer*9,h,i+layer*29,mountainMats[layer]);}
 const grandstandMat=mat(0x303c45,.88),seatMat=mat(0xb6c2c4,.7,.12);
-for(const side of [-1,1]){const stand=new THREE.Group();stand.position.set(side*82,0,-12);stand.rotation.y=side===1?-Math.PI/2:Math.PI/2;const base=new THREE.Mesh(new THREE.BoxGeometry(34,5,8),grandstandMat);base.position.y=2.5;stand.add(base);for(let row=0;row<5;row++){const seat=new THREE.Mesh(new THREE.BoxGeometry(32,.22,.65),seatMat);seat.position.set(0,4.2+row*.58,-3+row*.85);stand.add(seat)}const canopy=new THREE.Mesh(new THREE.BoxGeometry(36,.45,10),mat(0x26343d,.6,.25));canopy.position.set(0,8.2,-.2);stand.add(canopy);scene.add(stand)}
+for(const side of [-1,1]){addWorldCollider(side*82,-12,4.5,17.5);const stand=new THREE.Group();stand.position.set(side*82,0,-12);stand.rotation.y=side===1?-Math.PI/2:Math.PI/2;const base=new THREE.Mesh(new THREE.BoxGeometry(34,5,8),grandstandMat);base.position.y=2.5;stand.add(base);for(let row=0;row<5;row++){const seat=new THREE.Mesh(new THREE.BoxGeometry(32,.22,.65),seatMat);seat.position.set(0,4.2+row*.58,-3+row*.85);stand.add(seat)}const canopy=new THREE.Mesh(new THREE.BoxGeometry(36,.45,10),mat(0x26343d,.6,.25));canopy.position.set(0,8.2,-.2);stand.add(canopy);scene.add(stand)}
 // Warm sodium-style streetlights follow both edges of the drift circuit.
 const streetLampMetal=mat(0x202a35,.42,.72),lampGlowMat=new THREE.MeshBasicMaterial({color:0xffd36a});
 for(let i=0;i<(mobileQuality?9:18);i++){

@@ -358,7 +358,7 @@ const galaxySky=new THREE.Mesh(new THREE.SphereGeometry(5980,48,32),new THREE.Sh
  side:THREE.BackSide,transparent:true,depthWrite:false,uniforms:{uOpacity:{value:.82}},
  vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
  fragmentShader:`varying vec2 vUv;uniform float uOpacity;
- float hash21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+ float hash21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=vec2(dot(p,p+45.32));return fract(p.x*p.y);}
  float noise2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash21(i),hash21(i+vec2(1.,0.)),f.x),mix(hash21(i+vec2(0.,1.)),hash21(i+vec2(1.,1.)),f.x),f.y);}
  float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=noise2(p)*a;p=p*2.03+vec2(13.1,7.7);a*=.5;}return v;}
  void main(){

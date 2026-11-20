@@ -252,8 +252,9 @@ const loadingScreen=document.getElementById('loadingScreen');
 let introFinished=false,introTimer=0;
 function finishIntro(){if(introFinished)return;introFinished=true;clearTimeout(introTimer);const intro=document.getElementById('introScreen');if(intro){intro.classList.add('exit');setTimeout(()=>{intro.style.display='none'},600)}const menu=document.getElementById('menu');if(menu)menu.style.display='grid'}
 function startIntro(){const intro=document.getElementById('introScreen');if(!intro||introFinished)return;intro.style.display='grid';intro.classList.add('show');introTimer=setTimeout(finishIntro,5500)}
-function finishLoading(){if(loadingScreen)loadingScreen.classList.add('done');startIntro()}
-setTimeout(finishLoading,15000); // Failsafe only; normal completion follows the car load result.
+function finishLoading(){clearTimeout(startupFailsafe);if(loadingScreen)loadingScreen.classList.add('done');startIntro()}
+let startupFailsafe=0;
+startupFailsafe=setTimeout(()=>{if(!introFinished)showGameError('Startup is taking longer than expected. Check your connection, then reload the game.');},25000);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,175,500);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,950);
 const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const isChromeOS=/CrOS/i.test(navigator.userAgent);const touchControls=matchMedia('(pointer:coarse)').matches&&navigator.maxTouchPoints>0;const renderer=new THREE.WebGLRenderer({antialias:!mobileQuality,powerPreference:'high-performance',precision:'highp'});renderer.setPixelRatio(isChromeOS ? 0.78 :(mobileQuality?Math.min(devicePixelRatio,1.12):Math.min(devicePixelRatio,1.35)));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=!mobileQuality;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;document.body.appendChild(renderer.domElement);
@@ -273,23 +274,22 @@ window.addEventListener('keydown',e=>{if(e.code==='F3'&&!e.repeat){perfPanel.sty
 
 // Defer desktop-only reflection generation so it cannot delay the first page load.
 {
- if(isChromeOS){scene.environmentIntensity=.5}
- else{
+ {
   const buildStudioReflections=async()=>{
    try{
     const {RoomEnvironment}=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js');
     const pmremGenerator=new THREE.PMREMGenerator(renderer);
     const studioEnvironment=pmremGenerator.fromScene(new RoomEnvironment(),0.04);
-    scene.environment=studioEnvironment.texture;scene.environmentIntensity=1.0;
+    scene.environment=studioEnvironment.texture;scene.environmentIntensity=isChromeOS?.78:1.0;
     pmremGenerator.dispose();
    }catch(error){console.warn('Studio reflections unavailable; using scene lighting.',error)}
   };
-  if('requestIdleCallback' in window)requestIdleCallback(buildStudioReflections,{timeout:5000});
-  else setTimeout(buildStudioReflections,1800);
+  if('requestIdleCallback' in window)requestIdleCallback(buildStudioReflections,{timeout:isChromeOS?9000:5000});
+  else setTimeout(buildStudioReflections,isChromeOS?3200:1800);
  }
 }
-const hemiLight=new THREE.HemisphereLight(0x243b68,0x080b13,.34);scene.add(hemiLight);
-const moon=new THREE.DirectionalLight(0xb9d0ff,.82);moon.position.set(-85,115,65);moon.castShadow=!mobileQuality;moon.shadow.mapSize.set(1024,1024);moon.shadow.camera.left=-155;moon.shadow.camera.right=155;moon.shadow.camera.top=155;moon.shadow.camera.bottom=-155;scene.add(moon);
+const hemiLight=new THREE.HemisphereLight(0x506d9b,0x111923,isChromeOS?.48:.42);scene.add(hemiLight);
+const moon=new THREE.DirectionalLight(0xc6d9ff,isChromeOS?1.05:.92);moon.position.set(-85,115,65);moon.castShadow=!mobileQuality;moon.shadow.mapSize.set(1024,1024);moon.shadow.camera.left=-155;moon.shadow.camera.right=155;moon.shadow.camera.top=155;moon.shadow.camera.bottom=-155;scene.add(moon);
 // Visible moon disc and soft halo, placed ahead of the highway horizon.
 const moonDisc=new THREE.Mesh(new THREE.SphereGeometry(13,32,24),new THREE.MeshBasicMaterial({color:0xf4f1dc}));moonDisc.position.set(DRIVE_GAME_CENTER.x-115,DRIVE_GAME_CENTER.y+205,DRIVE_GAME_CENTER.z-590);scene.add(moonDisc);
 const moonHalo=new THREE.Mesh(new THREE.SphereGeometry(19,24,18),new THREE.MeshBasicMaterial({color:0xc6d9ff,transparent:true,opacity:.12,depthWrite:false}));moonHalo.position.copy(moonDisc.position);scene.add(moonHalo);
@@ -665,7 +665,7 @@ function applyStyle(){
    const namedGround=/ground|platform|base.?plate|shadow|collision|helper/.test(meshName2);
    const flatBase=meshSize.y<Math.max(scaledSize.x,scaledSize.z)*.025&&meshSize.x>scaledSize.x*.72&&meshSize.z>scaledSize.z*.72&&meshBounds.min.y<=bounds.min.y+scaledSize.y*.06;
    if(namedGround||flatBase){o.visible=false;return}
-   o.castShadow=!mobileQuality;o.receiveShadow=!mobileQuality;
+   o.castShadow=!mobileQuality||isChromeOS;o.receiveShadow=!mobileQuality||isChromeOS;
    const finishMaterial=m=>{
     const q=m.clone(),label=((q.name||'')+' '+meshName2).toLowerCase();q.envMapIntensity=1.65;
     const excluded=/glass|window|rubber|tire|wheel|rim|trim|chrome|light|lamp|interior|seat|dash/.test(label);
@@ -820,7 +820,7 @@ for(const x of [-.48,.48]){const seat=new THREE.Mesh(new THREE.BoxGeometry(.55,.
 const shifter=new THREE.Mesh(new THREE.CylinderGeometry(.025,.035,.20,12),trimMat);shifter.position.set(.15,.88,.05);e46Cabin.add(shifter);
 function applyE46Paint(){e46Paint.color.copy(paintMat.color)}
 // Skip the unused Spectral GT network preload. The chosen car loads on demand.
-finishLoading();
+// Loading screen is dismissed only after the complete game setup finishes.
 // Additional original CC0 cars from Innerscene's public-domain library.
 const extraCarLoader=new GLTFLoader();extraCarLoader.setMeshoptDecoder(MeshoptDecoder);
 // 2012 Lexus LFA Nürburgring Package, Ddiaz Design, CC BY-NC-SA 4.0.
@@ -1714,4 +1714,6 @@ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updat
 paintMat.color.set($('paint').value);$('paint').addEventListener('input',()=>{paintMat.color.set($('paint').value);applyTune()});
 camera.position.set(0,8,14);camera.lookAt(0,0,0);
 // Defer optional imported-car loading until the player opens the garage or starts driving.
+// All scene, controls, UI handlers and the render loop are now initialized.
+finishLoading();
 </script></body></html>

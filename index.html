@@ -642,14 +642,14 @@ j7Panel(.055,.105,.018,0,1.105,-1.055,j7Silver);
 // Climate panel, rotary knobs and tactile buttons.
 j7Panel(.56,.25,.075,.48,.72,-.82,j7Piano);
 for(let i=0;i<3;i++){
- const knob=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.035,24),j7Silver);knob.rotation.x=Math.PI/2;knob.position.set(.29+i*.19,.73,-.87);j7Cabin.add(knob);
+ const knob=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.035,24),j7Silver);knob.rotation.x=Math.PI/2;knob.position.set(.29+i*.19,.73,-.87);j7Shifter.add(knob);
  const center=new THREE.Mesh(new THREE.CircleGeometry(.026,20),j7Blue);center.position.set(.29+i*.19,.73,-.892);j7Cabin.add(center);
 }
 for(let i=0;i<5;i++)j7Panel(.055,.025,.012,.27+i*.105,.585,-.87,i===2?j7Blue:j7Silver);
 // Gear selector, leather boot, cup holders and armrest.
 j7Panel(.48,.12,.86,.48,.53,-.13,j7Soft);
 j7Panel(.24,.035,.28,.48,.61,-.32,j7Piano);
-const shifter=new THREE.Group();shifter.position.set(.48,.62,-.27);j7Cabin.add(shifter);
+const j7Shifter=new THREE.Group();j7Shifter.position.set(.48,.62,-.27);j7Cabin.add(j7Shifter);
 const boot=new THREE.Mesh(new THREE.CylinderGeometry(.09,.14,.13,16),j7Leather);shifter.add(boot);
 const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.025,.03,.19,12),j7Silver);shaft.position.y=.13;shifter.add(shaft);
 const knob=new THREE.Mesh(new THREE.SphereGeometry(.075,16,12),j7Leather);knob.scale.set(1,.72,1);knob.position.y=.25;shifter.add(knob);

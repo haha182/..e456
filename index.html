@@ -186,7 +186,7 @@ for(const route of [mountainRoute,forestRoute,industrialRoute]){
 const overlook=new THREE.Group();overlook.position.set(315,0,330);scene.add(overlook);addWorldCollider(296,330,.45,12);addWorldCollider(334,330,.45,12);
 const deck=new THREE.Mesh(new THREE.BoxGeometry(42,.65,24),mat(0x343d46,.8,.3));deck.position.y=.1;deck.receiveShadow=true;overlook.add(deck);
 for(const x of [-19,19]){const rail=new THREE.Mesh(new THREE.BoxGeometry(.25,1.5,24),openRoadPostMat);rail.position.set(x,1,0);overlook.add(rail)}
-const overlookLamp=new THREE.PointLight(0xffbd58,38,65);overlookLamp.position.set(0,9,0);overlook.add(overlookLamp);
+const overlookLamp=new THREE.PointLight(0xffbd58,48,76);overlookLamp.position.set(0,9,0);overlook.add(overlookLamp);
 const yard=new THREE.Group();yard.position.set(330,0,-95);scene.add(yard);
 const yardMat=mat(0x303a43,.9,.2);
 for(let i=0;i<5;i++){addWorldCollider(330+(i-2)*20,-95,9.2,3.7);const container=new THREE.Mesh(new THREE.BoxGeometry(18,5,7),i%2?mat(0x34464c,.85,.25):yardMat);container.position.set((i-2)*20,2.5,0);yard.add(container);for(let z=-3;z<=3;z+=1.5){const rib=new THREE.Mesh(new THREE.BoxGeometry(17.8,.07,.07),yardMat);rib.position.set((i-2)*20,2.5,z);yard.add(rib)}}
@@ -282,7 +282,7 @@ for(let i=0;i<(mobileQuality?9:18);i++){
   const inward=side.clone().multiplyScalar(-sign);const arm=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,2.05),streetLampMetal);arm.position.set(inward.x*-.92,8.35,inward.z*-.92);arm.rotation.y=Math.atan2(inward.x,inward.z);group.add(arm);
   const head=new THREE.Mesh(new THREE.BoxGeometry(.72,.18,1.05),streetLampMetal);head.position.set(inward.x*1.82,8.28,inward.z*1.82);head.rotation.y=arm.rotation.y;group.add(head);
   const bulb=new THREE.Mesh(new THREE.BoxGeometry(.52,.035,.72),lampGlowMat);bulb.position.set(inward.x*1.82,8.17,inward.z*1.82);bulb.rotation.y=arm.rotation.y;group.add(bulb);
-  if(i%3===0){const light=new THREE.PointLight(0xffc45f,52,68,1.45);light.position.set(inward.x*1.8,7.95,inward.z*1.8);light.castShadow=false;group.add(light);}
+  if(i%3===0){const light=new THREE.PointLight(0xffc45f,66,78,1.4);light.position.set(inward.x*1.8,7.95,inward.z*1.8);light.castShadow=false;group.add(light);}
   const halo=new THREE.Mesh(new THREE.SphereGeometry(.42,10,8),new THREE.MeshBasicMaterial({color:0xffd985,transparent:true,opacity:.16}));halo.position.set(inward.x*1.8,7.95,inward.z*1.8);group.add(halo);
  }
 }

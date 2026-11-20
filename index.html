@@ -394,12 +394,12 @@ for(const x of [-1.08,1.08])for(const z of [-1.48,1.48]){
 const lightMat=new THREE.MeshBasicMaterial({color:0xfff3d0});
 const smokeMat=new THREE.MeshBasicMaterial({color:0xdce4e6,transparent:true,opacity:.32,depthWrite:false});const smoke=[];
 for(let i=0;i<34;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(.55+Math.random()*.5,8,7),smokeMat.clone());m.visible=false;scene.add(m);smoke.push({mesh:m,life:0})}
-let speed=0,slip=0,heading=0,score=0,points=0,boost=100,steerAngle=0,paused=true,keys={},last=performance.now(),lastRender=0,carPos=curve.getPointAt(.03),vel=new THREE.Vector3(),driftAngle=0,combo=1,driftTimer=0,cameraMode=0,garageWasPlaying=false,garageMode=false,garagePos=new THREE.Vector3(),garageHeading=0,garageOrbitYaw=0,garageOrbitPitch=.20,garageOrbitRadius=9.5,cameraLook=new THREE.Vector3(),garageDragging=false,garageLastX=0,garageLastY=0,garageVisibilitySnapshot=[];
+let speed=0,slip=0,heading=0,score=0,points=0,boost=100,steerAngle=0,paused=true,keys={},last=performance.now(),lastRender=0,carPos=curve.getPointAt(.03),vel=new THREE.Vector3(),driftAngle=0,combo=1,driftTimer=0,cameraMode=0,garageWasPlaying=false,garageMode=false,garagePos=new THREE.Vector3(),garageHeading=0,garageOrbitYaw=0,garageOrbitPitch=.20,garageOrbitRadius=9.5,cameraLook=new THREE.Vector3(),cameraSnap=true,garageDragging=false,garageLastX=0,garageLastY=0,garageVisibilitySnapshot=[];
 carRoot.position.copy(carPos);carRoot.position.y=0;
 const $=id=>document.getElementById(id);
 function toast(s){$('toast').textContent=s;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',1800)}
 function reset(){carPos=curve.getPointAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=0;steerAngle=0;driftAngle=0;driftTimer=0;combo=1;keys={};carRoot.position.copy(carPos);carRoot.rotation.set(0,0,0);$('speed').textContent='0';$('combo').textContent='x1';const arc=$('speedArc');if(arc)arc.style.strokeDashoffset='270'}
-function changeCamera(){cameraMode=(cameraMode+1)%4;if(cameraMode===3){cockpitLookYaw=0;cockpitLookPitch=0}cockpitPointerDown=false;toast(["Chase camera","Close camera","High camera","First-person cockpit — drag mouse to look"][cameraMode]);if(cameraMode===3)updateFirstPersonCockpit()}
+function changeCamera(){cameraMode=(cameraMode+1)%4;cameraSnap=true;if(cameraMode===3){cockpitLookYaw=0;cockpitLookPitch=0}cockpitPointerDown=false;toast(["Chase camera","Close camera","High camera","First-person cockpit — drag mouse to look"][cameraMode]);if(cameraMode===3)updateFirstPersonCockpit()}
 const bmwDetails=new THREE.Group();carRoot.add(bmwDetails);
 const kidneyMat=mat(0x080d12,.38,.72),kidneyTrim=mat(0x9ba6aa,.3,.8);
 for(const x of [-.235,.235]){const surround=new THREE.Mesh(new THREE.BoxGeometry(.34,.29,.055),kidneyTrim);surround.position.set(x,.73,-2.325);bmwDetails.add(surround);const kidney=new THREE.Mesh(new THREE.BoxGeometry(.285,.245,.06),kidneyMat);kidney.position.set(x,.73,-2.36);bmwDetails.add(kidney);for(let j=0;j<5;j++){const slat=new THREE.Mesh(new THREE.BoxGeometry(.018,.21,.025),kidneyTrim);slat.position.set(x-.1+j*.05,.73,-2.395);bmwDetails.add(slat)}}
@@ -458,9 +458,9 @@ function applyStyle(){
  extraCarLoader.load(item.url,gltf=>{
   const model=gltf.scene;model.updateMatrixWorld(true);let bounds=new THREE.Box3().setFromObject(model),dims=bounds.getSize(new THREE.Vector3()),longest=Math.max(dims.x,dims.z);
   if(!longest)throw Error('Downloaded car model contains no measurable geometry');
-  model.scale.setScalar(4.65/longest);model.updateMatrixWorld(true);bounds.setFromObject(model);const center=bounds.getCenter(new THREE.Vector3());const scaledSize=bounds.getSize(new THREE.Vector3());item.group.userData.vehicleHeight=scaledSize.y;model.position.x-=center.x;model.position.z-=center.z;model.position.y-=bounds.min.y;
+  model.scale.setScalar(4.65/longest);model.updateMatrixWorld(true);bounds.setFromObject(model);const center=bounds.getCenter(new THREE.Vector3());const scaledSize=bounds.getSize(new THREE.Vector3());item.group.userData.vehicleHeight=scaledSize.y;item.group.userData.vehicleSize=scaledSize.clone();model.position.x-=center.x;model.position.z-=center.z;model.position.y-=bounds.min.y;
   model.traverse(o=>{if(!o.isMesh)return;const meshBounds=new THREE.Box3().setFromObject(o);const meshSize=meshBounds.getSize(new THREE.Vector3());const wholeX=scaledSize.x,wholeZ=scaledSize.z;const meshName=(o.name||'').toLowerCase();const namedGround=/ground|platform|base.?plate|shadow.?plane/.test(meshName);const flatBase=meshSize.y<Math.max(wholeX,wholeZ)*.025&&meshSize.x>wholeX*.72&&meshSize.z>wholeZ*.72&&meshBounds.min.y<=bounds.min.y+scaledSize.y*.06;if(namedGround||flatBase){o.visible=false;return}o.castShadow=false;o.receiveShadow=false;if(Array.isArray(o.material))o.material=o.material.map(m=>m.clone());else if(o.material)o.material=o.material.clone()});
-  item.group.add(model);item.ready=true;item.loading=false;const isSelected=$('carStyle').value===choice;item.group.visible=isSelected;if(isSelected)applyCustomizations();applyTune();if(isSelected){$('carLabel').textContent=item.label.toUpperCase();if(status)status.textContent=item.label.toUpperCase()+' READY';if(garageMode)setGarageCamera();toast(item.label+' loaded')}
+  item.group.add(model);item.group.updateMatrixWorld(true);const modelBounds=new THREE.Box3().setFromObject(item.group);const modelCenter=modelBounds.getCenter(new THREE.Vector3());item.group.userData.cameraCenter=carRoot.worldToLocal(modelCenter.clone());item.group.userData.cameraCenter.y=scaledSize.y*.5;item.ready=true;item.loading=false;const isSelected=$('carStyle').value===choice;item.group.visible=isSelected;if(isSelected)applyCustomizations();applyTune();if(isSelected){$('carLabel').textContent=item.label.toUpperCase();if(status)status.textContent=item.label.toUpperCase()+' READY';if(garageMode)setGarageCamera();toast(item.label+' loaded')}
  },undefined,error=>{item.loading=false;console.error(item.label+' load failed:',error);if($('carStyle').value===choice){$('carLabel').textContent='CAR DOWNLOAD FAILED';if(status)status.textContent='MODEL DOWNLOAD FAILED — SELECT ANOTHER CAR';toast('Could not download '+item.label+'; your other cars are still available')}});
 }
 
@@ -941,20 +941,18 @@ function tick(t){
    targetFov=66+speedRatio*2;
   }else{
    // Three distinct follow distances, with extra room at high speed.
-   const selectedExtra=extraCarModels[$('carStyle')?.value];const vehicleHeight=selectedExtra?.ready?Math.max(1.1,Math.min(2.7,selectedExtra.group.userData.vehicleHeight||1.5)):1.5;const sizeBoost=Math.max(0,vehicleHeight-1.5);
-   const distance=(cameraMode===0?9.4:cameraMode===1?5.8:14.2)+speedRatio*(cameraMode===0?2.0:cameraMode===1?1.15:2.2)+sizeBoost*1.1;
-   const height=(cameraMode===0?4.25:cameraMode===1?2.75:cameraMode===2?11.8:4)+speedRatio*(cameraMode===0?.9:cameraMode===1?.5:cameraMode===2?.8:0)+sizeBoost*.75;
-   // A small outside-of-corner offset makes drifting easier to read without losing the car.
-   const sideOffset=Math.max(-1.25,Math.min(1.25,steerAngle*.48));
-   desiredCam=carRoot.position.clone().addScaledVector(forwardCam,-distance).addScaledVector(rightCam,sideOffset).add(new THREE.Vector3(0,height,0));
-   const lookAhead=(cameraMode===2?4.2:3.0)+speedRatio*4.0;
-   const lookHeight=Math.max(1.12,vehicleHeight*.58);
-   desiredLook=carRoot.position.clone().addScaledVector(forwardCam,lookAhead).add(new THREE.Vector3(0,cameraMode===2?Math.max(1,lookHeight):lookHeight,0));
+   const selectedExtra=extraCarModels[$('carStyle')?.value];const vehicleHeight=selectedExtra?.ready?Math.max(1.1,Math.min(2.7,selectedExtra.group.userData.vehicleHeight||1.5)):1.5;const sizeBoost=Math.max(0,vehicleHeight-1.5);const localCenter=selectedExtra?.ready&&selectedExtra.group.userData.cameraCenter?selectedExtra.group.userData.cameraCenter:new THREE.Vector3(0,vehicleHeight*.5,0);const vehicleCenter=carRoot.localToWorld(localCenter.clone());
+   const distance=(cameraMode===0?9.8:cameraMode===1?7.0:15.2)+speedRatio*(cameraMode===0?2.0:cameraMode===1?1.25:2.4)+sizeBoost*1.25;
+   const height=(cameraMode===0?4.5:cameraMode===1?3.25:cameraMode===2?12.5:4)+speedRatio*(cameraMode===0?.9:cameraMode===1?.5:cameraMode===2?.8:0)+sizeBoost*.8;
+   const sideOffset=Math.max(-.9,Math.min(.9,steerAngle*.3));
+   desiredCam=carRoot.localToWorld(localCenter.clone().add(new THREE.Vector3(sideOffset,height,cameraMode===1?7.0:distance)));
+   const lookAhead=(cameraMode===2?4.8:3.5)+speedRatio*3.0;
+   const lookHeight=Math.max(1.0,vehicleHeight*.56);
+   desiredLook=carRoot.localToWorld(localCenter.clone().add(new THREE.Vector3(0,cameraMode===2?Math.max(1,lookHeight):lookHeight,-lookAhead)));
    targetFov=(cameraMode===0?65:cameraMode===1?62:60)+speedRatio*(cameraMode===2?4:8);
   }
   const camAlpha=1-Math.exp(-(cameraMode===3?11:7.2)*dt);
-  camera.position.lerp(desiredCam,camAlpha);
-  cameraLook.lerp(desiredLook,1-Math.exp(-(cameraMode===3?13:8.4)*dt));
+  if(cameraSnap){camera.position.copy(desiredCam);cameraLook.copy(desiredLook);cameraSnap=false}else{camera.position.lerp(desiredCam,camAlpha);cameraLook.lerp(desiredLook,1-Math.exp(-(cameraMode===3?13:8.4)*dt))}
   camera.lookAt(cameraLook);
   camera.fov+=(targetFov-camera.fov)*(1-Math.exp(-3.8*dt));camera.updateProjectionMatrix();
   if(cameraMode===3){const speedShake=Math.min(Math.abs(speed)/46,1);camera.rotation.z+=-steerAngle*.025*speedShake;camera.position.y+=Math.sin(t*.012)*.006*speedShake}
@@ -1030,7 +1028,7 @@ function start(){
   $('speed').textContent='0';$('score').textContent='0';$('combo').textContent='x1';$('speedArc').style.strokeDashoffset='270';
   carRoot.visible=true;restoreTreeVisibility(carRoot,true);applyStyle($('carStyle').value);carRoot.position.copy(carPos);carRoot.rotation.set(0,0,0);
   camera.position.set(carPos.x,carPos.y+7.2,carPos.z+12);
-  cameraLook.set(carPos.x,carPos.y+1.4,carPos.z-4);camera.lookAt(cameraLook);
+  cameraLook.set(carPos.x,carPos.y+1.4,carPos.z-4);camera.lookAt(cameraLook);cameraSnap=true;
   $('menu').style.display='none';$('garage').style.display='none';
   $('ui').style.display='block';$('help').style.display='block';$('touch').style.display=touchControls?'flex':'none';$('carRadio').style.display='block';
   $('driveActions').style.display='block';
@@ -1062,7 +1060,7 @@ function closeGarage(){
   if(garageWasPlaying){$('ui').style.display='block'}else{$('menu').style.display='grid'}
   carPos.copy(garagePos);heading=garageHeading;carRoot.position.copy(carPos);carRoot.rotation.y=heading;
   camera.position.set(carPos.x+Math.sin(heading)*12,carPos.y+7.2,carPos.z+Math.cos(heading)*12);
-  cameraLook.set(carPos.x,carPos.y+1.4,carPos.z-4);camera.lookAt(cameraLook);
+  cameraLook.set(carPos.x,carPos.y+1.4,carPos.z-4);camera.lookAt(cameraLook);cameraSnap=true;
  }
  if(garageWasPlaying){initCarAudio();paused=false;last=performance.now()}
 }function saveGarage(){const ids=['turbo','frontCamber','rearCamber','frontOffset','rearOffset','brakeBalance','frontHeight','rearHeight','brakePressure','bodyKit','spoilerStyle','rimFinish','neonColor','windowTint'];for(const id of ids)localStorage['hcg_'+id]=$(id).value;paintMat.color.set($('paint').value);localStorage.hcgPaint=$('paint').value;localStorage.hcgPower=$('turbo').value;localStorage.hcg_turbo=$('turbo').value;localStorage.hcgStyle=$('carStyle').value;applyStyle(localStorage.hcgStyle);applyTune();applyCustomizations();closeGarage();toast('Custom build saved')}function updateTuneLabels(){for(const id of ['turbo','frontCamber','rearCamber','frontOffset','rearOffset','brakeBalance','frontHeight','rearHeight','brakePressure'])$(id).addEventListener('input',()=>{const v=$(id).value;$(id+'Val').textContent=({turbo:v+' psi',frontCamber:v+'°',rearCamber:v+'°',frontOffset:v+' cm',rearOffset:v+' cm',brakeBalance:v+'%',frontHeight:(+v>0?'+':'')+v+' cm',rearHeight:(+v>0?'+':'')+v+' cm',brakePressure:v+'%'})[id];localStorage['hcg_'+id]=v;if(id==='turbo')localStorage.hcg_turbo=v;applyTune()})}$('garage').addEventListener('pointerdown',e=>{if(!garageMode||e.target.closest('button,input,select,label,.garage-left,.garage-right'))return;garageDragging=true;garageLastX=e.clientX;garageLastY=e.clientY;$('garage').setPointerCapture(e.pointerId);$('garage').style.cursor='grabbing'});$('garage').addEventListener('pointermove',e=>{if(!garageDragging)return;const dx=e.clientX-garageLastX,dy=e.clientY-garageLastY;garageLastX=e.clientX;garageLastY=e.clientY;garageOrbitYaw-=dx*.009;garageOrbitPitch=THREE.MathUtils.clamp(garageOrbitPitch+dy*.007,-.12,1.05);setGarageCamera()});const stopGarageDrag=()=>{garageDragging=false;$('garage').style.cursor='grab'};$('garage').addEventListener('pointerup',stopGarageDrag);$('garage').addEventListener('pointercancel',stopGarageDrag);$('garage').addEventListener('wheel',e=>{if(!garageMode||e.target.closest('.garage-left,.garage-right,button,input,select,label'))return;e.preventDefault();garageOrbitRadius=THREE.MathUtils.clamp(garageOrbitRadius+e.deltaY*.012,6.2,19);setGarageCamera()},{passive:false});$('start').onclick=start;$('openGarage').onclick=openGarage;$('closeGarage').onclick=closeGarage;$('saveGarage').onclick=saveGarage;

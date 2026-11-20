@@ -126,11 +126,11 @@ const roadMat=mat(0x252a30,.92),lineMat=mat(0xe9e1c8),curbRed=mat(0xd94a43),curb
 const pts=[new THREE.Vector3(0,0,-72),new THREE.Vector3(48,0,-95),new THREE.Vector3(105,0,-58),new THREE.Vector3(112,0,8),new THREE.Vector3(72,0,68),new THREE.Vector3(5,0,91),new THREE.Vector3(-66,0,68),new THREE.Vector3(-112,0,14),new THREE.Vector3(-90,0,-48)];
 const curve=new THREE.CatmullRomCurve3(pts,true,'catmullrom',.22);
 function ribbon(width,y,material,segments=420){const verts=[],idx=[];for(let i=0;i<=segments;i++){const t=i/segments,p=curve.getPointAt(t),tan=curve.getTangentAt(t),side=new THREE.Vector3(-tan.z,0,tan.x).normalize();verts.push(p.x+side.x*width/2,y,p.z+side.z*width/2,p.x-side.x*width/2,y,p.z-side.z*width/2);if(i<segments){let a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setIndex(idx);g.computeVertexNormals();const m=new THREE.Mesh(g,material);m.receiveShadow=true;scene.add(m);return m}
-ribbon(18,.02,roadMat);ribbon(1.1,.045,curbRed); 
-// Track edge strips and dashed center line
-function pathTube(offset,radius,material){const points=[];for(let i=0;i<=360;i++){const t=i/360,p=curve.getPointAt(t),v=curve.getTangentAt(t),s=new THREE.Vector3(-v.z,0,v.x).normalize();points.push(new THREE.Vector3(p.x+s.x*offset,.12,p.z+s.z*offset))}const mesh=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),500,radius,6,true),material);scene.add(mesh)}
-pathTube(9.2,.18,curbWhite);pathTube(-9.2,.18,curbWhite);
-const dashGeo=new THREE.BoxGeometry(.22,.035,3.2);for(let i=0;i<100;i++){const p=curve.getPointAt(i/100),t=curve.getTangentAt(i/100),m=new THREE.Mesh(dashGeo,lineMat);m.position.set(p.x,.09,p.z);m.rotation.y=Math.atan2(t.x,t.z);scene.add(m)}
+ribbon(18,.02,roadMat);
+// Track edge strips use lighter tessellation and batched center markings to avoid road shimmer and draw-call spikes.
+function pathTube(offset,radius,material){const points=[];for(let i=0;i<=180;i++){const t=i/180,p=curve.getPointAt(t),v=curve.getTangentAt(t),s=new THREE.Vector3(-v.z,0,v.x).normalize();points.push(new THREE.Vector3(p.x+s.x*offset,.105,p.z+s.z*offset))}const mesh=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),260,radius,5,true),material);scene.add(mesh)}
+pathTube(9.2,.13,curbWhite);pathTube(-9.2,.13,curbWhite);
+const dashGeo=new THREE.BoxGeometry(.20,.022,2.6),trackDashes=new THREE.InstancedMesh(dashGeo,lineMat,100),trackDashDummy=new THREE.Object3D();for(let i=0;i<100;i++){const p=curve.getPointAt(i/100),t=curve.getTangentAt(i/100);trackDashDummy.position.set(p.x,.052,p.z);trackDashDummy.rotation.set(0,Math.atan2(t.x,t.z),0);trackDashDummy.updateMatrix();trackDashes.setMatrixAt(i,trackDashDummy.matrix)}trackDashes.instanceMatrix.needsUpdate=true;scene.add(trackDashes);
 // Collision registry must exist before any road, building or prop registers a collider.
 const worldColliders=[];
 function addWorldCollider(x,z,halfX,halfZ){worldColliders.push({x,z,halfX,halfZ})}
@@ -758,7 +758,7 @@ function valueTune(id){const defaults={brakePressure:100,brakeBalance:70,turbo:1
 
 function tick(t){
  requestAnimationFrame(tick);
- const frameInterval=garageMode||paused?1000/30:(mobileQuality?1000/40:1000/50);if(t-lastRender<frameInterval)return;lastRender=t;
+ const frameInterval=garageMode?1000/40:(paused?1000/30:(mobileQuality?1000/40:1000/50));if(t-lastRender<frameInterval)return;lastRender=t;
  const dt=Math.min((t-last)/1000,.035);
  last=t;
  if(!paused){

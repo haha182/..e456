@@ -8,11 +8,37 @@ jobs:
   static-qa:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout website repository
+        uses: actions/checkout@v4
+
+      - name: Check preserved game source
+        uses: actions/setup-node@v4
         with:
           node-version: 20
       - name: Check JavaScript syntax
         run: node --check rebuild/game.js
       - name: Check HTML and game wiring
         run: node scripts/qa.mjs
+
+      - name: Checkout Horizon Remade
+        uses: actions/checkout@v4
+        with:
+          repository: Henry-fan88/horizon-remade
+          ref: ec4ce49a8f781329d51ee14ea7fa8d4d2a42b5d4
+          path: horizon-remade
+          persist-credentials: false
+      - name: Set up game build runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: npm
+          cache-dependency-path: horizon-remade/package-lock.json
+      - name: Install game dependencies
+        working-directory: horizon-remade
+        run: npm ci
+      - name: Test game systems
+        working-directory: horizon-remade
+        run: npm test
+      - name: Build game
+        working-directory: horizon-remade
+        run: npm run build

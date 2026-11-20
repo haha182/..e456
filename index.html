@@ -23,7 +23,7 @@
 /* Visual refresh: cinematic start screen, richer menu backdrop, and branded loader. */
 #menu{isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 72% 48%,rgba(25,115,142,.26),transparent 42%),linear-gradient(115deg,rgba(3,10,18,.96),rgba(5,20,32,.78) 55%,rgba(4,11,19,.94))}
 #menu:before{content:"";position:absolute;inset:-12%;z-index:-1;background:linear-gradient(135deg,transparent 38%,rgba(70,213,220,.09) 38.2%,transparent 38.7%),linear-gradient(25deg,transparent 58%,rgba(255,255,255,.055) 58.2%,transparent 58.6%),radial-gradient(ellipse at 78% 28%,rgba(55,161,183,.23),transparent 32%),radial-gradient(ellipse at 12% 88%,rgba(23,78,112,.36),transparent 42%);transform:skewY(-7deg);animation:menuDrift 16s ease-in-out infinite alternate}
-#menu:after{content:"HARRISON MOTORSPORT  /  DRIFT DIVISION";position:absolute;left:clamp(18px,4vw,58px);bottom:22px;color:#a8c4d0a8;font-size:10px;letter-spacing:.28em}
+#menu:after{content:"HARRISON MOTORSPORT  /  OPEN ROAD DIVISION";position:absolute;left:clamp(18px,4vw,58px);bottom:22px;color:#a8c4d0a8;font-size:10px;letter-spacing:.28em}
 #menu .card{position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(13,34,49,.94),rgba(5,16,27,.92));border:1px solid rgba(92,220,224,.34);box-shadow:0 28px 100px rgba(0,0,0,.58),inset 0 1px rgba(255,255,255,.08);backdrop-filter:blur(18px)}
 #menu .card:before{content:"";position:absolute;right:-90px;top:-110px;width:270px;height:270px;border:1px solid rgba(87,223,224,.18);border-radius:50%;box-shadow:0 0 0 24px rgba(87,223,224,.035),0 0 0 52px rgba(87,223,224,.025);pointer-events:none}
 #menu h1{letter-spacing:-.055em;text-shadow:0 8px 34px rgba(0,0,0,.48)}
@@ -175,11 +175,11 @@ body>canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;touch-action
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
-<div id="gameError" role="alert"></div><div id="loadingScreen"><div class="loading-panel"><div class="loading-mark">HARRISON MOTORSPORT</div><div class="loading-title">DRIFT WORLD</div><div class="loading-copy">BUILDING THE OPEN HIGHWAY</div><div class="loading-track"></div><div class="loading-foot">OPEN WORLD · TRAFFIC · CAR SHOP</div></div></div>
+<div id="gameError" role="alert"></div><div id="loadingScreen"><div class="loading-panel"><div class="loading-mark">HARRISON MOTORSPORT</div><div class="loading-title">DRIFT WORLD</div><div class="loading-copy">BUILDING THE OPEN ROAD</div><div class="loading-track"></div><div class="loading-foot">SCENIC ROADS · FOREST · CAR SHOP</div></div></div>
 <div id="introScreen" aria-label="Harrison Motorsport intro"><div class="intro-content"><div class="intro-kicker">HARRISON MOTORSPORT PRESENTS</div><div class="intro-title">AFTER<span>DARK</span></div><div class="intro-sub">THE STREETS ARE YOURS</div><div class="intro-car"><div class="intro-wheel"></div><div class="intro-light"></div></div><div class="intro-bottom"><button class="intro-enter" id="introEnter">START YOUR ENGINE</button><button class="intro-skip" id="introSkip">SKIP INTRO</button></div><div class="intro-progress"></div></div></div>
-<div id="menu" style="display:none"><div class="card"><h1>HIGHWAY<br>AFTER DARK</h1><p>Open roads. Live traffic. Your garage.</p><div class="menu-actions"><button class="primary" id="start">DRIVE HIGHWAY</button><button id="openGarage">CAR SHOP &amp; TUNING</button></div></div></div>
+<div id="menu" style="display:none"><div class="card"><h1>OPEN ROAD<br>AFTER DARK</h1><p>Winding roads. Scenic routes. Your garage.</p><div class="menu-actions"><button class="primary" id="start">START DRIVING</button><button id="openGarage">CAR SHOP &amp; TUNING</button></div></div></div>
 <div id="garage" class="velocity-style-garage">
-<div id="garageStatus">HIGHWAY MOTORSPORT · PRIVATE WORKSHOP</div>
+<div id="garageStatus">OPEN ROAD MOTORSPORT · PRIVATE WORKSHOP</div>
 <div class="card garage-shell">
 <header class="garage-header">
 <button class="garage-back" id="closeGarage">← BACK TO ROAD</button>
@@ -327,6 +327,68 @@ function rebuildCollisionGrid(){
  collisionGridDirty=false;
 }
 function addWorldCollider(x,z,halfX,halfZ){worldColliders.push({x,z,halfX,halfZ});collisionGridDirty=true}
+
+// DRIVE-GAME-INSPIRED ROAD ENVIRONMENT
+// Road ribbon / roadside barrier construction adapted from esc5221/drive-game
+// (MIT; Copyright (c) 2026 bwchoi). Original project: https://github.com/esc5221/drive-game
+// This game's existing car models, physics, garage and controls remain independent.
+const driveRoadWorld=new THREE.Group();scene.add(driveRoadWorld);
+const driveRailMat=new THREE.MeshStandardMaterial({color:0x87939a,metalness:.72,roughness:.42});
+const driveRailPostMat=new THREE.MeshStandardMaterial({color:0x68747a,metalness:.58,roughness:.58});
+const driveReflectorMat=new THREE.MeshBasicMaterial({color:0xffe8bd});
+const driveTreeTrunkMat=new THREE.MeshStandardMaterial({color:0x30271f,roughness:1});
+const driveTreeLeafMats=[
+ new THREE.MeshStandardMaterial({color:0x172b20,roughness:1}),
+ new THREE.MeshStandardMaterial({color:0x203827,roughness:1}),
+ new THREE.MeshStandardMaterial({color:0x293c2b,roughness:1})
+];
+const drivePostGeo=new THREE.BoxGeometry(.14,.78,.2);
+const driveReflectGeo=new THREE.BoxGeometry(.07,.14,.045);
+const driveTrunkGeo=new THREE.CylinderGeometry(.12,.2,2.2,5);
+const driveCanopyGeo=new THREE.ConeGeometry(1.25,4.3,7);
+const driveDummy=new THREE.Object3D();
+let driveSeed=20261120;
+function driveRand(){driveSeed=(driveSeed*1664525+1013904223)>>>0;return driveSeed/4294967296}
+const driveRailPoint=(t,side,height)=>{
+ const p=curve.getPointAt(t),tan=curve.getTangentAt(t),right=new THREE.Vector3(-tan.z,0,tan.x).normalize();
+ return new THREE.Vector3(p.x+right.x*side*12.25,height,p.z+right.z*side*12.25);
+};
+for(const side of [-1,1]){
+ const lower=[],upper=[];
+ for(let i=0;i<=360;i++){const t=i/360;lower.push(driveRailPoint(t,side,.62));upper.push(driveRailPoint(t,side,1.02))}
+ for(const pts of [lower,upper]){
+  const railCurve=new THREE.CatmullRomCurve3(pts,false,'catmullrom',.08);
+  const beam=new THREE.Mesh(new THREE.TubeGeometry(railCurve,520,.085,6,false),driveRailMat);
+  driveRailWorld.add(beam);
+ }
+ const postCount=180,posts=new THREE.InstancedMesh(drivePostGeo,driveRailPostMat,postCount);
+ const reflectors=new THREE.InstancedMesh(driveReflectGeo,driveReflectorMat,postCount);
+ for(let i=0;i<postCount;i++){
+  const t=i/postCount,p=driveRailPoint(t,side,.42),tan=curve.getTangentAt(t);
+  driveDummy.position.copy(p);driveDummy.rotation.set(0,Math.atan2(tan.x,tan.z),0);driveDummy.updateMatrix();posts.setMatrixAt(i,driveDummy.matrix);
+  const rp=driveRailPoint(t,side,.92);rp.x-=side*.11*(-tan.z);rp.z-=side*.11*tan.x;
+  driveDummy.position.copy(rp);driveDummy.rotation.set(0,Math.atan2(tan.x,tan.z),0);driveDummy.updateMatrix();reflectors.setMatrixAt(i,driveDummy.matrix);
+  addWorldCollider(p.x,p.z,.48,.48);
+ }
+ posts.instanceMatrix.needsUpdate=true;reflectors.instanceMatrix.needsUpdate=true;
+ driveRailWorld.add(posts,reflectors);
+}
+// Instanced roadside trees: natural forest framing without hundreds of separate draw calls.
+const driveTreeCount=210;
+const driveTrunks=new THREE.InstancedMesh(driveTrunkGeo,driveTreeTrunkMat,driveTreeCount);
+const driveCanopies=driveTreeLeafMats.map(m=>new THREE.InstancedMesh(driveCanopyGeo,m,driveTreeCount));
+for(let i=0;i<driveTreeCount;i++){
+ const t=driveRand(),side=driveRand()<.5?-1:1,offset=17+driveRand()*37,p=curve.getPointAt(t),tan=curve.getTangentAt(t),right=new THREE.Vector3(-tan.z,0,tan.x).normalize();
+ const x=p.x+right.x*side*offset,z=p.z+right.z*side*offset,scale=.72+driveRand()*.8;
+ driveDummy.position.set(x,1.05*scale,z);driveDummy.scale.set(scale,scale,scale);driveDummy.rotation.y=driveRand()*Math.PI*2;driveDummy.updateMatrix();driveTrunks.setMatrixAt(i,driveDummy.matrix);
+ driveDummy.position.set(x,3.1*scale,z);driveDummy.scale.set(scale,scale,scale);driveDummy.rotation.y=driveRand()*Math.PI*2;driveDummy.updateMatrix();driveCanopies[i%3].setMatrixAt(i,driveDummy.matrix);
+}
+driveTrunks.instanceMatrix.needsUpdate=true;driveTreeWorldAdd();
+function driveTreeWorldAdd(){driveRailWorld.add(driveTrunks,...driveCanopies)}
+// Slightly greener ground tint lets the existing terrain read as a natural roadside landscape.
+ground.material.color.setHex(0x17231c);
+driveRailWorld.traverse(o=>{o.frustumCulled=true});
+
 // OPEN WORLD EXTENSION: connected mountain, forest and industrial roads beyond the original circuit.
 const openRoadMat=new THREE.MeshStandardMaterial({color:0x777b80,map:asphaltTexture,roughness:.98,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}),roadEdgeMat=mat(0xe5e1d4,.78),roadLineMat=mat(0xe8dfc6,.82);
 function openRoad(points,width=18){
@@ -455,7 +517,7 @@ dbox(20,12,1,-21,6,28,dmat);dbox(20,12,1,21,6,28,dmat);dbox(8,9,.35,0,4.5,28.4,d
 for(const x of [-4.1,4.1])dbox(.18,9,.5,x,4.5,28.2,dneon);
 for(const x of [-25,-17,17,25])dbox(7,8,.22,x,6.5,28.55,dglass);
 dbox(62,.45,58,0,13.5,0,dmat);dbox(26,3,.5,0,16,29.1,dneon);
-const signCanvas=document.createElement('canvas');signCanvas.width=1024;signCanvas.height=160;const signCtx=signCanvas.getContext('2d');signCtx.fillStyle='#07151c';signCtx.fillRect(0,0,1024,160);signCtx.fillStyle='#a8ffff';signCtx.font='bold 66px Arial';signCtx.textAlign='center';signCtx.fillText('HIGHWAY MOTORSPORT',512,72);signCtx.font='bold 34px Arial';signCtx.fillText('DEALERSHIP  |  SALES  |  PERFORMANCE',512,125);const signTexture=new THREE.CanvasTexture(signCanvas);const signFace=new THREE.Mesh(new THREE.PlaneGeometry(25,2.6),new THREE.MeshBasicMaterial({map:signTexture,transparent:true}));signFace.position.set(0,16,29.38);dealerBuilding.add(signFace);
+const signCanvas=document.createElement('canvas');signCanvas.width=1024;signCanvas.height=160;const signCtx=signCanvas.getContext('2d');signCtx.fillStyle='#07151c';signCtx.fillRect(0,0,1024,160);signCtx.fillStyle='#a8ffff';signCtx.font='bold 66px Arial';signCtx.textAlign='center';signCtx.fillText('OPEN ROAD MOTORSPORT',512,72);signCtx.font='bold 34px Arial';signCtx.fillText('DEALERSHIP  |  SALES  |  PERFORMANCE',512,125);const signTexture=new THREE.CanvasTexture(signCanvas);const signFace=new THREE.Mesh(new THREE.PlaneGeometry(25,2.6),new THREE.MeshBasicMaterial({map:signTexture,transparent:true}));signFace.position.set(0,16,29.38);dealerBuilding.add(signFace);
 for(const x of [-19,-7,7,19]){dbox(8,.38,13,x,.22,-4,dmat);dbox(7.4,.07,12.4,x,.45,-4,dneon)}
 for(const x of [-22,22]){const light=new THREE.PointLight(0x8beaff,115,40,1.4);light.position.set(x,10,4);dealerBuilding.add(light)}
 trafficCars.forEach((car,i)=>{car.route=highwayRoute;car.closed=false;car.u=.035+i*.041;car.direction=i<20?1:-1;car.allowedLanes=car.direction>0?[-12,-8,-4,0]:[4,8];car.lane=car.allowedLanes[i%car.allowedLanes.length];car.laneIndex=car.allowedLanes.indexOf(car.lane);car.targetLane=car.lane;car.speed=(19+(i%7)*2.7)/highwayRoute.getLength();car.group.position.set(car.lane,0,20-car.u*highwayRoute.getLength());highwayWorld.add(car.group)});
@@ -1637,14 +1699,14 @@ function start(){
  try{
   initCarAudio();
   garageMode=false;restoreTreeVisibility(scene,true);showroom.visible=false;
-  for(const object of scene.children)object.visible=(object===carRoot||object===showroom||object===moon||object===moonDisc||object===moonHalo||object===hemiLight||object===highwayWorld||object===playerAvatar||object===stars||object===skyDome);
-  highwayWorld.visible=true;playerAvatar.visible=false;onFoot=false;
+  for(const object of scene.children)object.visible=(object!==carRoot&&object!==showroom&&object!==highwayWorld&&object!==playerAvatar);
+  highwayWorld.visible=false;driveRailWorld.visible=true;playerAvatar.visible=false;onFoot=false;
   scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,175,500);
   setWorldTime(currentWorldTime);renderer.setClearColor(scene.background,1);
-  carPos.set(0,0,0);const spawnTangent=new THREE.Vector3(0,0,-1);vel.set(0,0,0);speed=0;slip=0;heading=Math.atan2(-spawnTangent.x,-spawnTangent.z);steerAngle=0;driftAngle=0;driftTimer=0;combo=1;score=0;points=0;boost=100;keys={};cameraMode=0;cockpitLookYaw=0;cockpitLookPitch=0;cockpitPointerDown=false;lastRender=0;camera.fov=65;camera.updateProjectionMatrix();
+  carPos.copy(curve.getPointAt(.03));const spawnTangent=curve.getTangentAt(.03);vel.set(0,0,0);speed=0;slip=0;heading=Math.atan2(-spawnTangent.x,-spawnTangent.z);steerAngle=0;driftAngle=0;driftTimer=0;combo=1;score=0;points=0;boost=100;keys={};cameraMode=0;cockpitLookYaw=0;cockpitLookPitch=0;cockpitPointerDown=false;lastRender=0;camera.fov=65;camera.updateProjectionMatrix();
   $('speed').textContent='0';$('score').textContent='0';$('combo').textContent='x1';$('speedArc').style.strokeDashoffset='270';
-  carRoot.visible=true;restoreTreeVisibility(carRoot,true);applyStyle($('carStyle').value);carRoot.position.copy(carPos);carRoot.rotation.set(0,0,0);
-  camera.position.set(carPos.x,carPos.y+2.85,carPos.z+6.1);
+  carRoot.visible=true;restoreTreeVisibility(carRoot,true);applyStyle($('carStyle').value);carRoot.position.copy(carPos);carRoot.rotation.set(0,heading,0);
+  camera.position.set(carPos.x+Math.sin(heading)*6.1,carPos.y+2.85,carPos.z+Math.cos(heading)*6.1);
   cameraLook.set(carPos.x,carPos.y+1.5,carPos.z-2.15);camera.fov=56;camera.updateProjectionMatrix();camera.lookAt(cameraLook);cameraSnap=true;
   $('menu').style.display='none';$('garage').style.display='none';
   $('ui').style.display='block';$('help').style.display='block';$('touch').style.display=touchControls?'flex':'none';$('carRadio').style.display='block';

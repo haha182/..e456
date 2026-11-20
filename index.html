@@ -594,22 +594,15 @@ const extraCarModels={
 Object.values(extraCarModels).forEach(item=>{item.group.visible=false;carRoot.add(item.group)});
 // Universal driver cockpit, visible only in first-person mode.
 const firstPersonCockpit=new THREE.Group();firstPersonCockpit.name='FIRST_PERSON_DRIVER_COCKPIT';carRoot.add(firstPersonCockpit);
-const fpDashMat=new THREE.MeshStandardMaterial({color:0x10161b,roughness:.72,metalness:.18}),fpLeather=new THREE.MeshStandardMaterial({color:0x080c10,roughness:.9}),fpTrim=new THREE.MeshStandardMaterial({color:0x59656d,roughness:.32,metalness:.78}),fpGlass=new THREE.MeshStandardMaterial({color:0x152b35,roughness:.18,metalness:.25,transparent:true,opacity:.72}),fpGlow=new THREE.MeshBasicMaterial({color:0x59e5df});
+const fpDashMat=new THREE.MeshStandardMaterial({color:0x10161b,roughness:.72,metalness:.18}),fpTrim=new THREE.MeshStandardMaterial({color:0x59656d,roughness:.32,metalness:.78}),fpGlow=new THREE.MeshBasicMaterial({color:0x59e5df});
 function fpBox(parent,w,h,d,x,y,z,material){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.position.set(x,y,z);parent.add(m);return m}
-fpBox(firstPersonCockpit,2.02,.22,.72,0,1.055,-.67,fpDashMat);fpBox(firstPersonCockpit,2,.075,.62,0,1.19,-.67,fpLeather);fpBox(firstPersonCockpit,1.86,.10,.045,0,1.075,-1.035,fpTrim);
-const fpCluster=new THREE.Group();fpCluster.position.set(-.49,1.32,-.91);firstPersonCockpit.add(fpCluster);fpBox(fpCluster,.62,.31,.08,0,0,0,fpLeather);
-for(let i=0;i<2;i++){const g=new THREE.Mesh(new THREE.CircleGeometry(.115,32),new THREE.MeshBasicMaterial({color:0x07131a}));g.position.set((i-.5)*.25,.015,.045);fpCluster.add(g);const rim=new THREE.Mesh(new THREE.TorusGeometry(.116,.009,6,32),fpGlow);rim.position.copy(g.position);rim.position.z+=.008;fpCluster.add(rim);for(let j=0;j<5;j++){const tick=new THREE.Mesh(new THREE.BoxGeometry(.006,.025,.006),fpGlow);const ang=-2.2+j*1.1;tick.position.set((i-.5)*.25+Math.sin(ang)*.085,.015+Math.cos(ang)*.085,.052);fpCluster.add(tick)}}
-fpBox(firstPersonCockpit,.39,.22,.035,.48,1.12,-1.055,new THREE.MeshBasicMaterial({color:0x102c35}));fpBox(firstPersonCockpit,.30,.012,.012,.48,1.16,-1.035,fpGlow);fpBox(firstPersonCockpit,.23,.012,.012,.48,1.11,-1.035,fpGlow);
 const fpWheel=new THREE.Group();fpWheel.position.set(-.49,1.22,-.49);firstPersonCockpit.add(fpWheel);const fpWheelMat=new THREE.MeshStandardMaterial({color:0x080a0d,roughness:.58,metalness:.12});
 fpWheel.add(new THREE.Mesh(new THREE.TorusGeometry(.245,.027,10,48),fpWheelMat));fpBox(fpWheel,.055,.34,.045,0,0,0,fpTrim);for(const side of [-1,1]){const spoke=fpBox(fpWheel,.18,.045,.045,side*.085,-.035,0,fpTrim);spoke.rotation.z=side*.43}
 const fpHub=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.055,24),fpTrim);fpHub.rotation.x=Math.PI/2;fpWheel.add(fpHub);const fpHorn=new THREE.Mesh(new THREE.CircleGeometry(.052,24),fpGlow);fpHorn.position.z=.032;fpWheel.add(fpHorn);
 const fpColumn=new THREE.Mesh(new THREE.CylinderGeometry(.045,.06,.34,12),fpDashMat);fpColumn.rotation.x=Math.PI/2;fpColumn.position.set(-.49,1.22,-.29);firstPersonCockpit.add(fpColumn);
-const fpConsole=fpBox(firstPersonCockpit,.42,.36,.62,.48,.83,-.28,fpDashMat);fpConsole.rotation.x=-.12;for(let i=0;i<3;i++){const b=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.025,16),fpTrim);b.rotation.x=Math.PI/2;b.position.set(.34+i*.13,.91,-.61);firstPersonCockpit.add(b)}
-for(const side of [-1,1]){const pillar=fpBox(firstPersonCockpit,.075,.62,.10,side*.99,1.68,-.62,fpLeather);pillar.rotation.z=side*.13;fpBox(firstPersonCockpit,.22,.12,.12,side*1.01,1.57,-.27,fpDashMat);fpBox(firstPersonCockpit,.18,.075,.018,side*1.01,1.575,-.337,fpGlass)}
-fpBox(firstPersonCockpit,2.04,.10,.12,0,2.00,-.48,fpLeather);const fpHood=fpBox(firstPersonCockpit,1.82,.075,1.02,0,.79,-1.58,paintMat);fpHood.rotation.x=-.035;
+const fpHood=fpBox(firstPersonCockpit,1.82,.075,1.02,0,.79,-1.58,paintMat);fpHood.rotation.x=-.035;
 
-// Replace the earlier placeholder dash with the detailed cabin while retaining the animated wheel, column and hood.
-firstPersonCockpit.clear();firstPersonCockpit.add(fpWheel,fpColumn,fpHood);
+// Detailed cabin is built once and remains attached to the first-person cockpit.
 // MK7 Jetta-inspired cabin detailing: stitched soft-touch dash, door cards, seats and center stack.
 const j7Cabin=new THREE.Group();j7Cabin.name='MK7_JETTA_CABIN_DETAILS';firstPersonCockpit.add(j7Cabin);
 const j7Black=new THREE.MeshStandardMaterial({color:0x111416,roughness:.88});

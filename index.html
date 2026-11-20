@@ -739,6 +739,52 @@ for(const side of [-1,1]){
  for(let k=0;k<7;k++)fpBox(j7Cabin,.006,.006,.22,side*1.005,.98,.57+k*.014,j7Silver);
 }
 
+
+/* Glasshouse and lighting upgrade: transparent windshield, side glass and finished cabin trim. */
+const j7Glass=new THREE.MeshPhysicalMaterial({color:0x8bc8dc,metalness:.08,roughness:.12,transparent:true,opacity:.16,side:THREE.DoubleSide,depthWrite:false,clearcoat:.8,clearcoatRoughness:.12});
+const j7GlassEdge=new THREE.MeshStandardMaterial({color:0x080e13,roughness:.42,metalness:.28});
+const j7Chrome=new THREE.MeshStandardMaterial({color:0x71818a,roughness:.24,metalness:.82});
+const j7Windshield=new THREE.Mesh(new THREE.PlaneGeometry(1.88,.59),j7Glass);
+j7Windshield.position.set(0,1.68,-.665);j7Windshield.rotation.x=-.105;j7Cabin.add(j7Windshield);
+// Fine black ceramic-style windshield borders and lower cowl.
+j7Line([[-.94,1.39,-.69],[-.72,1.38,-.70],[0,1.38,-.705],[.72,1.38,-.70],[.94,1.39,-.69]],.014,j7GlassEdge);
+j7Line([[-.94,1.97,-.64],[-.55,1.985,-.65],[0,1.99,-.65],[.55,1.985,-.65],[.94,1.97,-.64]],.012,j7GlassEdge);
+// Side windows sit above the door cards; lightly tinted so the night world remains visible.
+for(const side of [-1,1]){
+ const sideGlass=new THREE.Mesh(new THREE.PlaneGeometry(1.13,.49),j7Glass);
+ sideGlass.rotation.y=side*Math.PI/2;sideGlass.position.set(side*.982,1.67,.105);j7Cabin.add(sideGlass);
+ // Slim window rails and B-pillar divide the front and rear panes.
+ j7Line([[side*.985,1.405,-.48],[side*.985,1.91,-.48]],.018,j7GlassEdge);
+ j7Line([[side*.985,1.405,.67],[side*.985,1.91,.67]],.018,j7GlassEdge);
+ j7Line([[side*.985,1.91,-.48],[side*.985,1.94,.08],[side*.985,1.91,.67]],.014,j7Chrome);
+ j7Line([[side*.985,1.405,.10],[side*.985,1.91,.10]],.012,j7GlassEdge);
+ // Interior window sill and chrome beltline.
+ j7Line([[side*.965,1.405,-.48],[side*.965,1.405,.67]],.012,j7Chrome);
+}
+// Rear quarter glass and rear window, completing the visible cabin enclosure.
+const j7RearGlass=new THREE.Mesh(new THREE.PlaneGeometry(1.55,.48),j7Glass);
+j7RearGlass.position.set(0,1.67,1.02);j7RearGlass.rotation.y=Math.PI;j7Cabin.add(j7RearGlass);
+j7Line([[-.79,1.43,1.02],[0,1.41,1.025],[.79,1.43,1.02]],.012,j7GlassEdge);
+j7Line([[-.79,1.91,1.02],[0,1.94,1.025],[.79,1.91,1.02]],.012,j7GlassEdge);
+// Rear-view mirror, mirror stem, sun visors and overhead console.
+j7Panel(.19,.055,.13,0,1.91,-.57,j7Black);
+const j7Mirror=new THREE.Mesh(new THREE.BoxGeometry(.25,.09,.035),j7Piano);j7Mirror.position.set(0,1.82,-.58);j7Cabin.add(j7Mirror);
+const j7MirrorFace=new THREE.Mesh(new THREE.BoxGeometry(.225,.062,.008),new THREE.MeshStandardMaterial({color:0x52636b,metalness:.55,roughness:.16}));j7MirrorFace.position.set(0,1.82,-.601);j7Cabin.add(j7MirrorFace);
+for(const side of [-1,1]){const visor=fpBox(j7Cabin,.31,.025,.16,side*.62,1.91,-.55,j7Leather);visor.rotation.z=side*.035}
+j7Panel(.24,.045,.22,0,1.94,-.36,j7Piano);
+j7Panel(.09,.012,.08,0,1.913,-.36,j7Blue);
+// Brighter but restrained LED light pipes and footwell spill for a clearly illuminated cabin.
+const j7AmbientBright=new THREE.MeshBasicMaterial({color:0x43d5ff});
+j7Line([[-.94,1.235,-.955],[-.55,1.25,-.99],[0,1.255,-1.0],[.55,1.25,-.99],[.94,1.235,-.955]],.016,j7AmbientBright);
+for(const side of [-1,1]){
+ j7Line([[side*.99,1.37,-.43],[side*.99,1.38,-.05],[side*.99,1.37,.35],[side*.99,1.35,.65]],.016,j7AmbientBright);
+ const footWash=new THREE.Mesh(new THREE.PlaneGeometry(.68,.58),new THREE.MeshBasicMaterial({color:0x087fc7,transparent:true,opacity:.16,side:THREE.DoubleSide,depthWrite:false}));
+ footWash.rotation.x=-Math.PI/2;footWash.position.set(side*.48,.215,-.12);j7Cabin.add(footWash);
+}
+const j7CabinFill=new THREE.PointLight(0x5bcfff,.42,3.6,2);j7CabinFill.position.set(0,1.48,.15);j7Cabin.add(j7CabinFill);
+const j7DashFill=new THREE.PointLight(0x24aeea,.34,2.8,2);j7DashFill.position.set(0,1.14,-.72);j7Cabin.add(j7DashFill);
+const j7Dome=new THREE.PointLight(0x9bdfff,.22,1.8,2);j7Dome.position.set(0,1.88,.18);j7Cabin.add(j7Dome);
+
 let cockpitLookYaw=0,cockpitLookPitch=0,cockpitPointerDown=false,cockpitPointerX=0,cockpitPointerY=0;
 function updateFirstPersonCockpit(){firstPersonCockpit.visible=cameraMode===3&&!garageMode;fpWheel.rotation.z=-steerAngle*1.55;}
 

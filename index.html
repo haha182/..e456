@@ -1292,6 +1292,7 @@ const CAR_AUDIO_PROFILES={
 };
 function currentCarAudioProfile(){return CAR_AUDIO_PROFILES[localStorage.hcgStyle]||CAR_AUDIO_PROFILES.hot_hatch}
 let carAudioCtx=null,carAudioMaster=null,engineVoices=[],v8Voices=[],engineAudioReady=false,engineAudioLoading=false,engineAudioWanted=false,engineThrottleSmooth=0,engineSpeedSmooth=0,audioGear=1,audioGearShiftAt=0,exhaustNoiseBuffer=null,tireSquealSource=null,tireSquealGain=null,tireSquealFilter=null,lastExhaustThrottle=0,lastExhaustPopAt=0,lastExhaustCrackleAt=0,exhaustFlameUntil=0;
+let lfaRecordingBuffer=null;
 async function initCarAudio(){
  engineAudioWanted=true;
  if(engineAudioReady){if(carAudioCtx.state==='suspended')await carAudioCtx.resume();carAudioMaster.gain.setTargetAtTime(.92,carAudioCtx.currentTime,.35);return}
@@ -1307,7 +1308,7 @@ async function initCarAudio(){
   await carAudioCtx.resume();
   // Actual Lexus LFA 1LR-GUE V10 recording by Altair78 (CC BY-SA 4.0).
   // Source: https://commons.wikimedia.org/wiki/File:Lexus_LFA_revving_1LR-GUE_(2009).ogg
-  let lfaRecordingBuffer=null;
+  lfaRecordingBuffer=null;
   try{const r=await fetch('https://upload.wikimedia.org/wikipedia/commons/e/ee/Lexus_LFA_revving_1LR-GUE_%282009%29.ogg',{mode:'cors',cache:'force-cache'});if(!r.ok)throw Error('LFA recording HTTP '+r.status);lfaRecordingBuffer=await carAudioCtx.decodeAudioData(await r.arrayBuffer())}catch(e){console.warn('LFA V10 recording unavailable; using fallback engine recordings.',e)}
   let recordedV8Buffers=[];
   try{

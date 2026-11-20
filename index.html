@@ -387,38 +387,6 @@ function resolveTrafficCollision(previousPosition){
  return false;
 }
 
-// Keep the open-world network to the paved coastal and main district roads.
-for(const route of [coastRoute]){
- for(let i=4;i<68;i+=7){const p=route.getPointAt(i/72),t=route.getTangentAt(i/72),side=new THREE.Vector3(-t.z,0,t.x).normalize();
-  for(const sign of [-1,1]){const pole=new THREE.Mesh(new THREE.CylinderGeometry(.07,.11,5.8,6),openRoadPostMat);pole.position.set(p.x+side.x*9.1,2.9,p.z+side.z*9.1);scene.add(pole);const arm=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,1.25),openRoadPostMat);arm.position.set(p.x+side.x*8.55,5.65,p.z+side.z*8.55);arm.rotation.y=Math.atan2(-side.x,-side.z);scene.add(arm);const bulb=new THREE.Mesh(new THREE.BoxGeometry(.42,.08,.48),lampGlowMat);bulb.position.set(p.x+side.x*8.05,5.55,p.z+side.z*8.05);scene.add(bulb)}
- }
-}
-// Add spaced warm streetlights along all five open-world routes; no extra shadow maps.
-for(const route of [northForestRoute,forestRoute,industrialRoute,coastRoute]){
- for(let i=5;i<70;i+=10){const p=route.getPointAt(i/72),t=route.getTangentAt(i/72),side=new THREE.Vector3(-t.z,0,t.x).normalize(),sign=(Math.floor(i/10)%2===0)?1:-1;const x=p.x+side.x*9.2*sign,z=p.z+side.z*9.2*sign;const pole=new THREE.Mesh(new THREE.CylinderGeometry(.075,.12,6.4,7),openRoadPostMat);pole.position.set(x,3.2,z);scene.add(pole);const arm=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,1.35),openRoadPostMat);arm.position.set(x-side.x*sign*.62,6.15,z-side.z*sign*.62);arm.rotation.y=Math.atan2(-side.x*sign,-side.z*sign);scene.add(arm);const bulb=new THREE.Mesh(new THREE.BoxGeometry(.46,.08,.5),lampGlowMat);bulb.position.set(x-side.x*sign*1.25,6.02,z-side.z*sign*1.25);scene.add(bulb);if(!mobileQuality){const glow=new THREE.PointLight(0xffd18a,34,54,1.45);glow.position.set(x-side.x*sign*1.25,5.9,z-side.z*sign*1.25);glow.castShadow=false;scene.add(glow)}}
-}
-// Coastal freight terminal: warehouse, loading bays, cranes and container stacks.
-const port=new THREE.Group();port.position.set(420,0,-90);scene.add(port);
-const portWall=mat(0x39464c,.88,.22),portRoof=mat(0x252f35,.8,.3),portGlow=new THREE.MeshBasicMaterial({color:0xffc76b});
-addWorldCollider(420,-115,23,14);for(let i=0;i<4;i++)addWorldCollider(393+i*18,-72,8.6,3.8);
-const warehouse=new THREE.Mesh(new THREE.BoxGeometry(46,12,28),portWall);warehouse.position.set(0,6,-25);port.add(warehouse);
-const warehouseRoof=new THREE.Mesh(new THREE.BoxGeometry(48,.8,30),portRoof);warehouseRoof.position.set(0,12.3,-25);port.add(warehouseRoof);
-for(let x=-17;x<=17;x+=11){const door=new THREE.Mesh(new THREE.BoxGeometry(7,7,.18),portRoof);door.position.set(x,4.1,-10.8);port.add(door);const lamp=new THREE.Mesh(new THREE.BoxGeometry(1.5,.18,.2),portGlow);lamp.position.set(x,8.2,-10.55);port.add(lamp)}
-for(let i=0;i<4;i++){const box=new THREE.Mesh(new THREE.BoxGeometry(17,4.8,7),i%2?mat(0x485b60,.84,.18):mat(0x6b4538,.86,.15));box.position.set(-27+i*18,2.4,18);port.add(box)}
-for(const x of [-34,34]){const leg=new THREE.Mesh(new THREE.BoxGeometry(.8,19,.8),portRoof);leg.position.set(x,9.5,4);port.add(leg)}
-const craneBeam=new THREE.Mesh(new THREE.BoxGeometry(70,.9,.9),portRoof);craneBeam.position.set(0,19,4);port.add(craneBeam);
-// Western roadside service stop.
-const serviceStop=new THREE.Group();serviceStop.position.set(-360,0,-85);scene.add(serviceStop);
-addWorldCollider(-360,-85,11.2,7.7);
-const shop=new THREE.Mesh(new THREE.BoxGeometry(22,6,15),mat(0x465158,.9,.08));shop.position.y=3;serviceStop.add(shop);
-const canopy=new THREE.Mesh(new THREE.BoxGeometry(27,.65,18),portRoof);canopy.position.set(0,6.4,1);serviceStop.add(canopy);
-for(const x of [-8,0,8]){addWorldCollider(-360+x,-72, .8,.8);const pump=new THREE.Mesh(new THREE.BoxGeometry(1.3,2.4,1.1),mat(0xc7c9c2,.45,.3));pump.position.set(x,1.2,13);serviceStop.add(pump);const screen=new THREE.Mesh(new THREE.BoxGeometry(.7,.45,.08),portGlow);screen.position.set(x,1.8,13.58);serviceStop.add(screen)}
-const signPost=new THREE.Mesh(new THREE.BoxGeometry(.35,8,.35),portRoof);signPost.position.set(15,4,0);serviceStop.add(signPost);
-const signBoard=new THREE.Mesh(new THREE.BoxGeometry(7,2.8,.3),portGlow);signBoard.position.set(15,8.8,0);serviceStop.add(signBoard);
-
-
-// Environment: pine-like trees and distant hills
-const trunkMat=mat(0x201d20),leafMat=mat(0xeaf2ff,.98),leaf2=mat(0xeaf2ff,.98);
 // SOLID WORLD COLLISIONS: expanded-AABB car collision with axis sliding.
 function resolveWorldCollision(previous,next){
  if(collisionGridDirty)rebuildCollisionGrid();

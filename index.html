@@ -116,16 +116,16 @@ const mountainRoute=openRoad([[76,65],[125,112],[175,158],[205,220],[255,285],[3
 const forestRoute=openRoad([[-75,65],[-130,115],[-190,155],[-255,190],[-325,170],[-365,105],[-345,35],[-285,-15],[-220,-28],[-165,5],[-130,55]]);
 const industrialRoute=openRoad([[105,-48],[155,-95],[215,-125],[285,-115],[350,-75],[390,-15],[365,45],[305,65],[245,45],[190,5],[155,-35]]);
 // Roadside reflector posts and occasional warm lamps make the routes readable from a distance.
-const reflectorMat=new THREE.MeshBasicMaterial({color:0xffc76b});
+const reflectorMat=new THREE.MeshBasicMaterial({color:0xffc76b}),openRoadPostMat=mat(0x303943,.5,.65);
 for(const route of [mountainRoute,forestRoute,industrialRoute]){
  for(let i=3;i<70;i+=4){const p=route.getPointAt(i/72),t=route.getTangentAt(i/72),side=new THREE.Vector3(-t.z,0,t.x).normalize();
-  for(const sign of [-1,1]){const post=new THREE.Mesh(new THREE.BoxGeometry(.13,.8,.13),streetLampMetal);post.position.set(p.x+side.x*7.7,.4,p.z+side.z*7.7);scene.add(post);const reflector=new THREE.Mesh(new THREE.BoxGeometry(.16,.12,.035),reflectorMat);reflector.position.set(post.position.x,.72,post.position.z);scene.add(reflector)}
+  for(const sign of [-1,1]){const post=new THREE.Mesh(new THREE.BoxGeometry(.13,.8,.13),openRoadPostMat);post.position.set(p.x+side.x*7.7,.4,p.z+side.z*7.7);scene.add(post);const reflector=new THREE.Mesh(new THREE.BoxGeometry(.16,.12,.035),reflectorMat);reflector.position.set(post.position.x,.72,post.position.z);scene.add(reflector)}
  }
 }
 // A remote mountain overlook and a small industrial yard give the roads destinations to discover.
 const overlook=new THREE.Group();overlook.position.set(315,0,330);scene.add(overlook);
 const deck=new THREE.Mesh(new THREE.BoxGeometry(42,.65,24),mat(0x343d46,.8,.3));deck.position.y=.1;deck.receiveShadow=true;overlook.add(deck);
-for(const x of [-19,19]){const rail=new THREE.Mesh(new THREE.BoxGeometry(.25,1.5,24),streetLampMetal);rail.position.set(x,1,0);overlook.add(rail)}
+for(const x of [-19,19]){const rail=new THREE.Mesh(new THREE.BoxGeometry(.25,1.5,24),openRoadPostMat);rail.position.set(x,1,0);overlook.add(rail)}
 const overlookLamp=new THREE.PointLight(0xffbd58,38,65);overlookLamp.position.set(0,9,0);overlook.add(overlookLamp);
 const yard=new THREE.Group();yard.position.set(330,0,-95);scene.add(yard);
 const yardMat=mat(0x303a43,.9,.2);

@@ -158,18 +158,6 @@ const yard=new THREE.Group();yard.position.set(330,0,-95);scene.add(yard);
 const yardMat=mat(0x303a43,.9,.2);
 for(let i=0;i<5;i++){addWorldCollider(330+(i-2)*20,-95,9.2,3.7);const container=new THREE.Mesh(new THREE.BoxGeometry(18,5,7),i%2?mat(0x34464c,.85,.25):yardMat);container.position.set((i-2)*20,2.5,0);yard.add(container);for(let z=-3;z<=3;z+=1.5){const rib=new THREE.Mesh(new THREE.BoxGeometry(17.8,.07,.07),yardMat);rib.position.set((i-2)*20,2.5,z);yard.add(rib)}}
 
-// SOLID WORLD COLLISIONS: expanded-AABB car collision with axis sliding.
-const worldColliders=[];
-function addWorldCollider(x,z,halfX,halfZ){worldColliders.push({x,z,halfX,halfZ})}
-function resolveWorldCollision(previous,next){
- const carHalfX=1.15,carHalfZ=2.25;
- const hits=(p)=>worldColliders.some(o=>Math.abs(p.x-o.x)<o.halfX+carHalfX&&Math.abs(p.z-o.z)<o.halfZ+carHalfZ);
- if(!hits(next))return next;
- const slideX=new THREE.Vector3(next.x,0,previous.z),slideZ=new THREE.Vector3(previous.x,0,next.z);
- if(!hits(slideX)){next.z=previous.z;return next}
- if(!hits(slideZ)){next.x=previous.x;return next}
- next.copy(previous);return next;
-}
 \n// EXTENDED OPEN WORLD: two additional connected exploration districts.
 // The coastal freight loop joins the industrial road at both ends.
 const coastRoute=openRoad([[155,-35],[190,-95],[235,-155],[300,-215],[380,-245],[445,-210],[470,-135],[450,-75],[405,-48],[350,-75]],14);
@@ -200,6 +188,18 @@ const signBoard=new THREE.Mesh(new THREE.BoxGeometry(7,2.8,.3),portGlow);signBoa
 
 // Environment: pine-like trees and distant hills
 const trunkMat=mat(0x201d20),leafMat=mat(0x101d1b),leaf2=mat(0x172725);
+// SOLID WORLD COLLISIONS: expanded-AABB car collision with axis sliding.
+const worldColliders=[];
+function addWorldCollider(x,z,halfX,halfZ){worldColliders.push({x,z,halfX,halfZ})}
+function resolveWorldCollision(previous,next){
+ const carHalfX=1.15,carHalfZ=2.25;
+ const hits=(p)=>worldColliders.some(o=>Math.abs(p.x-o.x)<o.halfX+carHalfX&&Math.abs(p.z-o.z)<o.halfZ+carHalfZ);
+ if(!hits(next))return next;
+ const slideX=new THREE.Vector3(next.x,0,previous.z),slideZ=new THREE.Vector3(previous.x,0,next.z);
+ if(!hits(slideX)){next.z=previous.z;return next}
+ if(!hits(slideZ)){next.x=previous.x;return next}
+ next.copy(previous);return next;
+}
 for(let i=0;i<(mobileQuality?48:145);i++){const a=i*2.399,rad=125+(i%7)*12,x=Math.cos(a)*rad,z=Math.sin(a)*rad;addWorldCollider(x,z,.65,.65);const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.35,.55,3.8,7),trunkMat);trunk.position.set(x,1.8,z);trunk.castShadow=false;scene.add(trunk);const crown=new THREE.Mesh(new THREE.ConeGeometry(2.7,8,7),i%2?leafMat:leaf2);crown.position.set(x,7,z);crown.castShadow=false;scene.add(crown)}
 // Distant foothills are dark silhouettes beneath the moonlit mountain range.
 for(let i=0;i<(mobileQuality?12:34);i++){const count=mobileQuality?12:34,a=i/count*Math.PI*2,r=238+(i%4)*13,h=25+(i*13%22);const hill=new THREE.Mesh(new THREE.ConeGeometry(29+(i%3)*8,h,9),mat(0x111b29,.98));hill.position.set(Math.cos(a)*r,h*.25,Math.sin(a)*r);hill.rotation.y=a*.7;scene.add(hill)}

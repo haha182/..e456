@@ -542,6 +542,26 @@ const showroomLight=new THREE.PointLight(0xfff0d9,95,48);showroomLight.position.
 const showroomFill=new THREE.PointLight(0xc9e5ff,32,38);showroomFill.position.set(-12,8,4);showroom.add(showroomFill);
 // Industrial drift-shop garage: concrete panels, high windows, steel beams and ceiling strip lights.
 const concreteMat=new THREE.MeshStandardMaterial({color:0x777d7d,roughness:.94});
+// Procedural, tileable workshop finishes: mottled poured concrete and sealed industrial flooring.
+function makeGarageTexture(kind){
+ const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;const ctx=canvas.getContext('2d');
+ if(kind==='wall'){
+  ctx.fillStyle='#85898a';ctx.fillRect(0,0,512,512);
+  for(let i=0;i<6200;i++){const v=Math.random()*42-21;ctx.fillStyle='rgba('+((125+v)|0)+','+((130+v)|0)+','+((131+v)|0)+','+(Math.random()*.12)+')';const x=Math.random()*512,y=Math.random()*512;ctx.fillRect(x,y,1+Math.random()*5,1+Math.random()*5)}
+  // Subtle concrete block courses and recessed mortar joints.
+  for(let y=0;y<=512;y+=128){ctx.fillStyle='rgba(30,38,40,.22)';ctx.fillRect(0,y,512,3);ctx.fillStyle='rgba(225,229,226,.12)';ctx.fillRect(0,y+3,512,2)}
+  for(let row=0;row<4;row++)for(let x=(row%2)*128;x<512;x+=256){ctx.fillStyle='rgba(28,35,37,.16)';ctx.fillRect(x,row*128,2,128)}
+ }else{
+  ctx.fillStyle='#454b4d';ctx.fillRect(0,0,512,512);
+  for(let i=0;i<10000;i++){const v=Math.random()*34-17;ctx.fillStyle='rgba('+((72+v)|0)+','+((78+v)|0)+','+((80+v)|0)+','+(Math.random()*.16)+')';ctx.fillRect(Math.random()*512,Math.random()*512,1+Math.random()*4,1+Math.random()*4)}
+  for(let y=0;y<512;y+=128){ctx.fillStyle='rgba(20,25,27,.18)';ctx.fillRect(0,y,512,2)}
+ }
+ const tex=new THREE.CanvasTexture(canvas);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());return tex;
+}
+const garageWallTexture=makeGarageTexture('wall'),garageFloorTexture=makeGarageTexture('floor');
+garageWallTexture.repeat.set(3,1.4);garageFloorTexture.repeat.set(5,5);
+garageFloor.material.map=garageFloorTexture;garageFloor.material.color.set(0xffffff);garageFloor.material.needsUpdate=true;
+backWall.material.map=garageWallTexture;backWall.material.color.set(0xffffff);backWall.material.needsUpdate=true;
 const darkConcrete=new THREE.MeshStandardMaterial({color:0x3c4345,roughness:.8,metalness:.18});
 const glassGarage=new THREE.MeshStandardMaterial({color:0x9eb9c1,roughness:.22,metalness:.22,transparent:true,opacity:.78});
 for(let x=-18;x<=18;x+=9){
@@ -557,7 +577,7 @@ for(const x of [-20,20]){
  const base=new THREE.Mesh(new THREE.BoxGeometry(1.7,.6,1.7),concreteMat);base.position.set(x,.3,-12.9);showroom.add(base);
 }
 // Complete 3D workshop shell: side walls, ceiling, roller shutter, tiled concrete and workshop props.
-const sideWallMat=new THREE.MeshStandardMaterial({color:0x858b8b,roughness:.92,side:THREE.DoubleSide});
+const sideWallMat=new THREE.MeshStandardMaterial({color:0xffffff,map:garageWallTexture,roughness:.94,side:THREE.DoubleSide});
 const ceilingMat=new THREE.MeshStandardMaterial({color:0x9da2a1,roughness:.88});
 const shutterMat=new THREE.MeshStandardMaterial({color:0x596164,roughness:.82,metalness:.12});
 const sideLeft=new THREE.Mesh(new THREE.PlaneGeometry(44,24),sideWallMat);sideLeft.rotation.y=Math.PI/2;sideLeft.position.set(-22,12,0);showroom.add(sideLeft);
@@ -1127,7 +1147,7 @@ function tick(t){
  last=t;
  updateTraffic(dt);
  if(false&&!garageMode&&christmasBulbData.length){const blink=Math.floor(t/850);if(blink!==christmasBlinkTime){christmasBlinkTime=blink;for(let i=0;i<christmasBulbData.length;i++){const b=christmasBulbData[i],on=Math.sin(t*.00115+b.phase)>-.12;christmasColor.setHex(b.color).multiplyScalar(on?1:.3);christmasBulbs.setColorAt(i,christmasColor)}if(christmasBulbs.instanceColor)christmasBulbs.instanceColor.needsUpdate=true}}
- if(garageMode){const a=1-Math.exp(-12*dt);camera.position.lerp(garageTargetPosition,a);cameraLook.lerp(garageTargetLook,a);camera.lookAt(cameraLook);if(camera.fov!==48){camera.fov=48;camera.updateProjectionMatrix()}}
+ if(garageMode){camera.position.copy(garageTargetPosition);cameraLook.copy(garageTargetLook);camera.up.set(0,1,0);camera.rotation.order='XYZ';camera.lookAt(cameraLook);if(camera.fov!==48){camera.fov=48;camera.updateProjectionMatrix()}}
  if(!paused&&!onFoot){
   const gas=!!(keys.w||keys.arrowup),brake=!!(keys.s||keys.arrowdown);
   const left=!!(keys.a||keys.arrowleft),right=!!(keys.d||keys.arrowright);
@@ -1450,7 +1470,7 @@ function start(){
   showGameError('The game could not start: '+(err&&err.message?err.message:String(err)));
  }
 }
-function setGarageValues(){const ids=['turbo','frontCamber','rearCamber','frontOffset','rearOffset','brakeBalance','frontHeight','rearHeight','brakePressure'];for(const id of ids){const el=$(id),v=localStorage['hcg_'+id]??el.value;el.value=v;$(id+'Val').textContent=({turbo:v+' psi',frontCamber:v+'°',rearCamber:v+'°',frontOffset:v+' cm',rearOffset:v+' cm',brakeBalance:v+'%',frontHeight:(+v>0?'+':'')+v+' cm',rearHeight:(+v>0?'+':'')+v+' cm',brakePressure:v+'%'})[id]}for(const id of ['bodyKit','spoilerStyle','rimFinish','neonColor','windowTint'])if(localStorage['hcg_'+id]!==undefined)$(id).value=localStorage['hcg_'+id];applyCustomizations()}function setGarageCamera(resetRadius=false){const choice=$('carStyle')?.value||'lexus_lfa';const selected=extraCarModels[choice]?.group;const bounds=new THREE.Box3();if(selected&&selected.visible){selected.updateMatrixWorld(true);bounds.setFromObject(selected)}const size=bounds.isEmpty()?new THREE.Vector3(4.2,1.5,4.6):bounds.getSize(new THREE.Vector3());const center=bounds.isEmpty()?new THREE.Vector3(0,.85,0):bounds.getCenter(new THREE.Vector3());if(resetRadius||garageFramingKey!==choice){garageOrbitRadius=THREE.MathUtils.clamp(Math.max(size.x,size.z)*1.85+size.y*.5,7.4,12.8);garageFramingKey=choice}const cp=Math.cos(garageOrbitPitch);garageTargetLook.copy(center);garageTargetPosition.set(center.x+Math.sin(garageOrbitYaw)*garageOrbitRadius*cp,center.y+Math.sin(garageOrbitPitch)*garageOrbitRadius,center.z+Math.cos(garageOrbitYaw)*garageOrbitRadius*cp);if(!garageCameraReady){camera.position.copy(garageTargetPosition);cameraLook.copy(garageTargetLook);camera.lookAt(cameraLook);garageCameraReady=true}}
+function setGarageValues(){const ids=['turbo','frontCamber','rearCamber','frontOffset','rearOffset','brakeBalance','frontHeight','rearHeight','brakePressure'];for(const id of ids){const el=$(id),v=localStorage['hcg_'+id]??el.value;el.value=v;$(id+'Val').textContent=({turbo:v+' psi',frontCamber:v+'°',rearCamber:v+'°',frontOffset:v+' cm',rearOffset:v+' cm',brakeBalance:v+'%',frontHeight:(+v>0?'+':'')+v+' cm',rearHeight:(+v>0?'+':'')+v+' cm',brakePressure:v+'%'})[id]}for(const id of ['bodyKit','spoilerStyle','rimFinish','neonColor','windowTint'])if(localStorage['hcg_'+id]!==undefined)$(id).value=localStorage['hcg_'+id];applyCustomizations()}function setGarageCamera(resetRadius=false){const choice=$('carStyle')?.value||'lexus_lfa';const selected=extraCarModels[choice]?.group;const bounds=new THREE.Box3();if(selected&&selected.visible){selected.updateMatrixWorld(true);bounds.setFromObject(selected)}const size=bounds.isEmpty()?new THREE.Vector3(4.2,1.5,4.6):bounds.getSize(new THREE.Vector3());const center=bounds.isEmpty()?new THREE.Vector3(0,.85,0):bounds.getCenter(new THREE.Vector3());if(resetRadius||garageFramingKey!==choice){garageOrbitRadius=THREE.MathUtils.clamp(Math.max(size.x,size.z)*1.85+size.y*.5,7.4,12.8);garageFramingKey=choice}const cp=Math.cos(garageOrbitPitch);garageTargetLook.copy(center);garageTargetPosition.set(center.x+Math.sin(garageOrbitYaw)*garageOrbitRadius*cp,center.y+Math.sin(garageOrbitPitch)*garageOrbitRadius,center.z+Math.cos(garageOrbitYaw)*garageOrbitRadius*cp);if(!garageCameraReady){camera.position.copy(garageTargetPosition);cameraLook.copy(garageTargetLook);camera.up.set(0,1,0);camera.rotation.order='XYZ';camera.lookAt(cameraLook);garageCameraReady=true}}
 function openGarage(){
  updateDealerUI();stopCarAudio();garageWasPlaying=!paused;paused=true;garageMode=true;garageVisibilitySnapshot=scene.children.map(o=>[o,o.visible]);garagePos.copy(carPos);garageHeading=heading;
  garageOrbitYaw=.28;garageOrbitPitch=.16;garageOrbitRadius=9.2;garageFramingKey='';garageCameraReady=false;

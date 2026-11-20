@@ -461,12 +461,14 @@ function applyE46Paint(){e46Paint.color.copy(paintMat.color)}
 // Load the CC0 Spectral GT RS GLB from its original public repository.
 const spectralLoader=new GLTFLoader();
 spectralLoader.load('https://raw.githubusercontent.com/JaronKBragg7337/spectral-gt-rs/main/spectral_gt_rs_game_ready.glb',gltf=>{
- const model=gltf.scene;model.rotation.y=-Math.PI/2;model.updateMatrixWorld(true);
+ const model=gltf.scene;model.rotation.y=Math.PI/2;model.updateMatrixWorld(true);
  let bounds=new THREE.Box3().setFromObject(model),dims=bounds.getSize(new THREE.Vector3());
  const longest=Math.max(dims.x,dims.z);if(!longest)throw new Error('Spectral GT model has no measurable geometry');
- model.scale.setScalar(4.65/longest);model.updateMatrixWorld(true);bounds.setFromObject(model);model.position.y-=bounds.min.y;
- model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(Array.isArray(o.material))o.material=o.material.map(m=>m.clone());else if(o.material)o.material=o.material.clone();}});
- spectralModel.add(model);spectralClips=gltf.animations||[];spectralMixer=spectralClips.length?new THREE.AnimationMixer(model):null;
+ model.scale.setScalar(4.65/longest);model.updateMatrixWorld(true);bounds.setFromObject(model);const center=bounds.getCenter(new THREE.Vector3());model.position.x-=center.x;model.position.z-=center.z;model.position.y-=bounds.min.y;
+ const spectralWheels=[];
+ model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(Array.isArray(o.material))o.material=o.material.map(m=>m.clone());else if(o.material)o.material=o.material.clone();}if(/wheel|tire/i.test(o.name)&&!(/wheel|tire/i.test(o.parent?.name||''))){spectralWheels.push({node:o,position:o.position.clone(),rotation:o.rotation.clone()})}});
+ spectralModel.add(model);spectralModel.userData.wheels=spectralWheels;spectralModel.userData.paintMaterials=[];model.traverse(o=>{if(!o.isMesh)return;const materials=Array.isArray(o.material)?o.material:[o.material];for(const m of materials){if(!m||!m.color)continue;const n=(m.name+' '+o.name).toLowerCase();if(/paint|body|exterior|shell|fender|hood|bumper|door/.test(n)&&!/glass|window|rubber|tire|wheel|trim/.test(n))spectralModel.userData.paintMaterials.push(m)}});
+ spectralClips=gltf.animations||[];spectralMixer=spectralClips.length?new THREE.AnimationMixer(model):null;
  const steeringClip=spectralClips.find(a=>a.name.toLowerCase().includes('steering'));if(steeringClip&&spectralMixer)spectralMixer.clipAction(steeringClip).play();
  spectralReady=true;if($('carStyle').value==='spectral_gt')applyStyle('spectral_gt');toast('Spectral GT RS loaded');
 },undefined,error=>{console.error('Spectral GT RS load failed:',error);toast('Spectral GT download failed — check connection');});
@@ -474,15 +476,11 @@ spectralLoader.load('https://raw.githubusercontent.com/JaronKBragg7337/spectral-
 function applyTune(){
  const value=id=>Number($(id)?.value ?? localStorage['hcg_'+id] ?? ({turbo:14.3,frontCamber:-5,rearCamber:-1,frontOffset:5,rearOffset:3,brakeBalance:70,frontHeight:-6,rearHeight:1,brakePressure:100}[id]));
  const frontH=value('frontHeight'),rearH=value('rearHeight');
- for(const target of [e46,m4Model,spectralModel])target.position.y=(frontH+rearH)*.005;
- for(const target of [e46,m4Model,spectralModel])target.rotation.x=Math.atan(((frontH-rearH)/100)/2.86);
- for(const w of wheels){
-  const front=w.z<0;
-  const offset=value(front?'frontOffset':'rearOffset');
-  const camber=value(front?'frontCamber':'rearCamber');
-  w.pivot.position.x=Math.sign(w.x)*(1.015+(offset-(front?5:3))*.01);
-  w.pivot.rotation.z=THREE.MathUtils.degToRad(camber);
- }
+ for(const target of [e46,m4Model]){target.position.y=(frontH+rearH)*.005;target.rotation.x=Math.atan(((frontH-rearH)/100)/2.86)}
+ spectralModel.position.y=(frontH+rearH)*.005;spectralModel.rotation.x=Math.atan(((frontH-rearH)/100)/2.86);
+ for(const w of wheels){const front=w.z<0,offset=value(front?'frontOffset':'rearOffset'),camber=value(front?'frontCamber':'rearCamber');w.pivot.position.x=Math.sign(w.x)*(1.015+(offset-(front?5:3))*.01);w.pivot.rotation.z=THREE.MathUtils.degToRad(camber)}
+ for(const w of (spectralModel.userData.wheels||[])){const front=w.position.z<0,offset=value(front?'frontOffset':'rearOffset'),camber=value(front?'frontCamber':'rearCamber');w.node.position.copy(w.position);w.node.position.x+=Math.sign(w.position.x||1)*(offset-(front?5:3))*.01;w.node.rotation.set(w.rotation.x,w.rotation.y,w.rotation.z+THREE.MathUtils.degToRad(camber))}
+ const paint=$('paint')?.value;if(paint){for(const m of (spectralModel.userData.paintMaterials||[]))m.color.set(paint);applyE46Paint()}
 }
 function tunedBrakeForce(){return valueTune('brakePressure')/100}
 function valueTune(id){const defaults={brakePressure:100,brakeBalance:70,turbo:14.3};return Number(localStorage['hcg_'+id]??defaults[id])}
@@ -649,5 +647,5 @@ const controlKeys=new Set(['arrowup','arrowdown','arrowleft','arrowright','w','a
 function bind(id,k){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;el.setPointerCapture(e.pointerId)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,()=>keys[k]=false))}
 bind('left','a');bind('right','d');bind('gas','w');bind('brake','s');bind('hand',' ');bind('boost','shift');
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
-paintMat.color.set($('paint').value);$('paint').addEventListener('input',()=>paintMat.color.set($('paint').value));camera.position.set(0,8,14);camera.lookAt(0,0,0);
+paintMat.color.set($('paint').value);$('paint').addEventListener('input',()=>{paintMat.color.set($('paint').value);applyTune()});camera.position.set(0,8,14);camera.lookAt(0,0,0);
 </script></body></html>

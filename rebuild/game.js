@@ -22,6 +22,25 @@ const dummy=new THREE.Object3D(),dashMat=new THREE.MeshBasicMaterial({color:0xe3
 const dash=new THREE.InstancedMesh(new THREE.BoxGeometry(.14,.025,5.2),dashMat,Math.floor(N/5)),rail=new THREE.InstancedMesh(new THREE.BoxGeometry(.13,.13,1),railMat,N*2),posts=new THREE.InstancedMesh(new THREE.BoxGeometry(.13,.8,.16),railMat,Math.floor(N/7)*2);let dc=0,rc=0,pc=0;
 for(let i=0;i<N;i++){const t=i/N,p=curve.getPointAt(t),r=frames.binormals[i],tan=frames.tangents[i];if(i%5===0){dummy.position.set(p.x,p.y+.09,p.z);dummy.rotation.set(0,Math.atan2(tan.x,tan.z),0);dummy.updateMatrix();dash.setMatrixAt(dc++,dummy.matrix)}for(const s of [-1,1]){const x=p.x+r.x*(W/2+1.25)*s,z=p.z+r.z*(W/2+1.25)*s;if(i%7===0){dummy.position.set(x,p.y+1.05,z);dummy.rotation.set(0,Math.atan2(tan.x,tan.z),0);dummy.updateMatrix();posts.setMatrixAt(pc++,dummy.matrix)}const q=curve.getPointAt((i+1)/N),rr=frames.binormals[i+1],end=new THREE.Vector3(q.x+rr.x*(W/2+1.25)*s,q.y+1.65,q.z+rr.z*(W/2+1.25)*s),start=new THREE.Vector3(x,p.y+1.65,z);dummy.position.copy(start).add(end).multiplyScalar(.5);dummy.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),end.clone().sub(start).normalize());dummy.scale.set(1,1,start.distanceTo(end));dummy.updateMatrix();rail.setMatrixAt(rc++,dummy.matrix)}}
 dash.count=dc;rail.count=rc;posts.count=pc;scene.add(dash,rail,posts);
+// Warm sodium-style road lamps, instanced for low draw-call overhead.
+const lampPoleMat=new THREE.MeshStandardMaterial({color:0x303943,metalness:.72,roughness:.38});
+const lampArmMat=new THREE.MeshStandardMaterial({color:0x3b4650,metalness:.68,roughness:.34});
+const bulbMat=new THREE.MeshStandardMaterial({color:0xffd58c,emissive:0xffb84d,emissiveIntensity:3.2});
+const lampPole=new THREE.InstancedMesh(new THREE.CylinderGeometry(.075,.12,6.4,7),lampPoleMat,Math.ceil(N/18));
+const lampArm=new THREE.InstancedMesh(new THREE.BoxGeometry(2.7,.09,.11),lampArmMat,Math.ceil(N/18));
+const lampBulb=new THREE.InstancedMesh(new THREE.BoxGeometry(.48,.12,.34),bulbMat,Math.ceil(N/18));
+let lampCount=0;
+for(let i=0;i<N;i+=18){
+ const p=curve.getPointAt(i/N),r=frames.binormals[i],side=(Math.floor(i/18)%2===0)?1:-1;
+ const polePos=new THREE.Vector3(p.x+r.x*(W/2+4.8)*side,p.y+3.2,p.z+r.z*(W/2+4.8)*side);
+ dummy.position.copy(polePos);dummy.rotation.set(0,0,0);dummy.scale.set(1,1,1);dummy.updateMatrix();lampPole.setMatrixAt(lampCount,dummy.matrix);
+ const inward=new THREE.Vector3(-r.x*side,0,-r.z*side);
+ const armPos=polePos.clone().addScaledVector(inward,1.22);dummy.position.copy(armPos);dummy.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),inward);dummy.updateMatrix();lampArm.setMatrixAt(lampCount,dummy.matrix);
+ const bulbPos=polePos.clone().addScaledVector(inward,2.55);dummy.position.copy(bulbPos);dummy.quaternion.copy(lampArm.quaternion);dummy.updateMatrix();lampBulb.setMatrixAt(lampCount,dummy.matrix);
+ if(lampCount%5===0){const pool=new THREE.PointLight(0xffc978,24,27,2);pool.position.copy(bulbPos).add(new THREE.Vector3(0,-.25,0));pool.castShadow=false;scene.add(pool)}
+ lampCount++;
+}
+lampPole.count=lampCount;lampArm.count=lampCount;lampBulb.count=lampCount;scene.add(lampPole,lampArm,lampBulb);
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(2200,2200),new THREE.MeshStandardMaterial({color:0x18251f,roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-3;ground.receiveShadow=true;scene.add(ground);
 const hillMat=new THREE.MeshStandardMaterial({color:0x1b2c2b,roughness:1});for(let i=0;i<24;i++){let a=i/24*Math.PI*2,h=new THREE.Mesh(new THREE.IcosahedronGeometry(1,2),hillMat);h.scale.set(70+i%4*18,25+i%5*11,65+i%3*20);h.position.set(Math.cos(a)*(250+i%3*38),-8,Math.sin(a)*(250+i%3*38));scene.add(h)}
 let seed=982451653;const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};const count=low?220:520,trunks=new THREE.InstancedMesh(new THREE.CylinderGeometry(.22,.42,5,6),new THREE.MeshStandardMaterial({color:0x302b25}),count),tops=new THREE.InstancedMesh(new THREE.ConeGeometry(3.2,12,7),new THREE.MeshStandardMaterial({color:0x10251f}),count);let made=0;while(made<count){let x=(rand()-.5)*1000,z=(rand()-.5)*1000,near=1e9;for(let j=0;j<70;j++){let q=curve.getPointAt(j/70);near=Math.min(near,Math.hypot(q.x-x,q.z-z))}if(near<22)continue;let sc=.7+rand()*.8;dummy.position.set(x,2.5*sc,z);dummy.scale.setScalar(sc);dummy.rotation.y=rand()*6.28;dummy.updateMatrix();trunks.setMatrixAt(made,dummy.matrix);dummy.position.y=8*sc;dummy.updateMatrix();tops.setMatrixAt(made,dummy.matrix);made++}scene.add(trunks,tops);

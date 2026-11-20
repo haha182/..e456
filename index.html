@@ -131,7 +131,7 @@ if(!mobileQuality){
 scene.add(new THREE.HemisphereLight(0x243b68,0x080b13,.34));
 const moon=new THREE.DirectionalLight(0x9bbcff,.62);moon.position.set(-85,115,65);moon.castShadow=!mobileQuality;moon.shadow.mapSize.set(1024,1024);moon.shadow.camera.left=-155;moon.shadow.camera.right=155;moon.shadow.camera.top=155;moon.shadow.camera.bottom=-155;scene.add(moon);
 const mat=(color,rough=.7,metal=0)=>new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal,envMapIntensity:metal>.12?1.15:.72});
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),mat(0x111a1b,.98));ground.rotation.x=-Math.PI/2;ground.position.y=-.12;ground.receiveShadow=false;scene.add(ground);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),new THREE.MeshBasicMaterial({color:0x080d13,roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-1.2;ground.receiveShadow=false;ground.renderOrder=0;scene.add(ground);
 // Procedural asphalt grain gives every road a believable, non-flat surface without external assets.
 const asphaltCanvas=document.createElement('canvas');asphaltCanvas.width=256;asphaltCanvas.height=256;
 const asphaltCtx=asphaltCanvas.getContext('2d');asphaltCtx.fillStyle='#30343a';asphaltCtx.fillRect(0,0,256,256);

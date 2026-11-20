@@ -30,6 +30,19 @@ jobs:
       - name: Install locked dependencies
         working-directory: horizon-remade
         run: npm ci
+      - name: Customize welcome screen
+        working-directory: horizon-remade
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("src/ui/menus.js")
+          s = p.read_text()
+          old = "h('div', { class: 'dialog-kicker' }, `WELCOME TO THE ${FESTIVAL_NAME.toUpperCase()}`),"
+          new = "h('div', { class: 'dialog-kicker' }, \"WELCOME TO HARRISON'S GAME\"),"
+          if old not in s:
+              raise SystemExit("Expected welcome screen text was not found; stopping build.")
+          p.write_text(s.replace(old, new, 1))
+          PY
       - name: Run upstream game tests
         working-directory: horizon-remade
         run: npm test

@@ -106,7 +106,7 @@ export function worldGround(track, x, z, yRef) {
   return apron * (1 - s) + dem * s;
 }
 
-export function buildDem(scene, track) {
+export function buildDem(scene, track, terrainStep = 22) {
   _track = track;             // demHeight() carves around the road from here on
   let sy = 0; for (let i = 0; i < track.n; i++) sy += track.py[i];
   _meanY = sy / track.n;
@@ -124,7 +124,7 @@ export function buildDem(scene, track) {
       minX = Math.min(minX, track.px[i]); maxX = Math.max(maxX, track.px[i]);
       minZ = Math.min(minZ, track.pz[i]); maxZ = Math.max(maxZ, track.pz[i]);
     }
-    const M = 400; st = 22;
+    const M = 400; st = terrainStep;
     gx0 = minX - M; gz0 = minZ - M;
     nx = Math.ceil((maxX - minX + 2 * M) / st) + 1;
     nz = Math.ceil((maxZ - minZ + 2 * M) / st) + 1;

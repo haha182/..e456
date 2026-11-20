@@ -254,7 +254,7 @@ function finishIntro(){if(introFinished)return;introFinished=true;clearTimeout(i
 function startIntro(){const intro=document.getElementById('introScreen');if(!intro||introFinished)return;intro.style.display='grid';intro.classList.add('show');introTimer=setTimeout(finishIntro,2800)}
 function finishLoading(){clearTimeout(startupFailsafe);if(loadingScreen)loadingScreen.classList.add('done');startIntro()}
 let startupFailsafe=0;
-startupFailsafe=setTimeout(()=>{if(!introFinished)showGameError('Startup is taking longer than expected. Check your connection, then reload the game.');},25000);
+startupFailsafe=setTimeout(()=>{if(!introFinished)showGameError('Startup is taking longer than expected. Check your connection, then reload the game.');},45000);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,175,500);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,950);
 const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const isChromeOS=/CrOS/i.test(navigator.userAgent);const touchControls=matchMedia('(pointer:coarse)').matches&&navigator.maxTouchPoints>0;const renderer=new THREE.WebGLRenderer({antialias:!mobileQuality,powerPreference:'high-performance',precision:'highp'});renderer.setPixelRatio(isChromeOS ? 0.78 :(mobileQuality?Math.min(devicePixelRatio,1.12):Math.min(devicePixelRatio,1.35)));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=!mobileQuality&&!isChromeOS;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.24;document.body.appendChild(renderer.domElement);
@@ -299,7 +299,7 @@ const ground=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),new THREE.MeshBas
 const driveGameTrack=new DriveGameTrack(DRIVE_GAME_TRACK);
 const pts=DRIVE_GAME_TRACK.points.map(p=>new THREE.Vector3(p[0],p[1],p[2]));
 const curve=new THREE.CatmullRomCurve3(pts,true,'centripetal');
-const driveGameWorld=buildDriveGameWorld(scene,driveGameTrack,{trees:isChromeOS?.055:(mobileQuality?.10:.16),aniso:isChromeOS?2:(mobileQuality?2:4),textureSize:isChromeOS?512:1024,terrainStep:isChromeOS?34:22,nord:true});
+const driveGameWorld=buildDriveGameWorld(scene,driveGameTrack,{trees:isChromeOS?.03:(mobileQuality?.10:.16),aniso:isChromeOS?2:(mobileQuality?2:4),textureSize:isChromeOS?512:1024,terrainStep:isChromeOS?46:22,nord:true});
 driveGameWorld.streetlights.group.visible=true;
 // Drive Game's buildWorld() now supplies the textured road, curbs, grass aprons,
  // PBR guardrails, rail posts, forest, signs, road furniture and night lamps.

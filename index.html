@@ -140,7 +140,7 @@ function finishLoading(){if(loadingScreen)loadingScreen.classList.add('done')}
 setTimeout(finishLoading,15000); // Failsafe only; normal completion follows the car load result.
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,145,560);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,950);
-const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const isChromeOS=/CrOS/i.test(navigator.userAgent);const touchControls=matchMedia('(pointer:coarse)').matches&&navigator.maxTouchPoints>0;const renderer=new THREE.WebGLRenderer({antialias:!mobileQuality,powerPreference:'low-power',precision:mobileQuality?'mediump':'highp'});renderer.setPixelRatio(isChromeOS?.72:(mobileQuality?Math.min(devicePixelRatio,.72):Math.min(devicePixelRatio,.88)));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;document.body.appendChild(renderer.domElement);
+const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const isChromeOS=/CrOS/i.test(navigator.userAgent);const touchControls=matchMedia('(pointer:coarse)').matches&&navigator.maxTouchPoints>0;const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',precision:'highp'});renderer.setPixelRatio(isChromeOS?.88:(mobileQuality?Math.min(devicePixelRatio,.88):Math.min(devicePixelRatio,1)));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;document.body.appendChild(renderer.domElement);
 // Desktop uses generated studio reflections; mobile skips PMREM to avoid GPU render artifacts.
 if(!mobileQuality){
  const pmremGenerator=new THREE.PMREMGenerator(renderer);pmremGenerator.compileEquirectangularShader();
@@ -319,20 +319,17 @@ const sideWallGeo=new THREE.PlaneGeometry(90,24);
 // Open sides keep the car visible from every orbit angle.
 // No enclosing side wall on the right.
 const garageStripe=new THREE.Mesh(new THREE.BoxGeometry(44,.035,.12),new THREE.MeshStandardMaterial({color:0xd5d6cc,roughness:.6}));garageStripe.position.set(0,-.045,4.5);showroom.add(garageStripe);
-for(let x=-16;x<=16;x+=8){const pillar=new THREE.Mesh(new THREE.BoxGeometry(.42,22,.55),new THREE.MeshStandardMaterial({color:0x3e4546,metalness:.25,roughness:.6}));pillar.position.set(x,11,-13.75);showroom.add(pillar)}
+// Removed repeated dark vertical dividers for a cleaner, open showroom wall.
 const showroomLight=new THREE.PointLight(0xfff0d9,110,55);showroomLight.position.set(0,13,5);showroom.add(showroomLight);
 const showroomFill=new THREE.PointLight(0xc9e5ff,65,45);showroomFill.position.set(-12,8,4);showroom.add(showroomFill);
 // Industrial drift-shop garage: concrete panels, high windows, steel beams and ceiling strip lights.
 const concreteMat=new THREE.MeshStandardMaterial({color:0x777d7d,roughness:.94});
 const darkConcrete=new THREE.MeshStandardMaterial({color:0x3c4345,roughness:.8,metalness:.18});
 const glassGarage=new THREE.MeshStandardMaterial({color:0x9eb9c1,roughness:.22,metalness:.22,transparent:true,opacity:.78});
-for(let x=-18;x<=18;x+=6){
- const seam=new THREE.Mesh(new THREE.BoxGeometry(.055,20,.045),darkConcrete);seam.position.set(x,11.5,-13.92);showroom.add(seam);
- const windowPane=new THREE.Mesh(new THREE.BoxGeometry(5.3,4.1,.12),glassGarage);windowPane.position.set(x,16.2,-13.72);showroom.add(windowPane);
- const sill=new THREE.Mesh(new THREE.BoxGeometry(5.5,.16,.28),darkConcrete);sill.position.set(x,14.05,-13.65);showroom.add(sill);
- const mullion=new THREE.Mesh(new THREE.BoxGeometry(.12,4.2,.2),darkConcrete);mullion.position.set(x,16.2,-13.58);showroom.add(mullion);
- const ceilingBeam=new THREE.Mesh(new THREE.BoxGeometry(.28,.32,44),darkConcrete);ceilingBeam.position.set(x,22.4,0);showroom.add(ceilingBeam);
- const strip=new THREE.Mesh(new THREE.BoxGeometry(3.6,.08,.5),new THREE.MeshBasicMaterial({color:0xfff4dc}));strip.position.set(x,21.9,1);showroom.add(strip);
+for(let x=-18;x<=18;x+=9){
+ const windowPane=new THREE.Mesh(new THREE.BoxGeometry(7.6,4.1,.12),glassGarage);windowPane.position.set(x,16.2,-13.72);showroom.add(windowPane);
+ const sill=new THREE.Mesh(new THREE.BoxGeometry(7.8,.16,.28),concreteMat);sill.position.set(x,14.05,-13.65);showroom.add(sill);
+ const strip=new THREE.Mesh(new THREE.BoxGeometry(5.2,.08,.5),new THREE.MeshBasicMaterial({color:0xfff4dc}));strip.position.set(x,21.9,1);showroom.add(strip);
 }
 for(let z=-10;z<=10;z+=10){
  const line=new THREE.Mesh(new THREE.BoxGeometry(42,.025,.045),new THREE.MeshBasicMaterial({color:0xd4d5ce}));line.position.set(0,-.025,z);showroom.add(line);
@@ -344,22 +341,21 @@ for(const x of [-20,20]){
 // Complete 3D workshop shell: side walls, ceiling, roller shutter, tiled concrete and workshop props.
 const sideWallMat=new THREE.MeshStandardMaterial({color:0x858b8b,roughness:.92,side:THREE.DoubleSide});
 const ceilingMat=new THREE.MeshStandardMaterial({color:0x9da2a1,roughness:.88});
-const shutterMat=new THREE.MeshStandardMaterial({color:0x252b2d,roughness:.72,metalness:.35});
+const shutterMat=new THREE.MeshStandardMaterial({color:0x596164,roughness:.82,metalness:.12});
 const sideLeft=new THREE.Mesh(new THREE.PlaneGeometry(44,24),sideWallMat);sideLeft.rotation.y=Math.PI/2;sideLeft.position.set(-22,12,0);showroom.add(sideLeft);
 const sideRight=new THREE.Mesh(new THREE.PlaneGeometry(44,24),sideWallMat);sideRight.rotation.y=-Math.PI/2;sideRight.position.set(22,12,0);showroom.add(sideRight);
 const ceiling=new THREE.Mesh(new THREE.PlaneGeometry(44,44),ceilingMat);ceiling.rotation.x=Math.PI/2;ceiling.position.set(0,23,0);showroom.add(ceiling);
 const shutter=new THREE.Mesh(new THREE.BoxGeometry(20,12,.32),shutterMat);shutter.position.set(0,6,-13.45);showroom.add(shutter);
-for(let y=1.1;y<12;y+=.72){const rib=new THREE.Mesh(new THREE.BoxGeometry(19.8,.055,.38),darkConcrete);rib.position.set(0,y,-13.23);showroom.add(rib)}
+// Smooth unsegmented garage door; no dark horizontal ribs.
 const cabinetMat=new THREE.MeshStandardMaterial({color:0x20282b,roughness:.65,metalness:.35});
 for(const x of [-16,-12,-8]){const cab=new THREE.Mesh(new THREE.BoxGeometry(3.4,3.3,1.2),cabinetMat);cab.position.set(x,1.65,-8.5);showroom.add(cab);for(let y=.65;y<3;y+=.75){const drawer=new THREE.Mesh(new THREE.BoxGeometry(3.15,.055,1.25),darkConcrete);drawer.position.set(x,y,-7.86);showroom.add(drawer)}}
 const barrelMat=new THREE.MeshStandardMaterial({color:0x9c3430,roughness:.5,metalness:.25});
 for(const x of [12,15]){const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.58,.58,1.7,20),barrelMat);barrel.position.set(x,.85,-7.8);showroom.add(barrel);const band=new THREE.Mesh(new THREE.TorusGeometry(.59,.055,8,24),darkConcrete);band.rotation.x=Math.PI/2;band.position.set(x,1.1,-7.8);showroom.add(band)}
 const tileMat=new THREE.MeshStandardMaterial({color:0x555b5d,roughness:.88});
-for(let x=-21;x<=21;x+=3){const line=new THREE.Mesh(new THREE.BoxGeometry(.035,.018,42),tileMat);line.position.set(x,.012,0);showroom.add(line)}
-for(let z=-21;z<=21;z+=3){const line=new THREE.Mesh(new THREE.BoxGeometry(42,.018,.035),tileMat);line.position.set(0,.013,z);showroom.add(line)}
+// Smooth concrete floor without a dense tile grid.
 for(const x of [-12,0,12]){const lamp=new THREE.Mesh(new THREE.BoxGeometry(5,.08,.65),new THREE.MeshBasicMaterial({color:0xfff2d9}));lamp.position.set(x,22.7,1);showroom.add(lamp);const glow=new THREE.PointLight(0xffedcf,85,30);glow.position.set(x,20,1);showroom.add(glow)}
 // Open ceiling: overhead strip lights remain as the garage lighting.
-const floorGrid=new THREE.GridHelper(44,44,0x737a79,0x565d5d);floorGrid.position.y=-.035;showroom.add(floorGrid);
+// No floor grid: keep the showroom floor visually smooth.
 
 // Premium industrial showroom details: illuminated display plinth, wall branding and vertical light bars.
 const plinthMat=new THREE.MeshStandardMaterial({color:0x151d22,roughness:.38,metalness:.58});
@@ -1058,7 +1054,7 @@ function start(){
 }
 function setGarageValues(){const ids=['turbo','frontCamber','rearCamber','frontOffset','rearOffset','brakeBalance','frontHeight','rearHeight','brakePressure'];for(const id of ids){const el=$(id),v=localStorage['hcg_'+id]??el.value;el.value=v;$(id+'Val').textContent=({turbo:v+' psi',frontCamber:v+'°',rearCamber:v+'°',frontOffset:v+' cm',rearOffset:v+' cm',brakeBalance:v+'%',frontHeight:(+v>0?'+':'')+v+' cm',rearHeight:(+v>0?'+':'')+v+' cm',brakePressure:v+'%'})[id]}for(const id of ['bodyKit','spoilerStyle','rimFinish','neonColor','windowTint'])if(localStorage['hcg_'+id]!==undefined)$(id).value=localStorage['hcg_'+id];applyCustomizations()}function setGarageCamera(resetRadius=false){const choice=$('carStyle')?.value||'hot_hatch';const selected=extraCarModels[choice]?.group;const bounds=new THREE.Box3();if(selected&&selected.visible){selected.updateMatrixWorld(true);bounds.setFromObject(selected)}const size=bounds.isEmpty()?new THREE.Vector3(4.2,1.5,4.6):bounds.getSize(new THREE.Vector3());const center=bounds.isEmpty()?new THREE.Vector3(0,.85,0):bounds.getCenter(new THREE.Vector3());if(resetRadius||garageFramingKey!==choice){garageOrbitRadius=THREE.MathUtils.clamp(Math.max(size.x,size.z)*1.85+size.y*.5,7.4,12.8);garageFramingKey=choice}const cp=Math.cos(garageOrbitPitch);garageTargetLook.copy(center);garageTargetPosition.set(center.x+Math.sin(garageOrbitYaw)*garageOrbitRadius*cp,center.y+Math.sin(garageOrbitPitch)*garageOrbitRadius,center.z+Math.cos(garageOrbitYaw)*garageOrbitRadius*cp);if(!garageCameraReady){camera.position.copy(garageTargetPosition);cameraLook.copy(garageTargetLook);camera.lookAt(cameraLook);garageCameraReady=true}}
 function openGarage(){
- stopCarAudio();garageWasPlaying=!paused;paused=true;garageMode=true;garageVisibilitySnapshot=[];scene.traverse(o=>garageVisibilitySnapshot.push([o,o.visible]));garagePos.copy(carPos);garageHeading=heading;
+ stopCarAudio();garageWasPlaying=!paused;paused=true;garageMode=true;garageVisibilitySnapshot=scene.children.map(o=>[o,o.visible]);garagePos.copy(carPos);garageHeading=heading;
  garageOrbitYaw=.28;garageOrbitPitch=.16;garageOrbitRadius=9.2;garageFramingKey='';garageCameraReady=false;
  $('menu').style.display='none';$('ui').style.display='none';$('help').style.display='none';$('touch').style.display='none';$('driveActions').style.display='none';$('carRadio').style.display='none';stopRadio();
  scene.background=new THREE.Color(0x101820);scene.fog=null;renderer.setClearColor(0x101820,1);
@@ -1089,6 +1085,8 @@ $('cameraBtn').onclick=changeCamera;$('garageBtn').onclick=openGarage;$('carStyl
 const controlKeys=new Set(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' ','shift']);addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=true;e.preventDefault()}if(k==='c')changeCamera();if(k==='r')reset();if(e.key==='Escape'){if(garageMode)closeGarage();paused=true;stopCarAudio();stopRadio();$('garage').style.display='none';$('menu').style.display='grid';$('ui').style.display='none';$('help').style.display='none';$('touch').style.display='none';$('driveActions').style.display='none';$('carRadio').style.display='none'}});addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=false;e.preventDefault()}});addEventListener('blur',()=>{for(const k of controlKeys)keys[k]=false});
 function bind(id,k){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;el.setPointerCapture(e.pointerId)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,()=>keys[k]=false))}
 bind('left','a');bind('right','d');bind('gas','w');bind('brake','s');bind('hand',' ');bind('boost','shift');
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(isChromeOS?.72:(mobileQuality?Math.min(devicePixelRatio,.72):Math.min(devicePixelRatio,.88)));renderer.setSize(innerWidth,innerHeight);if(garageMode)setGarageCamera()});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(isChromeOS?.88:(mobileQuality?Math.min(devicePixelRatio,.88):Math.min(devicePixelRatio,1)));renderer.setSize(innerWidth,innerHeight);if(garageMode)setGarageCamera()});
 paintMat.color.set($('paint').value);$('paint').addEventListener('input',()=>{paintMat.color.set($('paint').value);applyTune()});camera.position.set(0,8,14);camera.lookAt(0,0,0);
+// Preload the selected imported car while the menu is open, not after entering the garage.
+applyStyle($('carStyle').value);
 </script></body></html>

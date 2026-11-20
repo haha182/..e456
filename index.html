@@ -444,7 +444,7 @@ function applyCustomizations(){
  neonMat.color.set(neon);neonParts.visible=!!(localStorage.hcg_neonEnabled??'1');
  const label=$('windowTintVal');if(label)label.textContent=tint+'%';
  const chosen=$('carStyle')?.value||localStorage.hcgStyle||'bmw_e46';
- const selected=chosen==='bmw_e46'?e46:chosen==='spectral_gt'?spectralModel:chosen==='mid_engine'?extraCarModels.mid_engine?.group:extraCarModels.jdm_coupe?.group;
+ const selected=chosen==='bmw_e46'?e46:chosen==='spectral_gt'?spectralModel:extraCarModels[chosen]?.group;
  if(selected)selected.traverse(o=>{if(!o.isMesh)return;const mats=Array.isArray(o.material)?o.material:[o.material];for(const m of mats){if(!m||!m.color)continue;const n=((m.name||'')+' '+(o.name||'')).toLowerCase();if(/glass|window|windshield|windscreen/.test(n)){if(!m.userData.hcgTintBase)m.userData.hcgTintBase=m.color.clone();m.color.copy(m.userData.hcgTintBase).lerp(new THREE.Color(0x071018),tint/100)}}});
 }
 function applyStyle(){
@@ -462,7 +462,7 @@ function applyStyle(){
   if(!longest)throw Error('Downloaded car model contains no measurable geometry');
   model.scale.setScalar(4.65/longest);model.updateMatrixWorld(true);bounds.setFromObject(model);const center=bounds.getCenter(new THREE.Vector3());model.position.x-=center.x;model.position.z-=center.z;model.position.y-=bounds.min.y;
   model.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false;if(Array.isArray(o.material))o.material=o.material.map(m=>m.clone());else if(o.material)o.material=o.material.clone()}});
-  item.group.add(model);item.ready=true;item.loading=false;const isSelected=$('carStyle').value===choice;item.group.visible=isSelected;applyTune();if(isSelected){$('carLabel').textContent=item.label.toUpperCase();if(status)status.textContent=item.label.toUpperCase()+' READY';toast(item.label+' loaded')}
+  item.group.add(model);item.ready=true;item.loading=false;const isSelected=$('carStyle').value===choice;item.group.visible=isSelected;if(isSelected)applyCustomizations();applyTune();if(isSelected){$('carLabel').textContent=item.label.toUpperCase();if(status)status.textContent=item.label.toUpperCase()+' READY';toast(item.label+' loaded')}
  },undefined,error=>{item.loading=false;console.error(item.label+' load failed:',error);if($('carStyle').value===choice){$('carLabel').textContent='CAR DOWNLOAD FAILED';if(status)status.textContent='MODEL DOWNLOAD FAILED — SELECT ANOTHER CAR';toast('Could not download '+item.label+'; your other cars are still available')}});
 }
 

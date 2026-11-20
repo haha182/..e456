@@ -1148,9 +1148,9 @@ function tick(t){
   speed=THREE.MathUtils.clamp(speed,-12,(manualMode?96:82)+(nitro&&boost>0?10:0));
 
   // Progressive steering and speed-sensitive yaw, rather than the old handbrake-only sideways push.
-  const response=THREE.MathUtils.clamp(Number(localStorage.hcgSteer||3)*1.2,1.2,5.2);
+  const response=THREE.MathUtils.clamp(Number(localStorage.hcgSteer||3)*1.65,1.65,6.6);
   const speedFactor=THREE.MathUtils.clamp(Math.abs(speed)/11,0,1.25);
-  const steeringLock=THREE.MathUtils.lerp(.38,.62,Math.min(1,speedFactor));
+  const steeringLock=THREE.MathUtils.lerp(.46,.76,Math.min(1,speedFactor));
   steerAngle=THREE.MathUtils.damp(steerAngle,turn*steeringLock*response/3,4.8,dt);
   const direction=Math.sign(speed||speedBefore||1);
   const handbrakeYaw=hand&&Math.abs(speed)>5?1.28:1;

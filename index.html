@@ -170,13 +170,13 @@ function finishLoading(){if(loadingScreen)loadingScreen.classList.add('done');st
 setTimeout(finishLoading,15000); // Failsafe only; normal completion follows the car load result.
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,175,500);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,950);
-const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const isChromeOS=/CrOS/i.test(navigator.userAgent);const touchControls=matchMedia('(pointer:coarse)').matches&&navigator.maxTouchPoints>0;const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',precision:'highp'});renderer.setPixelRatio(isChromeOS?.94:(mobileQuality?Math.min(devicePixelRatio,.88):Math.min(devicePixelRatio,1)));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;document.body.appendChild(renderer.domElement);
+const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const isChromeOS=/CrOS/i.test(navigator.userAgent);const touchControls=matchMedia('(pointer:coarse)').matches&&navigator.maxTouchPoints>0;const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',precision:'highp'});renderer.setPixelRatio(isChromeOS?.96:(mobileQuality?Math.min(devicePixelRatio,.90):Math.min(devicePixelRatio,1)));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;document.body.appendChild(renderer.domElement);
 // Optional live performance diagnostics: press F3 while driving to show/hide.
 const perfPanel=document.createElement('div');perfPanel.id='perfPanel';perfPanel.style.cssText='position:fixed;left:12px;top:12px;z-index:30;display:none;padding:9px 11px;background:#06111ddd;border:1px solid #6d879966;border-radius:8px;color:#dff3ff;font:12px/1.55 ui-monospace,monospace;pointer-events:none;white-space:pre;';perfPanel.textContent='PERFORMANCE';document.body.appendChild(perfPanel);
 let perfFrames=0,perfWindowStart=performance.now(),perfLastUpdate=0;
 // Adaptive render resolution: preserve full quality when the GPU has headroom,
 // then lower pixel density gradually during sustained slow frames instead of stuttering.
-const devicePixelRatioCap=isChromeOS?.94:(mobileQuality?Math.min(devicePixelRatio,.88):Math.min(devicePixelRatio,1));
+const devicePixelRatioCap=isChromeOS?.96:(mobileQuality?Math.min(devicePixelRatio,.90):Math.min(devicePixelRatio,1));
 let adaptivePixelRatio=devicePixelRatioCap,qualitySampleStart=performance.now(),qualitySampleFrames=0;
 function applyAdaptivePixelRatio(){
  const garageCap=garageMode?Math.min(devicePixelRatioCap,.78):devicePixelRatioCap;
@@ -1066,9 +1066,11 @@ function tick(t){
    const fpSeat=new THREE.Vector3(-.49-fpSteer*.018,1.53+fpBob,-.22);
    desiredCam=carRoot.localToWorld(fpSeat);
    const fpYaw=cockpitLookYaw+fpSteer*.035*fpSpeed;
-   const fpPitch=cockpitLookPitch+Math.min(.035,fpSpeed*.035);
-   const fpAim=new THREE.Vector3(-.49+Math.sin(fpYaw)*24,1.53+Math.sin(fpPitch)*24,-.22-Math.cos(fpYaw)*24);
-   desiredLook=carRoot.localToWorld(fpAim);
+   const fpPitch=THREE.MathUtils.clamp(cockpitLookPitch+Math.min(.035,fpSpeed*.035),-.42,.42);
+   // World-heading view direction prevents imported model pitch/roll from flipping the camera.
+   const fpForward=forwardCam.clone().applyAxisAngle(new THREE.Vector3(0,1,0),fpYaw);
+   const fpDirection=fpForward.multiplyScalar(Math.cos(fpPitch));fpDirection.y=Math.sin(fpPitch);fpDirection.normalize();
+   desiredLook=desiredCam.clone().addScaledVector(fpDirection,24);
    targetFov=84+fpSpeed*1.2;
   }else{
    // Single close chase camera, kept tightly locked to the car.
@@ -1084,7 +1086,7 @@ function tick(t){
   }
   const camAlpha=1-Math.exp(-(cameraMode===3?15:19)*dt);
   if(cameraSnap){camera.position.copy(desiredCam);cameraLook.copy(desiredLook);cameraSnap=false}else{camera.position.lerp(desiredCam,camAlpha);cameraLook.lerp(desiredLook,1-Math.exp(-(cameraMode===3?18:22)*dt))}
-  camera.up.set(0,1,0);camera.lookAt(cameraLook);
+  camera.up.set(0,1,0);camera.lookAt(cameraLook);if(cameraMode===3){camera.rotation.order='YXZ';camera.rotation.z=0;}
   const nextFov=camera.fov+(targetFov-camera.fov)*(1-Math.exp(-3.8*dt));if(Math.abs(nextFov-camera.fov)>.025){camera.fov=nextFov;camera.updateProjectionMatrix()}
   if(cameraMode===3){
    // Absolute, bounded roll follows steering; never accumulate rotation frame after frame.
@@ -1112,8 +1114,8 @@ async function initCarAudio(){
  try{
   const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
   carAudioCtx=new AC();carAudioMaster=carAudioCtx.createGain();carAudioMaster.gain.value=0;carAudioMaster.connect(carAudioCtx.destination);
-  const v8Filter=carAudioCtx.createBiquadFilter();v8Filter.type='lowpass';v8Filter.frequency.value=540;v8Filter.connect(carAudioMaster);
-  for(const spec of [{type:'sawtooth',mult:1,gain:.21},{type:'triangle',mult:2,gain:.09},{type:'sine',mult:.5,gain:.27}]){const osc=carAudioCtx.createOscillator(),gain=carAudioCtx.createGain();osc.type=spec.type;osc.frequency.value=28*spec.mult;gain.gain.value=spec.gain;osc.connect(gain);gain.connect(v8Filter);osc.start();v8Voices.push({osc,gain,mult:spec.mult})}
+  const v8Filter=carAudioCtx.createBiquadFilter();v8Filter.type='lowpass';v8Filter.frequency.value=430;v8Filter.connect(carAudioMaster);
+  for(const spec of [{type:'sawtooth',mult:1,gain:.25},{type:'triangle',mult:2,gain:.075},{type:'sine',mult:.5,gain:.31}]){const osc=carAudioCtx.createOscillator(),gain=carAudioCtx.createGain();osc.type=spec.type;osc.frequency.value=18*spec.mult;gain.gain.value=spec.gain;osc.connect(gain);gain.connect(v8Filter);osc.start();v8Voices.push({osc,gain,mult:spec.mult})}
   exhaustNoiseBuffer=carAudioCtx.createBuffer(1,Math.floor(carAudioCtx.sampleRate*.18),carAudioCtx.sampleRate);const exhaustNoise=exhaustNoiseBuffer.getChannelData(0);for(let i=0;i<exhaustNoise.length;i++)exhaustNoise[i]=(Math.random()*2-1)*Math.pow(1-i/exhaustNoise.length,1.7);
   await carAudioCtx.resume();
   // One failed CDN request must not silence every engine sample.
@@ -1159,12 +1161,12 @@ function updateCarAudio(throttle,vehicleSpeed){
  if(audioGear<8&&speed>gearLimits[audioGear]&&now-audioGearShiftAt>.42){audioGear++;audioGearShiftAt=now;triggerExhaustPop(1.8,.015);triggerExhaustPop(1.55,.095);triggerExhaustPop(1.3,.18)}
  else if(audioGear>1&&speed<gearLimits[audioGear-1]*.72&&now-audioGearShiftAt>.55){audioGear--;audioGearShiftAt=now}
  const gearStart=gearLimits[audioGear-1],gearEnd=gearLimits[audioGear],gearProgress=THREE.MathUtils.clamp((speed-gearStart)/Math.max(1,gearEnd-gearStart),0,1);
- const rpm=THREE.MathUtils.clamp(.12+gearProgress*.72+engineThrottleSmooth*.16,0,1),index=rpm*(engineVoices.length-1),lo=Math.floor(index),hi=Math.min(engineVoices.length-1,lo+1),blend=index-lo;
+ const rpm=THREE.MathUtils.clamp(.065+gearProgress*.76+engineThrottleSmooth*.175,0,1),index=rpm*(engineVoices.length-1),lo=Math.floor(index),hi=Math.min(engineVoices.length-1,lo+1),blend=index-lo;
  engineVoices.forEach((v,i)=>{const weight=i===lo?1-blend:i===hi?blend:0;v.gain.gain.setTargetAtTime(weight*(.58+engineThrottleSmooth*.72),now,.075);v.source.playbackRate.setTargetAtTime((.82+i*.046)*(1+rpm*.42),now,.09)});
  const lifted=lastExhaustThrottle>.68&&throttle<.12;
  if(lifted&&speed>10&&now-lastExhaustPopAt>.58){const count=4+Math.floor(Math.random()*3);for(let i=0;i<count;i++)triggerExhaustPop((i===0?1.55:1.18)+Math.random()*.3,i*.085);lastExhaustPopAt=now+.36;lastExhaustCrackleAt=now}
  else if(throttle<.08&&speed>16&&rpm>.32&&now-lastExhaustPopAt>.52&&now-lastExhaustCrackleAt>.25&&Math.random()<.24){triggerExhaustPop(.72+Math.random()*.42);lastExhaustPopAt=now;lastExhaustCrackleAt=now}
- const v8Base=28+rpm*145;v8Voices.forEach(v=>v.osc.frequency.setTargetAtTime(v8Base*v.mult,now,.075));
+ const v8Base=18+rpm*155;v8Voices.forEach(v=>v.osc.frequency.setTargetAtTime(v8Base*v.mult,now,.075));
  lastExhaustThrottle=throttle;
 }
 const radioStations={
@@ -1268,7 +1270,7 @@ $('cameraBtn').onclick=changeCamera;$('garageBtn').onclick=openGarage;$('carStyl
 const controlKeys=new Set(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' ','shift']);addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=true;e.preventDefault()}if(k==='c')changeCamera();if(k==='r')reset();if(e.key==='Escape'){if(garageMode)closeGarage();paused=true;stopCarAudio();stopRadio();$('garage').style.display='none';$('menu').style.display='grid';$('ui').style.display='none';$('help').style.display='none';$('touch').style.display='none';$('driveActions').style.display='none';$('carRadio').style.display='none'}});addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=false;e.preventDefault()}});addEventListener('blur',()=>{for(const k of controlKeys)keys[k]=false});
 function bind(id,k){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;el.setPointerCapture(e.pointerId)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,()=>keys[k]=false))}
 bind('left','a');bind('right','d');bind('gas','w');bind('brake','s');bind('hand',' ');bind('boost','shift');
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(isChromeOS?.94:(mobileQuality?Math.min(devicePixelRatio,.88):Math.min(devicePixelRatio,1)));renderer.setSize(innerWidth,innerHeight);if(garageMode)setGarageCamera()});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(isChromeOS?.96:(mobileQuality?Math.min(devicePixelRatio,.90):Math.min(devicePixelRatio,1)));renderer.setSize(innerWidth,innerHeight);if(garageMode)setGarageCamera()});
 paintMat.color.set($('paint').value);$('paint').addEventListener('input',()=>{paintMat.color.set($('paint').value);applyTune()});camera.position.set(0,8,14);camera.lookAt(0,0,0);
 // Preload the selected imported car while the menu is open, not after entering the garage.
 applyStyle($('carStyle').value);

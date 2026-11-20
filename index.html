@@ -563,8 +563,8 @@ const skidMaterial=new THREE.MeshBasicMaterial({color:0x080a0d,transparent:true,
 const skidMarks=new THREE.InstancedMesh(skidGeometry,skidMaterial,SKID_MAX);
 skidMarks.frustumCulled=false;skidMarks.count=0;scene.add(skidMarks);
 const skidDummy=new THREE.Object3D();let skidIndex=0,skidCount=0,skidEmitTimer=0;
-function addDriftSkid(x,z,yaw){
- skidDummy.position.set(x,.035,z);skidDummy.rotation.set(0,yaw,0);skidDummy.scale.set(1,1,1);skidDummy.updateMatrix();
+function addDriftSkid(x,z,yaw,roadY=0){
+ skidDummy.position.set(x,roadY+.035,z);skidDummy.rotation.set(0,yaw,0);skidDummy.scale.set(1,1,1);skidDummy.updateMatrix();
  skidMarks.setMatrixAt(skidIndex,skidDummy.matrix);skidIndex=(skidIndex+1)%SKID_MAX;
  skidCount=Math.min(skidCount+1,SKID_MAX);skidMarks.count=skidCount;skidMarks.instanceMatrix.needsUpdate=true;
 }
@@ -1410,7 +1410,7 @@ function tick(t){
     skidEmitTimer=0;
     for(const side of [-1,1]){
      const wheelPoint=carRoot.localToWorld(new THREE.Vector3(side*.84,.035,1.42));
-     addDriftSkid(wheelPoint.x,wheelPoint.z,heading+driftAngle*.24);
+     addDriftSkid(wheelPoint.x,wheelPoint.z,heading+driftAngle*.24,carPos.y);
     }
    }
   }else{

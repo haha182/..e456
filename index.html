@@ -382,7 +382,7 @@ const customParts=new THREE.Group();customParts.name='HARRISON_CUSTOM_PARTS';car
 const kitParts=new THREE.Group(),spoilerParts=new THREE.Group(),rimParts=new THREE.Group(),neonParts=new THREE.Group();customParts.add(kitParts,spoilerParts,rimParts,neonParts);
 const aeroMat=new THREE.MeshStandardMaterial({color:0x111820,metalness:.62,roughness:.28});
 const aeroAccent=new THREE.MeshStandardMaterial({color:0x59d9d7,metalness:.5,roughness:.3});
-const rimMat=new THREE.MeshStandardMaterial({color:0xc5cdd1,metalness:.88,roughness:.2});
+const customRimMat=new THREE.MeshStandardMaterial({color:0xc5cdd1,metalness:.88,roughness:.2});
 const neonMat=new THREE.MeshBasicMaterial({color:0x19d9ff,transparent:true,opacity:.28,side:THREE.DoubleSide,depthWrite:false});
 function customBox(parent,w,h,d,x,y,z,material){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.position.set(x,y,z);parent.add(m);return m}
 customBox(kitParts,2.12,.075,.52,0,.39,-2.22,aeroMat);
@@ -399,8 +399,8 @@ const gtWing=new THREE.Group();customBox(gtWing,2.08,.085,.34,0,1.48,1.96,aeroMa
 for(const x of [-.72,.72])customBox(gtWing,.075,.43,.09,x,1.27,1.84,aeroAccent);
 spoilerParts.add(ducktail,gtWing);
 for(const side of [-1,1])for(const z of [-1.42,1.42]){
- const ring=new THREE.Mesh(new THREE.TorusGeometry(.34,.035,8,28),rimMat);ring.rotation.y=Math.PI/2;ring.position.set(side*1.045,.57,z);rimParts.add(ring);
- const hub=new THREE.Mesh(new THREE.TorusGeometry(.105,.018,6,20),rimMat);hub.rotation.y=Math.PI/2;hub.position.set(side*1.052,.57,z);rimParts.add(hub);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(.34,.035,8,28),customRimMat);ring.rotation.y=Math.PI/2;ring.position.set(side*1.045,.57,z);rimParts.add(ring);
+ const hub=new THREE.Mesh(new THREE.TorusGeometry(.105,.018,6,20),customRimMat);hub.rotation.y=Math.PI/2;hub.position.set(side*1.052,.57,z);rimParts.add(hub);
 }
 const glow=new THREE.Mesh(new THREE.PlaneGeometry(3.45,4.25),neonMat);glow.rotation.x=-Math.PI/2;glow.position.y=.055;neonParts.add(glow);
 for(const side of [-1,1]){const strip=new THREE.Mesh(new THREE.BoxGeometry(.035,.025,3.3),neonMat);strip.position.set(side*1.02,.10,0);neonParts.add(strip)}
@@ -412,7 +412,7 @@ function applyCustomizations(){
  const tint=Number($('windowTint')?.value??localStorage.hcg_windowTint??35);
  kitParts.visible=kit!=='factory';kitParts.children.forEach((o,i)=>{o.visible=kit==='widebody'||kit==='track'||(kit==='street'&&i<7)});
  spoilerParts.visible=true;ducktail.visible=spoiler==='ducktail';gtWing.visible=spoiler==='gtwing';
- rimMat.color.set(({silver:'#c5cdd1',black:'#101419',gold:'#d6a52d',bronze:'#95613b'})[finish]||'#c5cdd1');
+ customRimMat.color.set(({silver:'#c5cdd1',black:'#101419',gold:'#d6a52d',bronze:'#95613b'})[finish]||'#c5cdd1');
  neonMat.color.set(neon);neonParts.visible=!!(localStorage.hcg_neonEnabled??'1');
  const label=$('windowTintVal');if(label)label.textContent=tint+'%';
  const chosen=$('carStyle')?.value||localStorage.hcgStyle||'spectral_gt';

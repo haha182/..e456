@@ -1088,7 +1088,7 @@ function makeEndlessRoadChunk(start,initialHeading){
    positions.push(points[i].x+rx*side*8,points[i].y+.025,points[i].z+rz*side*8);
    uv.push(side===-1?0:1,i/2);
   }
-  if(i<points.length-1){const k=i*2;indices.push(k,k+1,k+2,k+1,k+3,k+2)}
+  if(i<points.length-1){const k=i*2;indices.push(k,k+2,k+1,k+1,k+2,k+3)}
  }
  const geo=new THREE.BufferGeometry();
  geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
@@ -1109,12 +1109,12 @@ function makeEndlessRoadChunk(start,initialHeading){
   for(let i=0;i<steps;i+=2){
    const p=points[i],q=points[i+2],mid=p.clone().add(q).multiplyScalar(.5);
    const dx=q.x-p.x,dz=q.z-p.z,yaw=Math.atan2(-dx,-dz);
-   const rail=new THREE.Mesh(new THREE.BoxGeometry(29,.48,.16),endlessRoadMaterials.rail);
+   const rail=new THREE.Mesh(new THREE.BoxGeometry(.16,.48,29),endlessRoadMaterials.rail);
    rail.position.set(mid.x,mid.y+.72,mid.z);rail.rotation.y=yaw;group.add(rail);
    for(const j of [0,2]){
     const at=p.clone().lerp(q,j/2);
     const post=new THREE.Mesh(new THREE.BoxGeometry(.16,.72,.18),endlessRoadMaterials.rail);
-    post.position.set(at.x+Math.cos(angle)*side*8,at.y+.34,at.z-Math.sin(angle)*side*8);group.add(post);
+    post.position.set(at.x+Math.cos(yaw)*side*8,at.y+.34,at.z-Math.sin(yaw)*side*8);group.add(post);
    }
   }
  }

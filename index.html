@@ -79,7 +79,7 @@ body>canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;touch-action
 <label><span>FRONT HEIGHT: <b id="frontHeightVal">-6 cm</b></span><input id="frontHeight" type="range" min="-12" max="5" step=".5" value="-6"></label>
 <label><span>REAR HEIGHT: <b id="rearHeightVal">+1 cm</b></span><input id="rearHeight" type="range" min="-12" max="8" step=".5" value="1"></label>
 <label><span>BRAKE PRESSURE: <b id="brakePressureVal">100%</b></span><input id="brakePressure" type="range" min="50" max="120" value="100"></label>
-<label><span>PAINT</span><input id="paint" type="color" value="#bfc7ce"></label><label><span>SELECT CAR</span><select id="carStyle"><option value="bmw_m4">2021 BMW M4 Competition</option><option value="bmw_e46">BMW M3 E46 (classic)</option></select></label></div>
+<label><span>PAINT</span><input id="paint" type="color" value="#bfc7ce"></label><label><span>SELECT CAR</span><select id="carStyle"><option value="bmw_m4">2021 BMW M4 Competition</option><option value="bmw_e46">BMW M3 E46 (classic)</option><option value="spectral_gt">Spectral GT RS (CC0)</option></select></label></div>
 <h2>TUNING</h2><div class="garage-actions"><button class="primary" id="saveGarage">SAVE BUILD</button></div></div></div>
 <div id="ui"><div class="cockpit"><div class="cockpit-brand">HARRISON MOTORSPORT <b id="carLabel">BMW M3 E46</b></div><div class="speed-cluster"><svg viewBox="0 0 220 145" role="img" aria-label="Speedometer"><path d="M24 119 A86 86 0 0 1 196 119" fill="none" stroke="#233b4a" stroke-width="13" stroke-linecap="round"/><path id="speedArc" d="M24 119 A86 86 0 0 1 196 119" fill="none" stroke="#56e8e2" stroke-width="5" stroke-linecap="round" stroke-dasharray="270" stroke-dashoffset="270"/><g fill="#d9edf5" font-size="10" text-anchor="middle"><text x="29" y="112">0</text><text x="48" y="64">40</text><text x="83" y="37">80</text><text x="137" y="37">120</text><text x="174" y="64">160</text><text x="191" y="112">200</text></g><text x="110" y="91" text-anchor="middle" fill="#fff" font-size="34" font-weight="700" id="speed">0</text><text x="110" y="108" text-anchor="middle" fill="#8faab8" font-size="10" letter-spacing="2">KM/H</text></svg></div><div class="drift-cluster"><span>DRIFT SCORE</span><b id="score">0</b><span>COMBO <b id="combo">x1</b></span></div></div></div>
 <div id="help">WASD / arrows: drive & steer<br>SPACE: handbrake · SHIFT: boost · R: reset<br>C: change camera</div><div id="driveActions" style="position:fixed;right:12px;top:72px;z-index:4;pointer-events:auto"><button id="cameraBtn">CAMERA</button><button id="garageBtn">GARAGE</button></div>
@@ -88,6 +88,7 @@ body>canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;touch-action
 <script type="module">
 import * as THREE from 'three';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/FBXLoader.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
 const gameError=document.getElementById('gameError');
 function showGameError(message){if(gameError){gameError.textContent=message;gameError.style.display='block'}}
@@ -322,12 +323,13 @@ for(const x of [-.235,.235]){const surround=new THREE.Mesh(new THREE.BoxGeometry
 const haloMat=new THREE.MeshBasicMaterial({color:0xeaf5ff});
 for(const x of [-.76,-.48,.48,.76]){const lamp=new THREE.Mesh(new THREE.TorusGeometry(.075,.018,8,24),haloMat);lamp.position.set(x,.91,-2.325);bmwDetails.add(lamp);const lens=new THREE.Mesh(new THREE.CircleGeometry(.065,24),new THREE.MeshBasicMaterial({color:0xc9e5f2}));lens.position.set(x,.91,-2.33);bmwDetails.add(lens)}
 const bmwBadge=new THREE.Mesh(new THREE.CircleGeometry(.075,24),mat(0xdce5e9,.35,.7));bmwBadge.position.set(0,.91,-2.34);bmwDetails.add(bmwBadge);
-function applyStyle(style){const useM4=style==='bmw_m4'&&m4Ready;e46.visible=!useM4;m4Model.visible=useM4;body.scale.set(1.02,1,1.02);cabin.scale.set(1,1,1);rearSpoiler.visible=false;frontLip.visible=true;bmwDetails.visible=style==="bmw_e46";$("carLabel").textContent=useM4?"BMW M4 COMPETITION":"BMW M3 E46"}
+function applyStyle(style){const useGT=style==='spectral_gt'&&spectralReady,useM4=style==='bmw_m4'&&m4Ready;e46.visible=!useM4&&!useGT;m4Model.visible=useM4;spectralModel.visible=useGT;body.scale.set(1.02,1,1.02);cabin.scale.set(1,1,1);rearSpoiler.visible=false;frontLip.visible=true;bmwDetails.visible=style==="bmw_e46";$("carLabel").textContent=useGT?'SPECTRAL GT RS':useM4?'BMW M4 COMPETITION':'BMW M3 E46';if(style==='spectral_gt'&&!spectralReady)toast('Spectral GT is still loading');}
 
 // REBUILT BMW E46 M3: replace the placeholder silhouette with a complete, separate model.
 for(const child of carRoot.children) child.visible=false;
 const e46=new THREE.Group();carRoot.add(e46);wheels.length=0;
 const m4Model=new THREE.Group();carRoot.add(m4Model);m4Model.visible=false;let m4Ready=false;
+const spectralModel=new THREE.Group();carRoot.add(spectralModel);spectralModel.visible=false;let spectralReady=false,spectralMixer=null,spectralClips=[];
 const e46Paint=new THREE.MeshPhysicalMaterial({color:paintMat.color.clone(),metalness:.58,roughness:.19,clearcoat:1,clearcoatRoughness:.08}), e46Glass=new THREE.MeshPhysicalMaterial({color:0x142b39,metalness:.18,roughness:.10,clearcoat:1,transparent:true,opacity:.58,depthWrite:false}), e46Rubber=mat(0x090b0e,.9), e46Dark=mat(0x11171c,.55,.35), e46Metal=mat(0x9ba6aa,.25,.85), e46Red=new THREE.MeshStandardMaterial({color:0xc51620,emissive:0x4b0000}), e46White=new THREE.MeshPhysicalMaterial({color:0xeaf4ff,emissive:0x7893a8,emissiveIntensity:.45,roughness:.12});
 function e46Profile(points,width,material,bevel=.035){const s=new THREE.Shape();s.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)s.lineTo(points[i][0],points[i][1]);s.closePath();const g=new THREE.ExtrudeGeometry(s,{depth:width,bevelEnabled:bevel>0,bevelSegments:3,steps:1,bevelSize:bevel,bevelThickness:bevel,curveSegments:10});g.translate(0,0,-width/2);g.rotateY(-Math.PI/2);const m=new THREE.Mesh(g,material);m.castShadow=true;m.receiveShadow=true;e46.add(m);return m}
 function e46Box(w,h,d,x,y,z,material,bevel=0){let g=new THREE.BoxGeometry(w,h,d);if(bevel){g=new THREE.BoxGeometry(w,h,d,1,1,1)}const m=new THREE.Mesh(g,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;e46.add(m);return m}
@@ -468,7 +470,19 @@ m4Loader.load('./assets/bmw-m4/source/BMW%20M4%202021%20v1.fbx',object=>{
  object.traverse(child=>{if(child.isMesh){child.castShadow=true;child.receiveShadow=true}});
  m4Model.add(object);m4Ready=true;finishLoading();const selected=localStorage.hcgStyle||'bmw_m4';$('carStyle').value=selected;applyStyle(selected);applyTune();toast('2021 BMW M4 Competition loaded');
 },undefined,error=>{console.error('BMW M4 model could not be loaded:',error);finishLoading();toast('BMW M4 files missing — classic BMW kept as fallback')});
-// Apply garage tuning to the actual E46 model and driving physics.
+// Load the CC0 Spectral GT RS GLB from its original public repository.
+const spectralLoader=new GLTFLoader();
+spectralLoader.load('https://raw.githubusercontent.com/JaronKBragg7337/spectral-gt-rs/main/spectral_gt_rs_game_ready.glb',gltf=>{
+ const model=gltf.scene;model.rotation.y=-Math.PI/2;model.updateMatrixWorld(true);
+ let bounds=new THREE.Box3().setFromObject(model),dims=bounds.getSize(new THREE.Vector3());
+ const longest=Math.max(dims.x,dims.z);if(!longest)throw new Error('Spectral GT model has no measurable geometry');
+ model.scale.setScalar(4.65/longest);model.updateMatrixWorld(true);bounds.setFromObject(model);model.position.y-=bounds.min.y;
+ model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(Array.isArray(o.material))o.material=o.material.map(m=>m.clone());else if(o.material)o.material=o.material.clone();}});
+ spectralModel.add(model);spectralClips=gltf.animations||[];spectralMixer=spectralClips.length?new THREE.AnimationMixer(model):null;
+ const steeringClip=spectralClips.find(a=>a.name.toLowerCase().includes('steering'));if(steeringClip&&spectralMixer)spectralMixer.clipAction(steeringClip).play();
+ spectralReady=true;if($('carStyle').value==='spectral_gt')applyStyle('spectral_gt');toast('Spectral GT RS loaded');
+},undefined,error=>{console.error('Spectral GT RS load failed:',error);toast('Spectral GT download failed — check connection');});
+// Apply garage tuning to the selected car and driving physics.
 function applyTune(){
  const value=id=>Number($(id)?.value ?? localStorage['hcg_'+id] ?? ({turbo:14.3,frontCamber:-5,rearCamber:-1,frontOffset:5,rearOffset:3,brakeBalance:70,frontHeight:-6,rearHeight:1,brakePressure:100}[id]));
  const frontH=value('frontHeight'),rearH=value('rearHeight');
@@ -591,6 +605,7 @@ function tick(t){
   const camAlpha=1-Math.exp(-5.2*dt);
   camera.position.lerp(desiredCam,camAlpha);cameraLook.lerp(desiredLook,1-Math.exp(-6.5*dt));camera.lookAt(cameraLook);
  }
+ if(spectralMixer)spectralMixer.update(dt);
  renderer.render(scene,camera);
 }
 requestAnimationFrame(tick);

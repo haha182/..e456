@@ -1162,6 +1162,16 @@ requestAnimationFrame(tick);
 // Recorded engine audio: CC0 racing-car loops from OpenGameArt.
 // https://opengameart.org/content/racing-car-engine-sound-loops
 const ENGINE_SAMPLE_URLS=['https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_1_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_2_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_3_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_4_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_5.wav'];
+const CAR_AUDIO_PROFILES={
+ hot_hatch:{idle:15.5,pitch:.94,harmonics:[.28,.09,.24],pop:1.12,shift:1.15},
+ roadster:{idle:13.5,pitch:1.02,harmonics:[.31,.105,.27],pop:1.28,shift:1.22},
+ grand_tourer:{idle:12.5,pitch:.88,harmonics:[.34,.12,.29],pop:1.35,shift:1.2},
+ compact_suv:{idle:16.5,pitch:.91,harmonics:[.27,.085,.23],pop:1.08,shift:1.08},
+ coupe:{idle:14,pitch:1.06,harmonics:[.3,.1,.25],pop:1.25,shift:1.18},
+ mid_engine:{idle:11.5,pitch:1.18,harmonics:[.36,.13,.3],pop:1.48,shift:1.32},
+ jdm_coupe:{idle:17,pitch:1.12,harmonics:[.25,.075,.22],pop:1.32,shift:1.24}
+};
+function currentCarAudioProfile(){return CAR_AUDIO_PROFILES[localStorage.hcgStyle]||CAR_AUDIO_PROFILES.hot_hatch}
 let carAudioCtx=null,carAudioMaster=null,engineVoices=[],v8Voices=[],engineAudioReady=false,engineAudioLoading=false,engineAudioWanted=false,engineThrottleSmooth=0,engineSpeedSmooth=0,audioGear=1,audioGearShiftAt=0,exhaustNoiseBuffer=null,tireSquealSource=null,tireSquealGain=null,tireSquealFilter=null,lastExhaustThrottle=0,lastExhaustPopAt=0,lastExhaustCrackleAt=0,exhaustFlameUntil=0;
 async function initCarAudio(){
  engineAudioWanted=true;
@@ -1172,7 +1182,7 @@ async function initCarAudio(){
   const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
   carAudioCtx=new AC();carAudioMaster=carAudioCtx.createGain();carAudioMaster.gain.value=0;carAudioMaster.connect(carAudioCtx.destination);
   const v8Filter=carAudioCtx.createBiquadFilter();v8Filter.type='lowpass';v8Filter.frequency.value=430;v8Filter.connect(carAudioMaster);
-  for(const spec of [{type:'sawtooth',mult:1,gain:.25},{type:'triangle',mult:2,gain:.075},{type:'sine',mult:.5,gain:.31}]){const osc=carAudioCtx.createOscillator(),gain=carAudioCtx.createGain();osc.type=spec.type;osc.frequency.value=18*spec.mult;gain.gain.value=spec.gain;osc.connect(gain);gain.connect(v8Filter);osc.start();v8Voices.push({osc,gain,mult:spec.mult})}
+  for(const spec of [{type:'sawtooth',mult:1,gain:.25},{type:'triangle',mult:2,gain:.075},{type:'sine',mult:.5,gain:.31}]){const osc=carAudioCtx.createOscillator(),gain=carAudioCtx.createGain();osc.type=spec.type;osc.frequency.value=15*spec.mult;gain.gain.value=spec.gain;osc.connect(gain);gain.connect(v8Filter);osc.start();v8Voices.push({osc,gain,mult:spec.mult})}
   exhaustNoiseBuffer=carAudioCtx.createBuffer(1,Math.floor(carAudioCtx.sampleRate*.18),carAudioCtx.sampleRate);const exhaustNoise=exhaustNoiseBuffer.getChannelData(0);for(let i=0;i<exhaustNoise.length;i++)exhaustNoise[i]=(Math.random()*2-1)*Math.pow(1-i/exhaustNoise.length,1.7);
   tireSquealSource=carAudioCtx.createBufferSource();tireSquealSource.buffer=exhaustNoiseBuffer;tireSquealSource.loop=true;tireSquealFilter=carAudioCtx.createBiquadFilter();tireSquealFilter.type='bandpass';tireSquealFilter.frequency.value=1350;tireSquealFilter.Q.value=.65;tireSquealGain=carAudioCtx.createGain();tireSquealGain.gain.value=0;tireSquealSource.connect(tireSquealFilter);tireSquealFilter.connect(tireSquealGain);tireSquealGain.connect(carAudioMaster);tireSquealSource.start();
   await carAudioCtx.resume();
@@ -1208,13 +1218,13 @@ function triggerExhaustPop(intensity=1,delay=0){
  // A short, sharp broadband crack gives the exhaust pop a punchy gunshot-like report.
  const crack=carAudioCtx.createBufferSource(),crackGain=carAudioCtx.createGain(),crackFilter=carAudioCtx.createBiquadFilter();
  crack.buffer=exhaustNoiseBuffer;crackFilter.type='highpass';crackFilter.frequency.setValueAtTime(1450+Math.random()*850,now);crackFilter.Q.value=.65;
- crackGain.gain.setValueAtTime(.0001,now);crackGain.gain.exponentialRampToValueAtTime(.72*level,now+.0015);crackGain.gain.exponentialRampToValueAtTime(.0001,now+.052);
+ crackGain.gain.setValueAtTime(.0001,now);crackGain.gain.exponentialRampToValueAtTime(1.05*level,now+.001);crackGain.gain.exponentialRampToValueAtTime(.0001,now+.068);
  crack.connect(crackFilter);crackFilter.connect(crackGain);crackGain.connect(carAudioMaster);crack.start(now);crack.stop(now+.06);
  // Add a compact low-end thump underneath the crack, rather than a long soft limiter-like burble.
  const body=carAudioCtx.createOscillator(),bodyGain=carAudioCtx.createGain(),bodyFilter=carAudioCtx.createBiquadFilter();
  body.type='sawtooth';body.frequency.setValueAtTime(105+Math.random()*25,now);body.frequency.exponentialRampToValueAtTime(42,now+.055);
  bodyFilter.type='lowpass';bodyFilter.frequency.setValueAtTime(620,now);bodyFilter.frequency.exponentialRampToValueAtTime(190,now+.06);
- bodyGain.gain.setValueAtTime(.0001,now);bodyGain.gain.exponentialRampToValueAtTime(.34*level,now+.002);bodyGain.gain.exponentialRampToValueAtTime(.0001,now+.065);
+ bodyGain.gain.setValueAtTime(.0001,now);bodyGain.gain.exponentialRampToValueAtTime(.58*level,now+.0015);bodyGain.gain.exponentialRampToValueAtTime(.0001,now+.082);
  body.connect(bodyFilter);bodyFilter.connect(bodyGain);bodyGain.connect(carAudioMaster);body.start(now);body.stop(now+.07);
 }
 function updateCarAudio(throttle,vehicleSpeed,slipAngle=0){
@@ -1222,16 +1232,16 @@ function updateCarAudio(throttle,vehicleSpeed,slipAngle=0){
  engineThrottleSmooth+=(throttle-engineThrottleSmooth)*.13;engineSpeedSmooth+=(Math.abs(vehicleSpeed)-engineSpeedSmooth)*.09;
  const speed=Math.abs(vehicleSpeed),now=carAudioCtx.currentTime;
  if(tireSquealGain){const squeal=THREE.MathUtils.clamp((Math.abs(slipAngle)-.13)*1.65,0,1)*THREE.MathUtils.clamp(speed/22,0,1);tireSquealGain.gain.setTargetAtTime(squeal*.20,now,.055);tireSquealFilter.frequency.setTargetAtTime(950+Math.min(900,speed*8),now,.08)}
- const gearLimits=[0,9,18,28,39,51,64,77,92];
- if(audioGear<8&&speed>gearLimits[audioGear]&&now-audioGearShiftAt>.42){audioGear++;audioGearShiftAt=now;triggerExhaustPop(1.8,.015);triggerExhaustPop(1.55,.095);triggerExhaustPop(1.3,.18)}
+ const profile=currentCarAudioProfile(),gearLimits=[0,9,18,28,39,51,64,77,92];
+ if(audioGear<8&&speed>gearLimits[audioGear]&&now-audioGearShiftAt>.42){audioGear++;audioGearShiftAt=now;triggerExhaustPop(1.8*profile.shift,.015);triggerExhaustPop(1.65*profile.shift,.095);triggerExhaustPop(1.45*profile.shift,.18)}
  else if(audioGear>1&&speed<gearLimits[audioGear-1]*.72&&now-audioGearShiftAt>.55){audioGear--;audioGearShiftAt=now}
  const gearStart=gearLimits[audioGear-1],gearEnd=gearLimits[audioGear],gearProgress=THREE.MathUtils.clamp((speed-gearStart)/Math.max(1,gearEnd-gearStart),0,1);
  const rpm=THREE.MathUtils.clamp(.065+gearProgress*.76+engineThrottleSmooth*.175,0,1),index=rpm*(engineVoices.length-1),lo=Math.floor(index),hi=Math.min(engineVoices.length-1,lo+1),blend=index-lo;
- engineVoices.forEach((v,i)=>{const weight=i===lo?1-blend:i===hi?blend:0;v.gain.gain.setTargetAtTime(weight*(.58+engineThrottleSmooth*.72),now,.075);v.source.playbackRate.setTargetAtTime((.82+i*.046)*(1+rpm*.42),now,.09)});
+ engineVoices.forEach((v,i)=>{const weight=i===lo?1-blend:i===hi?blend:0;v.gain.gain.setTargetAtTime(weight*(.58+engineThrottleSmooth*.72),now,.075);v.source.playbackRate.setTargetAtTime((.82+i*.046)*(1+rpm*.42)*profile.pitch,now,.09)});
  const lifted=lastExhaustThrottle>.68&&throttle<.12;
- if(lifted&&speed>10&&now-lastExhaustPopAt>.58){const count=4+Math.floor(Math.random()*3);for(let i=0;i<count;i++)triggerExhaustPop((i===0?1.55:1.18)+Math.random()*.3,i*.085);lastExhaustPopAt=now+.36;lastExhaustCrackleAt=now}
- else if(throttle<.08&&speed>16&&rpm>.32&&now-lastExhaustPopAt>.52&&now-lastExhaustCrackleAt>.25&&Math.random()<.24){triggerExhaustPop(.72+Math.random()*.42);lastExhaustPopAt=now;lastExhaustCrackleAt=now}
- const v8Base=18+rpm*155;v8Voices.forEach(v=>v.osc.frequency.setTargetAtTime(v8Base*v.mult,now,.075));
+ if(lifted&&speed>10&&now-lastExhaustPopAt>.58){const count=4+Math.floor(Math.random()*3);for(let i=0;i<count;i++)triggerExhaustPop(((i===0?1.55:1.25)+Math.random()*.3)*profile.pop,i*.082);lastExhaustPopAt=now+.36;lastExhaustCrackleAt=now}
+ else if(throttle<.08&&speed>16&&rpm>.32&&now-lastExhaustPopAt>.52&&now-lastExhaustCrackleAt>.25&&Math.random()<.24){triggerExhaustPop((.9+Math.random()*.42)*profile.pop);lastExhaustPopAt=now;lastExhaustCrackleAt=now}
+ const v8Base=profile.idle+rpm*(profile.idle*7.6);v8Voices.forEach((v,i)=>{v.osc.frequency.setTargetAtTime(v8Base*v.mult*profile.pitch,now,.075);v.gain.gain.setTargetAtTime(profile.harmonics[i]||.1,now,.12)});
  lastExhaustThrottle=throttle;
 }
 const radioStations={

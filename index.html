@@ -1147,11 +1147,17 @@ function stopCarAudio(){engineAudioWanted=false;if(engineAudioReady&&carAudioCtx
 function triggerExhaustPop(intensity=1,delay=0){
  if(!engineAudioReady||!carAudioCtx||carAudioCtx.state!=='running'||!engineAudioWanted||!exhaustNoiseBuffer)return;
  const now=carAudioCtx.currentTime+delay,level=THREE.MathUtils.clamp(intensity,.45,1.8);exhaustFlameUntil=Math.max(exhaustFlameUntil,performance.now()+delay*1000+145);
- const osc=carAudioCtx.createOscillator(),og=carAudioCtx.createGain(),filter=carAudioCtx.createBiquadFilter();
- osc.type='sawtooth';osc.frequency.setValueAtTime(112+Math.random()*35,now);osc.frequency.exponentialRampToValueAtTime(43+Math.random()*12,now+.105);
- og.gain.setValueAtTime(.0001,now);og.gain.exponentialRampToValueAtTime(.39*level,now+.008);og.gain.exponentialRampToValueAtTime(.0001,now+.14);
- filter.type='lowpass';filter.frequency.setValueAtTime(1050,now);filter.frequency.exponentialRampToValueAtTime(260,now+.13);osc.connect(filter);filter.connect(og);og.connect(carAudioMaster);osc.start(now);osc.stop(now+.15);
- const noise=carAudioCtx.createBufferSource(),ng=carAudioCtx.createGain(),nf=carAudioCtx.createBiquadFilter();noise.buffer=exhaustNoiseBuffer;nf.type='bandpass';nf.frequency.setValueAtTime(780+Math.random()*600,now);nf.Q.value=.7;ng.gain.setValueAtTime(.0001,now);ng.gain.exponentialRampToValueAtTime(.27*level,now+.004);ng.gain.exponentialRampToValueAtTime(.0001,now+.105);noise.connect(nf);nf.connect(ng);ng.connect(carAudioMaster);noise.start(now);noise.stop(now+.11);
+ // A short, sharp broadband crack gives the exhaust pop a punchy gunshot-like report.
+ const crack=carAudioCtx.createBufferSource(),crackGain=carAudioCtx.createGain(),crackFilter=carAudioCtx.createBiquadFilter();
+ crack.buffer=exhaustNoiseBuffer;crackFilter.type='highpass';crackFilter.frequency.setValueAtTime(1450+Math.random()*850,now);crackFilter.Q.value=.65;
+ crackGain.gain.setValueAtTime(.0001,now);crackGain.gain.exponentialRampToValueAtTime(.72*level,now+.0015);crackGain.gain.exponentialRampToValueAtTime(.0001,now+.052);
+ crack.connect(crackFilter);crackFilter.connect(crackGain);crackGain.connect(carAudioMaster);crack.start(now);crack.stop(now+.06);
+ // Add a compact low-end thump underneath the crack, rather than a long soft limiter-like burble.
+ const body=carAudioCtx.createOscillator(),bodyGain=carAudioCtx.createGain(),bodyFilter=carAudioCtx.createBiquadFilter();
+ body.type='sawtooth';body.frequency.setValueAtTime(105+Math.random()*25,now);body.frequency.exponentialRampToValueAtTime(42,now+.055);
+ bodyFilter.type='lowpass';bodyFilter.frequency.setValueAtTime(620,now);bodyFilter.frequency.exponentialRampToValueAtTime(190,now+.06);
+ bodyGain.gain.setValueAtTime(.0001,now);bodyGain.gain.exponentialRampToValueAtTime(.34*level,now+.002);bodyGain.gain.exponentialRampToValueAtTime(.0001,now+.065);
+ body.connect(bodyFilter);bodyFilter.connect(bodyGain);bodyGain.connect(carAudioMaster);body.start(now);body.stop(now+.07);
 }
 function updateCarAudio(throttle,vehicleSpeed){
  if(!engineAudioReady||!carAudioCtx||carAudioCtx.state!=='running'||!engineAudioWanted)return;

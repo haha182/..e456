@@ -673,7 +673,17 @@ const drakeTracks=[
  {id:'uxpDa-c-4Mc',title:'Hotline Bling'},
  {id:'U9BwWKXjVaI',title:'Nice For What'},
  {id:'JFm7YDVlqnI',title:'Laugh Now Cry Later'},
- {id:'vcer12OFU2g',title:'One Dance (Live)'}
+ {id:'vcer12OFU2g',title:'One Dance (Live)'},
+ {id:'DRS_PpOrUZ4',title:'In My Feelings'},
+ {id:'xWggTb45brM',title:'Toosie Slide'},
+ {id:'-zzP29emgpg',title:'Take Care'},
+ {id:'COz9lDCFHjw',title:'Passionfruit'},
+ {id:'KnkDL9lkbX8',title:"Hold On, We're Going Home"},
+ {id:'PsW85VbSau0',title:'Controlla'},
+ {id:'7LnBvuzjpr4',title:'Energy'},
+ {id:'lJTRVX9R5EA',title:'Nonstop'},
+ {id:'rIhx2wZ8jnA',title:"I'm Upset"},
+ {id:'U5pzmGX8Ztg',title:'Worst Behavior'}
 ];
 let ytPlayer=null,ytApiLoading=false,ytReady=false,radioWanted=false,radioOrder=[],radioIndex=-1,radioHistory=[];
 function shuffledRadioOrder(exclude=''){const ids=drakeTracks.map((t,i)=>i).filter(i=>drakeTracks[i].id!==exclude);for(let i=ids.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]]}return ids}

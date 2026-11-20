@@ -262,7 +262,7 @@ const perfPanel=document.createElement('div');perfPanel.id='perfPanel';perfPanel
 let perfFrames=0,perfWindowStart=performance.now(),perfLastUpdate=0;
 // Adaptive render resolution: preserve full quality when the GPU has headroom,
 // then lower pixel density gradually during sustained slow frames instead of stuttering.
-const devicePixelRatioCap=isChromeOS? .78:(mobileQuality?Math.min(devicePixelRatio,.9):Math.min(devicePixelRatio,1.2));
+const devicePixelRatioCap=isChromeOS? .88:(mobileQuality?Math.min(devicePixelRatio,.9):Math.min(devicePixelRatio,1.2));
 let adaptivePixelRatio=devicePixelRatioCap,qualitySampleStart=performance.now(),qualitySampleFrames=0;
 function applyAdaptivePixelRatio(){
  const garageCap=garageMode?Math.min(devicePixelRatioCap,.78):devicePixelRatioCap;
@@ -273,7 +273,7 @@ window.addEventListener('keydown',e=>{if(e.code==='F3'&&!e.repeat){perfPanel.sty
 
 // Defer desktop-only reflection generation so it cannot delay the first page load.
 {
- if(isChromeOS){scene.environmentIntensity=.32}
+ if(isChromeOS){scene.environmentIntensity=.5}
  else{
   const buildStudioReflections=async()=>{
    try{
@@ -299,7 +299,7 @@ const ground=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),new THREE.MeshBas
 const driveGameTrack=new DriveGameTrack(DRIVE_GAME_TRACK);
 const pts=DRIVE_GAME_TRACK.points.map(p=>new THREE.Vector3(p[0],p[1],p[2]));
 const curve=new THREE.CatmullRomCurve3(pts,true,'centripetal');
-const driveGameWorld=buildDriveGameWorld(scene,driveGameTrack,{trees:isChromeOS?.09:(mobileQuality?.12:.16),aniso:isChromeOS?1:(mobileQuality?2:4),nord:true});
+const driveGameWorld=buildDriveGameWorld(scene,driveGameTrack,{trees:isChromeOS?.09:(mobileQuality?.12:.16),aniso:isChromeOS?2:(mobileQuality?2:4),nord:true});
 driveGameWorld.streetlights.group.visible=true;
 // Drive Game's buildWorld() now supplies the textured road, curbs, grass aprons,
  // PBR guardrails, rail posts, forest, signs, road furniture and night lamps.
@@ -392,7 +392,7 @@ function setWorldTime(mode){
  const presets={
   day:{bg:0x83c9f2,fog:0x9bc9df,top:0x2877bd,horizon:0xc7e7f4,hemi:1.05,moon:1.45,hemiSky:0xb9e7ff,hemiGround:0x526044,light:0xfff0d7,stars:0,exposure:1.22},
   sunset:{bg:0xf18b59,fog:0xd98b70,top:0x542c65,horizon:0xffa06b,hemi:.72,moon:1.05,hemiSky:0xffa477,hemiGround:0x302334,light:0xff9b62,stars:.08,exposure:1.16},
-  night:{bg:0x050914,fog:0x091323,top:0x02040d,horizon:0x101d32,hemi:.34,moon:.82,hemiSky:0x243b68,hemiGround:0x080b13,light:0xb9d0ff,stars:.94,exposure:1.12},
+  night:{bg:0x050914,fog:0x091323,top:0x02040d,horizon:0x101d32,hemi:.42,moon:.92,hemiSky:0x243b68,hemiGround:0x080b13,light:0xb9d0ff,stars:.94,exposure:1.18},
   galaxy:{bg:0x08051d,fog:0x100b2d,top:0x08031f,horizon:0x38205e,hemi:.42,moon:.58,hemiSky:0x594b9c,hemiGround:0x090719,light:0xb7a5ff,stars:1,exposure:1.18}
  };
  const p=presets[currentWorldTime];
@@ -1677,7 +1677,7 @@ addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){
 addEventListener('blur',()=>{for(const k of controlKeys)keys[k]=false});
 function bind(id,k){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;el.setPointerCapture(e.pointerId)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,()=>keys[k]=false))}
 bind('left','a');bind('right','d');bind('gas','w');bind('brake','s');bind('hand',' ');bind('boost','shift');
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(isChromeOS?1.05:(mobileQuality?Math.min(devicePixelRatio,1.12):Math.min(devicePixelRatio,1.35)));renderer.setSize(innerWidth,innerHeight);if(garageMode)setGarageCamera()});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();adaptivePixelRatio=Math.min(adaptivePixelRatio,devicePixelRatioCap);applyAdaptivePixelRatio();renderer.setSize(innerWidth,innerHeight,false);if(garageMode)setGarageCamera()});
 paintMat.color.set($('paint').value);$('paint').addEventListener('input',()=>{paintMat.color.set($('paint').value);applyTune()});
 camera.position.set(0,8,14);camera.lookAt(0,0,0);
 // Defer optional imported-car loading until the player opens the garage or starts driving.

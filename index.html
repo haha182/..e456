@@ -291,22 +291,26 @@ const treeTrunkGeo=new THREE.CylinderGeometry(.35,.55,3.8,6),treeCrownGeo=new TH
 const treeTrunks=new THREE.InstancedMesh(treeTrunkGeo,trunkMat,treeCount),treeCrowns=new THREE.InstancedMesh(treeCrownGeo,leafMat,treeCount);
 treeTrunks.instanceMatrix.setUsage(THREE.StaticDrawUsage);treeCrowns.instanceMatrix.setUsage(THREE.StaticDrawUsage);
 const treeDummy=new THREE.Object3D(),treeColor=new THREE.Color();
+// Sample every drivable route once; scenery is only placed well beyond the road shoulder.
+const treeRoadSamples=[];for(const road of forestRoutes)for(let s=0;s<=240;s+=3){const q=road.getPointAt(s/240);treeRoadSamples.push([q.x,q.z])}
+let placedTrees=0;
 for(let i=0;i<treeCount;i++){
  const route=forestRoutes[i%forestRoutes.length],t=((Math.floor(i/forestRoutes.length)*.61803398875+i*.137)%1);
  const p=route.getPointAt(t),tan=route.getTangentAt(t),side=new THREE.Vector3(-tan.z,0,tan.x).normalize();
  const sign=i%2?1:-1,offset=18+(i*29%58),along=((i*17)%13)-6;
  const x=p.x+side.x*offset*sign+tan.x*along,z=p.z+side.z*offset*sign+tan.z*along;
- addWorldCollider(x,z,.65,.65);
- treeDummy.position.set(x,1.9,z);treeDummy.rotation.y=(i%17)*.37;treeDummy.updateMatrix();treeTrunks.setMatrixAt(i,treeDummy.matrix);
- treeDummy.position.set(x,7,z);treeDummy.scale.setScalar(.88+(i%5)*.06);treeDummy.updateMatrix();treeCrowns.setMatrixAt(i,treeDummy.matrix);
- treeColor.set(i%3===0?0x172a25:(i%3===1?0x10231e:0x1d3028));treeCrowns.setColorAt(i,treeColor);
+ let roadClearance=Infinity;for(const q of treeRoadSamples){const d=Math.hypot(x-q[0],z-q[1]);if(d<roadClearance)roadClearance=d;if(roadClearance<23)break}if(roadClearance<23)continue;
+ const ti=placedTrees++;addWorldCollider(x,z,.65,.65);
+ treeDummy.position.set(x,1.9,z);treeDummy.rotation.y=(i%17)*.37;treeDummy.scale.setScalar(1);treeDummy.updateMatrix();treeTrunks.setMatrixAt(ti,treeDummy.matrix);
+ treeDummy.position.set(x,7,z);treeDummy.scale.setScalar(.88+(i%5)*.06);treeDummy.updateMatrix();treeCrowns.setMatrixAt(ti,treeDummy.matrix);
+ treeColor.set(i%3===0?0x172a25:(i%3===1?0x10231e:0x1d3028));treeCrowns.setColorAt(ti,treeColor);
  const palette=[0xff1744,0xff8a00,0xffed35,0x35f06b,0x27d9ff,0x3975ff,0xc65bff,0xff4fc8];
  for(let ring=0;ring<3;ring++)for(let j=0;j<8;j++){
   const aa=j/8*Math.PI*2+ring*.22,rr=[2.05,1.55,1.02][ring],yy=[4.7,6.25,7.75][ring];
   christmasBulbData.push({position:new THREE.Vector3(x+Math.cos(aa)*rr,yy,z+Math.sin(aa)*rr),color:palette[(j+ring*3+i)%palette.length],phase:(i%5)*.16+ring*.12+j*.025});
  }
 }
-treeTrunks.instanceMatrix.needsUpdate=true;treeCrowns.instanceMatrix.needsUpdate=true;
+treeTrunks.count=placedTrees;treeCrowns.count=placedTrees;treeTrunks.instanceMatrix.needsUpdate=true;treeCrowns.instanceMatrix.needsUpdate=true;
 treeTrunks.castShadow=false;treeCrowns.castShadow=false;scene.add(treeTrunks,treeCrowns);
 const christmasBulbs=new THREE.InstancedMesh(new THREE.SphereGeometry(.105,5,4),new THREE.MeshBasicMaterial({color:0xffffff}),christmasBulbData.length),christmasDummy=new THREE.Object3D(),christmasColor=new THREE.Color();
 christmasBulbData.forEach((b,i)=>{christmasDummy.position.copy(b.position);christmasDummy.updateMatrix();christmasBulbs.setMatrixAt(i,christmasDummy.matrix);christmasColor.setHex(b.color).multiplyScalar(.08);christmasBulbs.setColorAt(i,christmasColor)});
@@ -315,7 +319,7 @@ const cottageWhite=new THREE.MeshBasicMaterial({color:0xffffff}),cottageWall=mat
 // Place the six decorated cabins clear of every drivable road and one another.
 const cabinRoutes=[curve,northForestRoute,forestRoute,industrialRoute,coastRoute,westRoute];
 const cabinRoadSamples=[];for(const route of cabinRoutes)for(let s=0;s<=180;s+=4){const p=route.getPointAt(s/180);cabinRoadSamples.push([p.x,p.z]);}
-const cabinSpots=[];for(let h=0;h<6;h++){let best=null,bestScore=-Infinity;for(let r=205;r<=260;r+=5)for(let deg=0;deg<360;deg+=5){const a=deg*Math.PI/180,x=Math.cos(a)*r,z=Math.sin(a)*r;let roadClear=Infinity;for(const p of cabinRoadSamples){const d=Math.hypot(x-p[0],z-p[1]);if(d<roadClear)roadClear=d;if(roadClear<20)break}if(roadClear<20)continue;let spacing=Infinity;for(const p of cabinSpots)spacing=Math.min(spacing,Math.hypot(x-p.x,z-p.z));if(spacing<44)continue;const score=Math.min(roadClear,spacing===Infinity?100:spacing);if(score>bestScore){bestScore=score;best={x,z,a}}}if(best)cabinSpots.push(best)}
+const cabinSpots=[];for(let h=0;h<6;h++){let best=null,bestScore=-Infinity;for(let r=205;r<=260;r+=5)for(let deg=0;deg<360;deg+=5){const a=deg*Math.PI/180,x=Math.cos(a)*r,z=Math.sin(a)*r;let roadClear=Infinity;for(const p of cabinRoadSamples){const d=Math.hypot(x-p[0],z-p[1]);if(d<roadClear)roadClear=d;if(roadClear<20)break}if(roadClear<30)continue;let spacing=Infinity;for(const p of cabinSpots)spacing=Math.min(spacing,Math.hypot(x-p.x,z-p.z));if(spacing<44)continue;const score=Math.min(roadClear,spacing===Infinity?100:spacing);if(score>bestScore){bestScore=score;best={x,z,a}}}if(best)cabinSpots.push(best)}
 for(let h=0;h<cabinSpots.length;h++){const {x,z,a}=cabinSpots[h],house=new THREE.Group();house.position.set(x,0,z);house.rotation.y=-a+Math.PI/2;scene.add(house);addWorldCollider(x,z,4.8,4.2);const walls=new THREE.Mesh(new THREE.BoxGeometry(8,4.2,6.5),cottageWall);walls.position.y=2.1;house.add(walls);const roofA=new THREE.Mesh(new THREE.BoxGeometry(4.8,.28,7.1),cottageRoof);roofA.position.set(-1.75,4.45,0);roofA.rotation.z=-.48;house.add(roofA);const roofB=new THREE.Mesh(new THREE.BoxGeometry(4.8,.28,7.1),cottageRoof);roofB.position.set(1.75,4.45,0);roofB.rotation.z=.48;house.add(roofB);const door=new THREE.Mesh(new THREE.BoxGeometry(1.15,2.5,.12),mat(0x49352d,.8));door.position.set(0,1.25,3.31);house.add(door);for(const wx of [-2.45,2.45]){const pane=new THREE.Mesh(new THREE.BoxGeometry(1.35,1.15,.1),new THREE.MeshBasicMaterial({color:0xffe6ad}));pane.position.set(wx,2.35,3.34);house.add(pane)}for(const pts of [[[-4,4.15,3.38],[0,4.15,3.38],[4,4.15,3.38]],[[-4,4.15,3.38],[-1.8,5.5,0],[0,5.5,-3.4]],[[4,4.15,3.38],[1.8,5.5,0],[0,5.5,-3.4]]]){const path=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(...p)));house.add(new THREE.Mesh(new THREE.TubeGeometry(path,20,.035,5,false),cottageWhite));for(let k=0;k<=12;k++)cottageBulbPositions.push(house.localToWorld(path.getPoint(k/12).clone()))}}const cottageBulbs=new THREE.InstancedMesh(new THREE.SphereGeometry(.075,6,5),cottageWhite,cottageBulbPositions.length);cottageBulbPositions.forEach((p,i)=>{christmasDummy.position.copy(p);christmasDummy.updateMatrix();cottageBulbs.setMatrixAt(i,christmasDummy.matrix)});cottageBulbs.instanceMatrix.needsUpdate=true;scene.add(cottageBulbs);
 // Removed distant foothills to keep the winter forest and night horizon open.
 // Layered drift-circuit scenery: sky dome, distant ridgelines, cloud banks and trackside details.
@@ -691,6 +695,14 @@ const spokeL=fpBox(fpWheel,.052,.19,.04,-.13,.045,0,fpTrim);spokeL.rotation.z=.6
 const spokeR=fpBox(fpWheel,.052,.19,.04,.13,.045,0,fpTrim);spokeR.rotation.z=-.65;
 const fpHub=new THREE.Mesh(new THREE.CylinderGeometry(.064,.064,.026,32),fpWheelMat);fpHub.rotation.x=Math.PI/2;fpWheel.add(fpHub);
 const fpHorn=new THREE.Mesh(new THREE.CircleGeometry(.038,32),fpTrim);fpHorn.position.z=.016;fpWheel.add(fpHorn);
+// Visible driver arms, leather sleeves, wrists and fingers wrap around the wheel.
+const fpSkin=new THREE.MeshStandardMaterial({color:0xb98262,roughness:.82}),fpSleeve=new THREE.MeshStandardMaterial({color:0x202a34,roughness:.88}),fpSeam=new THREE.MeshStandardMaterial({color:0x69747c,roughness:.72});
+function fpLimb(parent,a,b,r1,r2,material){const va=new THREE.Vector3(...a),vb=new THREE.Vector3(...b),delta=vb.clone().sub(va),mesh=new THREE.Mesh(new THREE.CylinderGeometry(r2,r1,delta.length(),10),material);mesh.position.copy(va.add(vb).multiplyScalar(.5));mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());parent.add(mesh);return mesh}
+// Forearms extend from the driver's lap to the 9-and-3 positions.
+fpLimb(firstPersonCockpit,[-.93,1.02,.30],[-.70,1.32,-.43],.105,.078,fpSleeve);
+fpLimb(firstPersonCockpit,[-.05,1.02,.30],[-.28,1.32,-.43],.105,.078,fpSleeve);
+function fpHand(x,y){const hand=new THREE.Group();hand.position.set(x,y,.018);fpWheel.add(hand);const palm=new THREE.Mesh(new THREE.SphereGeometry(.071,12,9),fpSkin);palm.scale.set(1,.72,.48);hand.add(palm);for(let f=0;f<4;f++){const finger=fpLimb(hand,[(f-1.5)*.027,-.025,.012],[(f-1.5)*.031,-.105,.012],.014,.011,fpSkin);finger.rotation.z=(f-1.5)*-.08}const thumb=fpLimb(hand,[x<0?.045:-.045,.005,.015],[x<0?.095:-.095,-.045,.015],.018,.014,fpSkin);return hand}
+fpHand(-.205,.105);fpHand(.205,.105);
 const fpColumn=new THREE.Mesh(new THREE.CylinderGeometry(.045,.06,.34,12),fpDashMat);fpColumn.rotation.x=Math.PI/2;fpColumn.position.set(-.49,1.22,-.29);firstPersonCockpit.add(fpColumn);
 const fpHood=fpBox(firstPersonCockpit,1.82,.075,1.02,0,.79,-1.58,paintMat);fpHood.rotation.x=-.035;
 
@@ -1004,11 +1016,11 @@ function tick(t){
    // Small lateral/vertical movement adds vehicle feedback without shaking the road view.
    const fpSpeed=Math.min(Math.abs(speed)/55,1),fpSteer=THREE.MathUtils.clamp(steerAngle,-1,1);
    const fpBob=Math.sin(t*.010)*.009*fpSpeed;
-   const fpSeat=new THREE.Vector3(-.49-fpSteer*.025,1.46+fpBob,-.16);
+   const fpSeat=new THREE.Vector3(-.49-fpSteer*.018,1.49+fpBob,-.02);
    desiredCam=carRoot.localToWorld(fpSeat);
    const fpYaw=cockpitLookYaw+fpSteer*.035*fpSpeed;
    const fpPitch=cockpitLookPitch+Math.min(.035,fpSpeed*.035);
-   const fpAim=new THREE.Vector3(-.49+Math.sin(fpYaw)*18,1.46+Math.sin(fpPitch)*18,-.16-Math.cos(fpYaw)*18);
+   const fpAim=new THREE.Vector3(-.49+Math.sin(fpYaw)*24,1.49+Math.sin(fpPitch)*24,-.02-Math.cos(fpYaw)*24);
    desiredLook=carRoot.localToWorld(fpAim);
    targetFov=70+fpSpeed*1.5;
   }else{

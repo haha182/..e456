@@ -596,9 +596,16 @@ Object.values(extraCarModels).forEach(item=>{item.group.visible=false;carRoot.ad
 const firstPersonCockpit=new THREE.Group();firstPersonCockpit.name='FIRST_PERSON_DRIVER_COCKPIT';carRoot.add(firstPersonCockpit);
 const fpDashMat=new THREE.MeshStandardMaterial({color:0x10161b,roughness:.72,metalness:.18}),fpTrim=new THREE.MeshStandardMaterial({color:0x59656d,roughness:.32,metalness:.78}),fpGlow=new THREE.MeshBasicMaterial({color:0x59e5df});
 function fpBox(parent,w,h,d,x,y,z,material){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.position.set(x,y,z);parent.add(m);return m}
-const fpWheel=new THREE.Group();fpWheel.position.set(-.49,1.22,-.49);firstPersonCockpit.add(fpWheel);const fpWheelMat=new THREE.MeshStandardMaterial({color:0x080a0d,roughness:.58,metalness:.12});
-fpWheel.add(new THREE.Mesh(new THREE.TorusGeometry(.245,.027,10,48),fpWheelMat));fpBox(fpWheel,.055,.34,.045,0,0,0,fpTrim);for(const side of [-1,1]){const spoke=fpBox(fpWheel,.18,.045,.045,side*.085,-.035,0,fpTrim);spoke.rotation.z=side*.43}
-const fpHub=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.055,24),fpTrim);fpHub.rotation.x=Math.PI/2;fpWheel.add(fpHub);const fpHorn=new THREE.Mesh(new THREE.CircleGeometry(.052,24),fpGlow);fpHorn.position.z=.032;fpWheel.add(fpHorn);
+const fpWheel=new THREE.Group();fpWheel.position.set(-.49,1.22,-.49);firstPersonCockpit.add(fpWheel);
+const fpWheelMat=new THREE.MeshStandardMaterial({color:0x111315,roughness:.72,metalness:.08});
+const fpWheelLeather=new THREE.MeshStandardMaterial({color:0x17191b,roughness:.9});
+fpWheel.add(new THREE.Mesh(new THREE.TorusGeometry(.255,.031,12,64),fpWheelLeather));
+for(let i=0;i<48;i++){const a=i/48*Math.PI*2;const stitch=new THREE.Mesh(new THREE.SphereGeometry(.0038,5,5),new THREE.MeshBasicMaterial({color:0x9b8a7c}));stitch.position.set(Math.cos(a)*.282,Math.sin(a)*.282,0);fpWheel.add(stitch)}
+const spokeA=fpBox(fpWheel,.052,.19,.04,0,-.105,0,fpTrim);
+const spokeL=fpBox(fpWheel,.052,.19,.04,-.13,.045,0,fpTrim);spokeL.rotation.z=.65;
+const spokeR=fpBox(fpWheel,.052,.19,.04,.13,.045,0,fpTrim);spokeR.rotation.z=-.65;
+const fpHub=new THREE.Mesh(new THREE.CylinderGeometry(.064,.064,.026,32),fpWheelMat);fpHub.rotation.x=Math.PI/2;fpWheel.add(fpHub);
+const fpHorn=new THREE.Mesh(new THREE.CircleGeometry(.038,32),fpTrim);fpHorn.position.z=.016;fpWheel.add(fpHorn);
 const fpColumn=new THREE.Mesh(new THREE.CylinderGeometry(.045,.06,.34,12),fpDashMat);fpColumn.rotation.x=Math.PI/2;fpColumn.position.set(-.49,1.22,-.29);firstPersonCockpit.add(fpColumn);
 const fpHood=fpBox(firstPersonCockpit,1.82,.075,1.02,0,.79,-1.58,paintMat);fpHood.rotation.x=-.035;
 
@@ -718,13 +725,6 @@ j7Panel(.685,.345,.012,.49,1.025,-1.13,j7Screen);
 for(let k=0;k<3;k++){j7Panel(.018,.25,.012,.105+k*.018,.99,-1.14,j7Silver);j7Panel(.018,.25,.012,.875-k*.018,.99,-1.14,j7Silver)}
 j7Panel(.62,.018,.012,.49,.825,-1.14,j7Blue);
 for(const x of [-.39,-.23,.23,.39]){const vent=new THREE.Mesh(new THREE.CylinderGeometry(.027,.027,.018,20),j7Silver);vent.rotation.x=Math.PI/2;vent.position.set(x,1.105,-1.095);j7Cabin.add(vent)}
-// Realistic stitched steering-wheel rim and three spokes.
-const j7WheelRim=new THREE.Mesh(new THREE.TorusGeometry(.255,.031,12,64),j7Leather);j7WheelRim.position.set(-.49,1.22,-.505);j7Cabin.add(j7WheelRim);
-const j7WheelStitch=new THREE.MeshBasicMaterial({color:0x9b8a7c});
-for(let i=0;i<48;i++){const a=i/48*Math.PI*2;const bead=new THREE.Mesh(new THREE.SphereGeometry(.0038,5,5),j7WheelStitch);bead.position.set(-.49+Math.cos(a)*.282,1.22+Math.sin(a)*.282,-.505);j7Cabin.add(bead)}
-for(const [x,y,rz] of [[0,-.11,0],[-.13,.045,.65],[.13,.045,-.65]]){const spoke=fpBox(j7Cabin,.055,.19,.035,-.49+x,1.22+y,-.505,j7Silver);spoke.rotation.z=rz}
-const j7WheelBadge=new THREE.Mesh(new THREE.CylinderGeometry(.062,.062,.022,32),j7Piano);j7WheelBadge.rotation.x=Math.PI/2;j7WheelBadge.position.set(-.49,1.22,-.535);j7Cabin.add(j7WheelBadge);
-const j7WheelMark=new THREE.Mesh(new THREE.CircleGeometry(.036,32),j7Silver);j7WheelMark.position.set(-.49,1.22,-.55);j7Cabin.add(j7WheelMark);
 // Lower console detailing and cup-holder chrome rings.
 for(let i=0;i<2;i++){const ring=new THREE.Mesh(new THREE.TorusGeometry(.083,.009,8,32),j7Silver);ring.position.set(.35+i*.26,.602,.03);ring.rotation.x=Math.PI/2;j7Cabin.add(ring);const well=new THREE.Mesh(new THREE.CircleGeometry(.075,24),j7Piano);well.rotation.x=-Math.PI/2;well.position.set(.35+i*.26,.596,.03);j7Cabin.add(well)}
 j7Panel(.075,.055,.28,.18,.60,.13,j7Leather);

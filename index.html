@@ -486,8 +486,8 @@ spectralLoader.load('https://raw.githubusercontent.com/JaronKBragg7337/spectral-
 function applyTune(){
  const value=id=>Number($(id)?.value ?? localStorage['hcg_'+id] ?? ({turbo:14.3,frontCamber:-5,rearCamber:-1,frontOffset:5,rearOffset:3,brakeBalance:70,frontHeight:-6,rearHeight:1,brakePressure:100}[id]));
  const frontH=value('frontHeight'),rearH=value('rearHeight');
- for(const target of [e46,m4Model])target.position.y=(frontH+rearH)*.005;
- for(const target of [e46,m4Model])target.rotation.x=Math.atan(((frontH-rearH)/100)/2.86);
+ for(const target of [e46,m4Model,spectralModel])target.position.y=(frontH+rearH)*.005;
+ for(const target of [e46,m4Model,spectralModel])target.rotation.x=Math.atan(((frontH-rearH)/100)/2.86);
  for(const w of wheels){
   const front=w.z<0;
   const offset=value(front?'frontOffset':'rearOffset');

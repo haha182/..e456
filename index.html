@@ -407,12 +407,15 @@ function updateTraffic(dt){
   }
  }
 }
+
+// Impact-camera feedback adapted from the MIT-licensed Velocity Rush racing project:
+// https://github.com/prashant371/velocity-rush (camera shake concept; integrated into this game's camera loop).
 function resolveTrafficCollision(previousPosition){
  for(const car of trafficCars){
   if(car.hitCooldown>0)continue;
   const dx=carPos.x-car.group.position.x,dz=carPos.z-car.group.position.z;
   if(dx*dx+dz*dz<7.2){
-   carPos.copy(previousPosition);speed*=.28;vel.multiplyScalar(.22);car.hitCooldown=1.35;driftTimer=0;combo=1;
+   carPos.copy(previousPosition);speed*=.28;vel.multiplyScalar(.22);car.hitCooldown=1.35;collisionShake=Math.max(collisionShake,.34);driftTimer=0;combo=1;
    toast('TRAFFIC COLLISION  ·  SLOW DOWN');return true;
   }
  }
@@ -691,7 +694,7 @@ for(const x of [-1.08,1.08])for(const z of [-1.48,1.48]){
 const lightMat=new THREE.MeshBasicMaterial({color:0xfff3d0});
 const smokeMat=new THREE.MeshBasicMaterial({color:0xdce4e6,transparent:true,opacity:.32,depthWrite:false});const smoke=[];
 for(let i=0;i<34;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(.55+Math.random()*.5,8,7),smokeMat.clone());m.visible=false;scene.add(m);smoke.push({mesh:m,life:0})}
-let speed=0,slip=0,heading=0,score=0,points=0,boost=100,steerAngle=0,manualMode=false,manualGear=1,manualShiftLockUntil=0,paused=true,keys={},last=performance.now(),lastRender=0,carPos=curve.getPointAt(.03),vel=new THREE.Vector3(),driftAngle=0,combo=1,driftTimer=0,cameraMode=0,garageWasPlaying=false,garageMode=false,garagePos=new THREE.Vector3(),garageHeading=0,garageOrbitYaw=0,garageOrbitPitch=.20,garageOrbitRadius=9.5,cameraLook=new THREE.Vector3(),cameraSnap=true,garageTargetPosition=new THREE.Vector3(),garageTargetLook=new THREE.Vector3(),garageCameraReady=false,garageFramingKey='',garageDragging=false,garageLastX=0,garageLastY=0,garageVisibilitySnapshot=[];
+let speed=0,slip=0,heading=0,score=0,points=0,boost=100,steerAngle=0,manualMode=false,manualGear=1,manualShiftLockUntil=0,paused=true,keys={},last=performance.now(),lastRender=0,carPos=curve.getPointAt(.03),vel=new THREE.Vector3(),driftAngle=0,combo=1,driftTimer=0,cameraMode=0,collisionShake=0,garageWasPlaying=false,garageMode=false,garagePos=new THREE.Vector3(),garageHeading=0,garageOrbitYaw=0,garageOrbitPitch=.20,garageOrbitRadius=9.5,cameraLook=new THREE.Vector3(),cameraSnap=true,garageTargetPosition=new THREE.Vector3(),garageTargetLook=new THREE.Vector3(),garageCameraReady=false,garageFramingKey='',garageDragging=false,garageLastX=0,garageLastY=0,garageVisibilitySnapshot=[];
 carRoot.position.copy(carPos);carRoot.position.y=0;
 function shiftManualGear(delta){if(!manualMode)return;const next=THREE.MathUtils.clamp(manualGear+delta,0,6),caps=[18,29,42,57,74,96];if(next===manualGear)return;if(delta<0&&next>0&&Math.abs(speed)>caps[next-1]*.96){toast('DOWNSHIFT BLOCKED · TOO FAST');return}manualGear=next;manualShiftLockUntil=performance.now()+180;audioGear=manualGear;audioShiftDip=1;$('manualBtn').textContent='MANUAL '+(manualGear===0?'N':manualGear);toast(manualGear===0?'NEUTRAL · ENGINE DISCONNECTED':'GEAR '+manualGear+' · '+(delta>0?'UPSHIFT':'DOWNSHIFT'))}
 const $=id=>document.getElementById(id);
@@ -1376,7 +1379,7 @@ function tick(t){
   }
   const camAlpha=1-Math.exp(-(cameraMode===3?15:19)*dt);
   if(cameraSnap){camera.position.copy(desiredCam);cameraLook.copy(desiredLook);cameraSnap=false}else{camera.position.lerp(desiredCam,camAlpha);cameraLook.lerp(desiredLook,1-Math.exp(-(cameraMode===3?18:22)*dt))}
-  camera.up.set(0,1,0);camera.lookAt(cameraLook);if(cameraMode===3){camera.rotation.order='YXZ';camera.rotation.z=0;}
+  if(collisionShake>0){const impact=collisionShake;camera.position.x+=Math.sin(t*.041)*impact*.16;camera.position.y+=Math.sin(t*.057)*impact*.09;collisionShake=Math.max(0,collisionShake-dt*1.8)}camera.up.set(0,1,0);camera.lookAt(cameraLook);if(cameraMode===3){camera.rotation.order='YXZ';camera.rotation.z=0;}
   const nextFov=camera.fov+(targetFov-camera.fov)*(1-Math.exp(-3.8*dt));if(Math.abs(nextFov-camera.fov)>.025){camera.fov=nextFov;camera.updateProjectionMatrix()}
   if(cameraMode===3){
    // Absolute, bounded roll follows steering; never accumulate rotation frame after frame.

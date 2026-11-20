@@ -722,6 +722,7 @@ function applyStyle(){
  for(const child of carRoot.children)child.visible=false;
  customParts.visible=false;applyCustomizations();
  const choice=$('carStyle')?.value||'lexus_lfa';
+ if(gtiAudioCredit)gtiAudioCredit.style.display=garageMode&&choice==='gti_2010'?'block':'none';
  const item=extraCarModels[choice];if(!item){$('carLabel').textContent='LEXUS LFA MODEL UNAVAILABLE';return}
  if(item.ready){item.group.visible=true;$('carLabel').textContent=item.label.toUpperCase();const status=$('garageStatus');if(status)status.textContent=item.label.toUpperCase()+' READY';applyCustomizations();applyTune();if(garageMode)setGarageCamera(true);return}
  if(item.loading){$('carLabel').textContent='LOADING '+item.label.toUpperCase();return}
@@ -897,6 +898,7 @@ const extraCarModels={
  gti_2010:{label:'2010 Volkswagen Golf GTI Mk6',group:new THREE.Group(),ready:true,loading:false,procedural:true}
 };
 Object.values(extraCarModels).forEach(item=>{item.group.visible=false;carRoot.add(item.group)});
+const gtiAudioCredit=document.createElement('div');gtiAudioCredit.style.cssText='position:fixed;left:12px;bottom:8px;z-index:40;max-width:min(520px,90vw);padding:5px 8px;border-radius:5px;background:#071018dd;color:#c6d2d8;font:10px/1.4 Arial,sans-serif;display:none';gtiAudioCredit.innerHTML='GTI audio: FiExhaust · <a href="https://commons.wikimedia.org/wiki/File:Volkswagen_Golf_Mk6_with_Fi_Exhaust_-_engine_and_exhaust_sound_(YouTube_n1sqDV2vyZ0).opus" target="_blank" rel="noopener" style="color:#8ed8ef">source</a> · <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener" style="color:#8ed8ef">CC BY 3.0</a> · trimmed for in-game throttle playback';$('garage').appendChild(gtiAudioCredit);
 // Lightweight custom Mk6 GTI model: detailed hatchback proportions without a heavy external asset.
 {
  const g=extraCarModels.gti_2010.group;

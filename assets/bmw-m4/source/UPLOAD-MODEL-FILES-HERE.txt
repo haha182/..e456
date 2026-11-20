@@ -1,1 +1,0 @@
-Upload the contents of the source folder from bmw-m4-assets-for-drift-game.zip into this directory. Keep the FBX and all texture images together here. The game loads: BMW M4 2021 v1.fbx

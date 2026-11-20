@@ -1,0 +1,3 @@
+[submodule "horizon-remade"]
+	path = horizon-remade
+	url = https://github.com/Henry-fan88/horizon-remade.git

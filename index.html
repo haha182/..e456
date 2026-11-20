@@ -92,6 +92,45 @@ ribbon(18,.02,roadMat);ribbon(1.1,.045,curbRed);
 function pathTube(offset,radius,material){const points=[];for(let i=0;i<=360;i++){const t=i/360,p=curve.getPointAt(t),v=curve.getTangentAt(t),s=new THREE.Vector3(-v.z,0,v.x).normalize();points.push(new THREE.Vector3(p.x+s.x*offset,.12,p.z+s.z*offset))}const mesh=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),500,radius,6,true),material);scene.add(mesh)}
 pathTube(9.2,.18,curbWhite);pathTube(-9.2,.18,curbWhite);
 const dashGeo=new THREE.BoxGeometry(.22,.035,3.2);for(let i=0;i<100;i++){const p=curve.getPointAt(i/100),t=curve.getTangentAt(i/100),m=new THREE.Mesh(dashGeo,lineMat);m.position.set(p.x,.09,p.z);m.rotation.y=Math.atan2(t.x,t.z);scene.add(m)}
+// OPEN WORLD EXTENSION: connected mountain, forest and industrial roads beyond the original circuit.
+const openRoadMat=mat(0x20262c,.96),roadEdgeMat=mat(0xb9b8aa,.8),roadLineMat=mat(0xd8d3bd,.82);
+function openRoad(points,width=13){
+ const route=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(p[0],0,p[1])),false,'catmullrom',.18);
+ const segments=Math.max(180,points.length*45),verts=[],ids=[],edgeL=[],edgeR=[];
+ for(let i=0;i<=segments;i++){
+  const t=i/segments,p=route.getPointAt(t),tan=route.getTangentAt(t),side=new THREE.Vector3(-tan.z,0,tan.x).normalize();
+  verts.push(p.x+side.x*width/2,.012,p.z+side.z*width/2,p.x-side.x*width/2,.012,p.z-side.z*width/2);
+  edgeL.push(new THREE.Vector3(p.x+side.x*(width/2-.65),.09,p.z+side.z*(width/2-.65)));
+  edgeR.push(new THREE.Vector3(p.x-side.x*(width/2-.65),.09,p.z-side.z*(width/2-.65)));
+  if(i<segments){const n=i*2;ids.push(n,n+1,n+2,n+1,n+3,n+2)}
+ }
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));geo.setIndex(ids);geo.computeVertexNormals();
+ const road=new THREE.Mesh(geo,openRoadMat);road.receiveShadow=true;scene.add(road);
+ for(const edge of [edgeL,edgeR]){const line=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(edge),segments,.105,5,false),roadEdgeMat);scene.add(line)}
+ // Broken center markings make the new roads read clearly at night.
+ const dash=new THREE.BoxGeometry(.16,.035,2.8);
+ for(let i=5;i<segments-5;i+=13){const p=route.getPointAt(i/segments),t=route.getTangentAt(i/segments),m=new THREE.Mesh(dash,roadLineMat);m.position.set(p.x,.075,p.z);m.rotation.y=Math.atan2(t.x,t.z);scene.add(m)}
+ return route;
+}
+const mountainRoute=openRoad([[76,65],[125,112],[175,158],[205,220],[255,285],[315,330],[365,300],[385,235],[350,175],[300,135],[235,112],[175,120],[125,112]]);
+const forestRoute=openRoad([[-75,65],[-130,115],[-190,155],[-255,190],[-325,170],[-365,105],[-345,35],[-285,-15],[-220,-28],[-165,5],[-130,55]]);
+const industrialRoute=openRoad([[105,-48],[155,-95],[215,-125],[285,-115],[350,-75],[390,-15],[365,45],[305,65],[245,45],[190,5],[155,-35]]);
+// Roadside reflector posts and occasional warm lamps make the routes readable from a distance.
+const reflectorMat=new THREE.MeshBasicMaterial({color:0xffc76b});
+for(const route of [mountainRoute,forestRoute,industrialRoute]){
+ for(let i=3;i<70;i+=4){const p=route.getPointAt(i/72),t=route.getTangentAt(i/72),side=new THREE.Vector3(-t.z,0,t.x).normalize();
+  for(const sign of [-1,1]){const post=new THREE.Mesh(new THREE.BoxGeometry(.13,.8,.13),streetLampMetal);post.position.set(p.x+side.x*7.7,.4,p.z+side.z*7.7);scene.add(post);const reflector=new THREE.Mesh(new THREE.BoxGeometry(.16,.12,.035),reflectorMat);reflector.position.set(post.position.x,.72,post.position.z);scene.add(reflector)}
+ }
+}
+// A remote mountain overlook and a small industrial yard give the roads destinations to discover.
+const overlook=new THREE.Group();overlook.position.set(315,0,330);scene.add(overlook);
+const deck=new THREE.Mesh(new THREE.BoxGeometry(42,.65,24),mat(0x343d46,.8,.3));deck.position.y=.1;deck.receiveShadow=true;overlook.add(deck);
+for(const x of [-19,19]){const rail=new THREE.Mesh(new THREE.BoxGeometry(.25,1.5,24),streetLampMetal);rail.position.set(x,1,0);overlook.add(rail)}
+const overlookLamp=new THREE.PointLight(0xffbd58,38,65);overlookLamp.position.set(0,9,0);overlook.add(overlookLamp);
+const yard=new THREE.Group();yard.position.set(330,0,-95);scene.add(yard);
+const yardMat=mat(0x303a43,.9,.2);
+for(let i=0;i<5;i++){const container=new THREE.Mesh(new THREE.BoxGeometry(18,5,7),i%2?mat(0x34464c,.85,.25):yardMat);container.position.set((i-2)*20,2.5,0);yard.add(container);for(let z=-3;z<=3;z+=1.5){const rib=new THREE.Mesh(new THREE.BoxGeometry(17.8,.07,.07),streetLampMetal);rib.position.set((i-2)*20,2.5,z);yard.add(rib)}}
+
 // Environment: pine-like trees and distant hills
 const trunkMat=mat(0x201d20),leafMat=mat(0x101d1b),leaf2=mat(0x172725);
 for(let i=0;i<145;i++){const a=i*2.399,rad=125+(i%7)*12,x=Math.cos(a)*rad,z=Math.sin(a)*rad;const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.35,.55,3.8,7),trunkMat);trunk.position.set(x,1.8,z);trunk.castShadow=true;scene.add(trunk);const crown=new THREE.Mesh(new THREE.ConeGeometry(2.7,8,7),i%2?leafMat:leaf2);crown.position.set(x,7,z);crown.castShadow=true;scene.add(crown)}

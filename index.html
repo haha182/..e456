@@ -1305,8 +1305,10 @@ async function initCarAudio(){
   exhaustNoiseBuffer=carAudioCtx.createBuffer(1,Math.floor(carAudioCtx.sampleRate*.18),carAudioCtx.sampleRate);const exhaustNoise=exhaustNoiseBuffer.getChannelData(0);for(let i=0;i<exhaustNoise.length;i++)exhaustNoise[i]=(Math.random()*2-1)*Math.pow(1-i/exhaustNoise.length,1.7);
   tireSquealSource=carAudioCtx.createBufferSource();tireSquealSource.buffer=exhaustNoiseBuffer;tireSquealSource.loop=true;tireSquealFilter=carAudioCtx.createBiquadFilter();tireSquealFilter.type='bandpass';tireSquealFilter.frequency.value=1350;tireSquealFilter.Q.value=.65;tireSquealGain=carAudioCtx.createGain();tireSquealGain.gain.value=0;tireSquealSource.connect(tireSquealFilter);tireSquealFilter.connect(tireSquealGain);tireSquealGain.connect(carAudioMaster);tireSquealSource.start();
   await carAudioCtx.resume();
-  // Recorded V8 loops by DerMeehdrescher / Meehdrescher Studios, CC-BY-SA 4.0.
-  // OpenGameArt asset: https://opengameart.org/content/generic-v8-engine-sound
+  // Actual Lexus LFA 1LR-GUE V10 recording by Altair78 (CC BY-SA 4.0).
+  // Source: https://commons.wikimedia.org/wiki/File:Lexus_LFA_revving_1LR-GUE_(2009).ogg
+  let lfaRecordingBuffer=null;
+  try{const r=await fetch('https://upload.wikimedia.org/wikipedia/commons/e/ee/Lexus_LFA_revving_1LR-GUE_%282009%29.ogg',{mode:'cors',cache:'force-cache'});if(!r.ok)throw Error('LFA recording HTTP '+r.status);lfaRecordingBuffer=await carAudioCtx.decodeAudioData(await r.arrayBuffer())}catch(e){console.warn('LFA V10 recording unavailable; using fallback engine recordings.',e)}
   let recordedV8Buffers=[];
   try{
    const JSZipModule=await import('https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm'),JSZip=JSZipModule.default||JSZipModule;
@@ -1322,7 +1324,7 @@ async function initCarAudio(){
    return carAudioCtx.decodeAudioData(await r.arrayBuffer());
   }));
   const fallbackBuffers=results.filter(x=>x.status==='fulfilled').map(x=>x.value);
-  const buffers=recordedV8Buffers.length?recordedV8Buffers:fallbackBuffers;
+  const buffers=lfaRecordingBuffer?[lfaRecordingBuffer]:(recordedV8Buffers.length?recordedV8Buffers:fallbackBuffers);
   if(!buffers.length){
    // Offline-safe engine fallback: a harmonically rich loop with adjustable RPM.
    const rate=carAudioCtx.sampleRate,length=rate*2,buffer=carAudioCtx.createBuffer(1,length,rate),data=buffer.getChannelData(0);
@@ -1331,8 +1333,8 @@ async function initCarAudio(){
   }
   buffers.forEach((buffer,i)=>{
    const source=carAudioCtx.createBufferSource(),gain=carAudioCtx.createGain();source.buffer=buffer;source.loop=true;
-   source.playbackRate.value=recordedV8Buffers.length?.72+i*.035:.78+i*.025;gain.gain.value=i===0?.34:0;
-   source.connect(gain);gain.connect(carAudioMaster);source.start();engineVoices.push({source,gain,isRecordedV8:recordedV8Buffers.length>0});
+   source.playbackRate.value=lfaRecordingBuffer?.48:(recordedV8Buffers.length?.72+i*.035:.78+i*.025);gain.gain.value=i===0?.34:0;
+   source.connect(gain);gain.connect(carAudioMaster);source.start();engineVoices.push({source,gain,isLFARecording:!!lfaRecordingBuffer,isRecordedV8:!lfaRecordingBuffer&&recordedV8Buffers.length>0});
   });
   engineAudioReady=true;if(engineAudioWanted)carAudioMaster.gain.setTargetAtTime(.92,carAudioCtx.currentTime,.3);
   if(results.some(x=>x.status==='rejected'))console.warn('Some engine samples failed; using the available samples.');
@@ -1369,11 +1371,11 @@ function updateCarAudio(throttle,vehicleSpeed,slipAngle=0){
  else if(audioGear>1&&speed<gearLimits[audioGear-1]*.72&&now-audioGearShiftAt>.55){audioGear--;audioGearShiftAt=now}
  const gearStart=manualMode?0:gearLimits[audioGear-1],gearEnd=manualMode?manualCaps[manualGear-1]:gearLimits[audioGear],gearProgress=THREE.MathUtils.clamp((speed-gearStart)/Math.max(1,gearEnd-gearStart),0,1);
  const rpm=THREE.MathUtils.clamp(.055+gearProgress*.78+engineThrottleSmooth*.18,0,1),index=rpm*(engineVoices.length-1),lo=Math.floor(index),hi=Math.min(engineVoices.length-1,lo+1),blend=index-lo;
- engineVoices.forEach((v,i)=>{if(v.isRecordedV8){const loaded=i===0,level=loaded?(.20+engineThrottleSmooth*.40):(.10+(1-engineThrottleSmooth)*.20);v.gain.gain.setTargetAtTime(level,now,.12);v.source.playbackRate.setTargetAtTime((loaded?.70:.66)*(1+rpm*.34)*Math.min(profile.pitch,1.02),now,.12)}else{const weight=i===lo?1-blend:i===hi?blend:0;v.gain.gain.setTargetAtTime(weight*(.12+engineThrottleSmooth*.12),now,.11);v.source.playbackRate.setTargetAtTime((.68+i*.032)*(1+rpm*.34)*Math.min(profile.pitch,1.02),now,.11)}});
+ engineVoices.forEach((v,i)=>{if(v.isLFARecording){v.gain.gain.setTargetAtTime(.24+engineThrottleSmooth*.46,now,.16);v.source.playbackRate.setTargetAtTime(.42+rpm*.92,now,.16)}else if(v.isRecordedV8){const loaded=i===0,level=loaded?(.20+engineThrottleSmooth*.40):(.10+(1-engineThrottleSmooth)*.20);v.gain.gain.setTargetAtTime(level,now,.12);v.source.playbackRate.setTargetAtTime((loaded?.70:.66)*(1+rpm*.34)*Math.min(profile.pitch,1.02),now,.12)}else{const weight=i===lo?1-blend:i===hi?blend:0;v.gain.gain.setTargetAtTime(weight*(.12+engineThrottleSmooth*.12),now,.11);v.source.playbackRate.setTargetAtTime((.68+i*.032)*(1+rpm*.34)*Math.min(profile.pitch,1.02),now,.11)}});
  const lifted=lastExhaustThrottle>.68&&throttle<.12;
  if(lifted&&speed>10&&now-lastExhaustPopAt>.58){const count=4+Math.floor(Math.random()*3);for(let i=0;i<count;i++)triggerExhaustPop(((i===0?1.55:1.25)+Math.random()*.3)*profile.pop,i*.082);lastExhaustPopAt=now+.36;lastExhaustCrackleAt=now}
  else if(throttle<.08&&speed>16&&rpm>.32&&now-lastExhaustPopAt>.52&&now-lastExhaustCrackleAt>.25&&Math.random()<.24){triggerExhaustPop((.9+Math.random()*.42)*profile.pop);lastExhaustPopAt=now;lastExhaustCrackleAt=now}
- const v8Base=(38+rpm*205)*Math.min(profile.pitch,1.02);v8Voices.forEach((v,i)=>{const harmonicGain=(profile.harmonics[i]??.025)*(i===0?.38:.22)*(i===0?1.0:.82+engineThrottleSmooth*.28);v.osc.frequency.setTargetAtTime(v8Base*v.mult,now,.10);v.gain.gain.setTargetAtTime(harmonicGain,now,.14)});
+ const v8Base=(38+rpm*205)*Math.min(profile.pitch,1.02);v8Voices.forEach((v,i)=>{const harmonicGain=(profile.harmonics[i]??.025)*(i===0?.38:.22)*(i===0?1.0:.82+engineThrottleSmooth*.28);v.osc.frequency.setTargetAtTime(v8Base*v.mult,now,.10);v.gain.gain.setTargetAtTime(lfaRecordingBuffer?0:harmonicGain,now,.14)});
  lastExhaustThrottle=throttle;
 }
 const radioStations={

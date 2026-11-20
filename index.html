@@ -158,7 +158,7 @@ const mountainRoute=openRoad([[76,65],[125,112],[175,158],[205,220],[255,285],[3
 const forestRoute=openRoad([[-75,65],[-130,115],[-190,155],[-255,190],[-325,170],[-365,105],[-345,35],[-285,-15],[-220,-28],[-165,5],[-130,55]]);
 const industrialRoute=openRoad([[105,-48],[155,-95],[215,-125],[285,-115],[350,-75],[390,-15],[365,45],[305,65],[245,45],[190,5],[155,-35]]);
 // Roadside reflector posts and occasional warm lamps make the routes readable from a distance.
-const reflectorMat=new THREE.MeshBasicMaterial({color:0xffc76b}),openRoadPostMat=mat(0x303943,.5,.65);
+const reflectorMat=new THREE.MeshBasicMaterial({color:0xffc76b}),openRoadPostMat=mat(0x303943,.5,.65),lampGlowMat=new THREE.MeshBasicMaterial({color:0xffd36a});
 for(const route of [mountainRoute,forestRoute,industrialRoute]){
  for(let i=3;i<70;i+=4){const p=route.getPointAt(i/72),t=route.getTangentAt(i/72),side=new THREE.Vector3(-t.z,0,t.x).normalize();
   for(const sign of [-1,1]){addWorldCollider(p.x+side.x*7.7*sign,p.z+side.z*7.7*sign,.18,.18);const post=new THREE.Mesh(new THREE.BoxGeometry(.13,.8,.13),openRoadPostMat);post.position.set(p.x+side.x*7.7*sign,.4,p.z+side.z*7.7*sign);scene.add(post);const reflector=new THREE.Mesh(new THREE.BoxGeometry(.16,.12,.035),reflectorMat);reflector.position.set(post.position.x,.72,post.position.z);scene.add(reflector)}
@@ -255,7 +255,7 @@ for(let layer=0;layer<mountainLayers;layer++)for(let i=0;i<mountainsPerLayer;i++
 const grandstandMat=mat(0x303c45,.88),seatMat=mat(0xb6c2c4,.7,.12);
 for(const side of [-1,1]){addWorldCollider(side*82,-12,4.5,17.5);const stand=new THREE.Group();stand.position.set(side*82,0,-12);stand.rotation.y=side===1?-Math.PI/2:Math.PI/2;const base=new THREE.Mesh(new THREE.BoxGeometry(34,5,8),grandstandMat);base.position.y=2.5;stand.add(base);for(let row=0;row<5;row++){const seat=new THREE.Mesh(new THREE.BoxGeometry(32,.22,.65),seatMat);seat.position.set(0,4.2+row*.58,-3+row*.85);stand.add(seat)}const canopy=new THREE.Mesh(new THREE.BoxGeometry(36,.45,10),mat(0x26343d,.6,.25));canopy.position.set(0,8.2,-.2);stand.add(canopy);scene.add(stand)}
 // Warm sodium-style streetlights follow both edges of the drift circuit.
-const streetLampMetal=mat(0x202a35,.42,.72),lampGlowMat=new THREE.MeshBasicMaterial({color:0xffd36a});
+const streetLampMetal=mat(0x202a35,.42,.72);
 for(let i=0;i<(mobileQuality?9:18);i++){
  const p=curve.getPointAt(i/18),tangent=curve.getTangentAt(i/18),side=new THREE.Vector3(-tangent.z,0,tangent.x).normalize();
  for(const sign of [-1,1]){
@@ -635,7 +635,7 @@ j7Panel(.055,.105,.018,0,1.105,-1.055,j7Silver);
 // Climate panel, rotary knobs and tactile buttons.
 j7Panel(.56,.25,.075,.48,.72,-.82,j7Piano);
 for(let i=0;i<3;i++){
- const knob=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.035,24),j7Silver);knob.rotation.x=Math.PI/2;knob.position.set(.29+i*.19,.73,-.87);j7Shifter.add(knob);
+ const knob=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.035,24),j7Silver);knob.rotation.x=Math.PI/2;knob.position.set(.29+i*.19,.73,-.87);j7Cabin.add(knob);
  const center=new THREE.Mesh(new THREE.CircleGeometry(.026,20),j7Blue);center.position.set(.29+i*.19,.73,-.892);j7Cabin.add(center);
 }
 for(let i=0;i<5;i++)j7Panel(.055,.025,.012,.27+i*.105,.585,-.87,i===2?j7Blue:j7Silver);
@@ -643,9 +643,9 @@ for(let i=0;i<5;i++)j7Panel(.055,.025,.012,.27+i*.105,.585,-.87,i===2?j7Blue:j7S
 j7Panel(.48,.12,.86,.48,.53,-.13,j7Soft);
 j7Panel(.24,.035,.28,.48,.61,-.32,j7Piano);
 const j7Shifter=new THREE.Group();j7Shifter.position.set(.48,.62,-.27);j7Cabin.add(j7Shifter);
-const boot=new THREE.Mesh(new THREE.CylinderGeometry(.09,.14,.13,16),j7Leather);shifter.add(boot);
-const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.025,.03,.19,12),j7Silver);shaft.position.y=.13;shifter.add(shaft);
-const knob=new THREE.Mesh(new THREE.SphereGeometry(.075,16,12),j7Leather);knob.scale.set(1,.72,1);knob.position.y=.25;shifter.add(knob);
+const boot=new THREE.Mesh(new THREE.CylinderGeometry(.09,.14,.13,16),j7Leather);j7Shifter.add(boot);
+const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.025,.03,.19,12),j7Silver);shaft.position.y=.13;j7Shifter.add(shaft);
+const gearKnob=new THREE.Mesh(new THREE.SphereGeometry(.075,16,12),j7Leather);gearKnob.scale.set(1,.72,1);gearKnob.position.y=.25;j7Shifter.add(gearKnob);
 j7Panel(.25,.035,.32,.48,.59,.28,j7Leather);
 j7Panel(.38,.075,.48,.48,.63,.75,j7Soft);
 // Windshield frame and roof header, kept slim so the view stays open.

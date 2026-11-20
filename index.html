@@ -776,7 +776,7 @@ const lightMat=new THREE.MeshBasicMaterial({color:0xfff3d0});
 const smokeMat=new THREE.MeshBasicMaterial({color:0xdce4e6,transparent:true,opacity:.32,depthWrite:false});const smoke=[];
 for(let i=0;i<34;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(.55+Math.random()*.5,8,7),smokeMat.clone());m.visible=false;scene.add(m);smoke.push({mesh:m,life:0})}
 let speed=0,slip=0,heading=0,score=0,points=0,boost=100,steerAngle=0,manualMode=false,manualGear=1,manualShiftLockUntil=0,paused=true,keys={},last=performance.now(),lastRender=0,carPos=curve.getPointAt(.03),vel=new THREE.Vector3(),driftAngle=0,combo=1,driftTimer=0,cameraMode=0,collisionShake=0,garageWasPlaying=false,garageMode=false,garagePos=new THREE.Vector3(),garageHeading=0,garageOrbitYaw=0,garageOrbitPitch=.20,garageOrbitRadius=9.5,cameraLook=new THREE.Vector3(),cameraSnap=true,garageTargetPosition=new THREE.Vector3(),garageTargetLook=new THREE.Vector3(),garageCameraReady=false,garageFramingKey='',garageDragging=false,garageLastX=0,garageLastY=0,garageVisibilitySnapshot=[];
-carRoot.position.copy(carPos);carRoot.position.y=0;
+carRoot.position.copy(carPos);carRoot.position.y=carPos.y;
 function shiftManualGear(delta){if(!manualMode)return;const next=THREE.MathUtils.clamp(manualGear+delta,0,6),caps=[18,29,42,57,74,96];if(next===manualGear)return;if(delta<0&&next>0&&Math.abs(speed)>caps[next-1]*.96){toast('DOWNSHIFT BLOCKED · TOO FAST');return}manualGear=next;manualShiftLockUntil=performance.now()+180;audioGear=manualGear;audioShiftDip=1;$('manualBtn').textContent='MANUAL '+(manualGear===0?'N':manualGear);toast(manualGear===0?'NEUTRAL · ENGINE DISCONNECTED':'GEAR '+manualGear+' · '+(delta>0?'UPSHIFT':'DOWNSHIFT'))}
 const $=id=>document.getElementById(id);
 function toast(s){$('toast').textContent=s;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',1800)}
@@ -1391,7 +1391,7 @@ function tick(t){
   vel.copy(forward).multiplyScalar(speed).addScaledVector(side,lateralSpeed);
   const previousCarPos=carPos.clone();carPos.addScaledVector(vel,dt);resolveWorldCollision(previousCarPos,carPos);resolveTrafficCollision(previousCarPos);if(carPos.distanceToSquared(previousCarPos)<.0001){speed*=.18;vel.multiplyScalar(.12);driftTimer=0;combo=1;}
   carRoot.position.copy(carPos);
-  carRoot.position.y=.05+Math.sin(t*.012)*.005;
+  carRoot.position.y=carPos.y+.05+Math.sin(t*.012)*.005;
   const motionHeading=Math.atan2(-vel.x,-vel.z);
   driftAngle=Math.atan2(Math.sin(heading-motionHeading),Math.cos(heading-motionHeading));
   carRoot.rotation.y=heading;

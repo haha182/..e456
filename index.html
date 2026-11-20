@@ -126,30 +126,108 @@ body>canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;touch-action
 #garage .garage-back{position:absolute;top:16px;left:20px;z-index:3;padding:10px 16px;border-radius:6px;background:rgba(8,14,19,.92);}
 #garageStatus{position:absolute;top:20px;left:50%;transform:translateX(-50%);z-index:2;color:#d5e5e7;font:700 10px/1.2 Arial,sans-serif;letter-spacing:.2em;text-align:center;white-space:nowrap;pointer-events:none;}
 @media(max-width:700px){#garage .card{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:54px 9px 58px;}#garage .garage-left,#garage .garage-right{max-height:calc(100dvh - 125px);padding:9px 10px;background:rgba(5,12,17,.96);}#garage .garage-left label,#garage .garage-right label{margin:5px 0 8px;font-size:10px;}#garage .garage-actions{bottom:8px;}#garage .garage-actions button{min-width:140px;padding:10px 14px;}#garageStatus{top:18px;font-size:8px;}}
-@media(max-width:700px){#dealerPanel{grid-column:1/-1;grid-row:1;align-self:start;max-height:30vh;overflow:auto;margin:0 0 6px!important;padding:10px!important}#dealerPanel>div:first-child{gap:6px!important}#dealerPanel div[style*='font-size:24px']{font-size:18px!important}#dealerPanel button{font-size:11px;padding:8px!important}}</style>
+@media(max-width:700px){#dealerPanel{grid-column:1/-1;grid-row:1;align-self:start;max-height:30vh;overflow:auto;margin:0 0 6px!important;padding:10px!important}#dealerPanel>div:first-child{gap:6px!important}#dealerPanel div[style*='font-size:24px']{font-size:18px!important}#dealerPanel button{font-size:11px;padding:8px!important}}
+/* Velocity Rush-inspired full-screen garage rebuild */
+#garage.velocity-style-garage{background:radial-gradient(ellipse at 50% 48%,rgba(20,48,61,.26),rgba(3,8,14,.76) 72%);color:#f4fbff;cursor:default}
+#garage.velocity-style-garage:before{display:block;content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(3,8,14,.78),transparent 43%,rgba(3,8,14,.5)),linear-gradient(0deg,rgba(1,5,9,.7),transparent 25%,rgba(1,5,9,.45));pointer-events:none}
+#garage .garage-shell{height:100%;min-height:100%;padding:74px 22px 76px;grid-template-columns:minmax(220px,265px) minmax(220px,1fr) minmax(330px,390px);grid-template-rows:1fr;gap:clamp(12px,1.6vw,24px);align-items:stretch}
+#garage .garage-header{position:absolute;top:0;left:0;right:0;height:62px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 22px;background:linear-gradient(180deg,rgba(4,12,20,.96),rgba(4,12,20,.72));border-bottom:1px solid rgba(70,218,239,.2);pointer-events:auto}
+#garage .garage-back{position:static;justify-self:start;padding:9px 13px;border:1px solid rgba(70,218,239,.35);border-radius:6px;background:rgba(8,24,34,.9);color:#d9faff;font-size:11px;letter-spacing:.1em}
+#garage .garage-heading{text-align:center;display:flex;flex-direction:column;gap:1px}
+#garage .garage-heading span{font-size:9px;letter-spacing:.25em;color:#65dff1;font-weight:800}
+#garage .garage-heading strong{font-size:21px;letter-spacing:.18em;font-weight:900}
+#garage .garage-balance{justify-self:end;color:#7f9aa8;font-size:9px;letter-spacing:.15em;text-align:right}
+#garage .garage-balance b{display:block;color:#ffd45d;font-size:16px;letter-spacing:.04em;margin-top:3px}
+#garageStatus{top:72px;left:50%;padding:5px 10px;border:0;background:transparent;color:#6d8998;font-size:9px;letter-spacing:.2em}
+#garage .dealer-panel,#garage .garage-tuning{position:relative;align-self:stretch;min-height:0;max-height:calc(100vh - 154px);overflow:auto;padding:16px;border:1px solid rgba(89,211,231,.22);border-radius:10px;background:linear-gradient(160deg,rgba(8,20,30,.94),rgba(4,12,20,.91));box-shadow:0 18px 45px rgba(0,0,0,.32);backdrop-filter:blur(14px);pointer-events:auto;scrollbar-width:thin;scrollbar-color:#285565 transparent}
+#garage .dealer-panel{grid-column:1;grid-row:1;margin:0!important}
+#garage .garage-center{grid-column:2;grid-row:1;align-self:stretch;min-height:260px;position:relative;pointer-events:none}
+#garage .garage-floor-label{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);white-space:nowrap;color:#7c9aa9;font-size:9px;letter-spacing:.2em;text-shadow:0 2px 8px #000}
+#garage .garage-panel-heading{display:flex;flex-direction:column;gap:6px;padding-bottom:13px;margin-bottom:14px;border-bottom:1px solid rgba(86,209,230,.2)}
+#garage .garage-panel-heading span{font-size:9px;letter-spacing:.2em;color:#5bd7eb;font-weight:800}
+#garage .garage-panel-heading b{font-size:15px;letter-spacing:.08em;color:#f2f8fb}
+#garage .garage-current-car{padding:13px;margin:0 0 12px;border:1px solid rgba(87,212,232,.22);border-radius:7px;background:linear-gradient(120deg,rgba(17,54,68,.65),rgba(8,25,36,.8))}
+#garage .garage-current-car span{display:block;font-size:8px;color:#6ddced;letter-spacing:.2em}
+#garage .garage-current-car strong{display:block;margin-top:5px;font-size:13px;letter-spacing:.06em}
+#garage .garage-current-car small{display:block;margin-top:5px;color:#90a6b2;font-size:10px}
+#dealerMessage{margin:10px 0;color:#8da6b2;font-size:10px;line-height:1.5}
+#dealerCarChoices{display:grid!important;grid-template-columns:1fr;gap:8px;margin-top:12px!important}
+#dealerCarChoices button{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;padding:12px;border:1px solid rgba(118,159,177,.2);border-radius:6px;background:rgba(14,31,43,.86);color:#ecf8fc;text-align:left;font-size:12px;font-weight:800;letter-spacing:.08em;transition:border-color .16s,background .16s}
+#dealerCarChoices button small{font-size:9px;color:#7895a4;letter-spacing:.14em}
+#dealerCarChoices button:hover,#dealerCarChoices button.active,#dealerCarChoices button.primary{border-color:#51d8ec;background:rgba(21,67,82,.72);color:#fff;box-shadow:inset 3px 0 #52d9ed}
+#garage .garage-tuning{grid-column:3;grid-row:1;display:flex;flex-direction:column;gap:0}
+#garage .garage-tuning-columns{display:flex;flex-direction:column;gap:14px;min-height:0}
+#garage .tuning-group{position:static;display:block;max-height:none;overflow:visible;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none}
+#garage .tuning-group-title{margin:0 0 8px;color:#5bd7eb;font-size:9px;letter-spacing:.18em;font-weight:800}
+#garage label{margin:9px 0;color:#dceaf0;font-size:10px}
+#garage label span{display:flex;justify-content:space-between;gap:8px;margin-bottom:5px;color:#b8cbd4;font-size:9px;letter-spacing:.08em}
+#garage label span b{color:#f4fbff;font-size:10px}
+#garage input[type=range]{height:4px;accent-color:#50d8eb}
+#garage input[type=color]{height:27px;border:1px solid rgba(90,210,231,.25);border-radius:4px;background:#102431}
+#garage select{width:100%;padding:8px;border:1px solid rgba(90,210,231,.25);border-radius:5px;background:#0d202c;color:#eaf8fc;font-size:10px}
+#garage .garage-footer{position:absolute;left:0;right:0;bottom:0;height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:linear-gradient(0deg,rgba(4,12,20,.98),rgba(4,12,20,.82));border-top:1px solid rgba(70,218,239,.2);pointer-events:auto}
+#garage .garage-footer span{color:#718d9b;font-size:9px;letter-spacing:.16em}
+#garage .garage-footer button{padding:11px 24px;border:1px solid #58d9ed;border-radius:5px;background:linear-gradient(100deg,#48cce0,#8be9f2);color:#04121a;font-size:11px;font-weight:900;letter-spacing:.16em}
+#garage .garage-actions{display:none}
+@media(max-width:900px){#garage .garage-shell{grid-template-columns:minmax(150px, .8fr) minmax(0,1fr);grid-template-rows:auto 1fr;padding:76px 9px 68px;gap:9px}#garage .garage-header{padding:0 10px;grid-template-columns:1fr auto 1fr}#garage .garage-heading strong{font-size:16px}#garage .garage-balance{font-size:8px}#garage .garage-balance b{font-size:13px}#garage .dealer-panel{grid-column:1;grid-row:1 / span 2;max-height:calc(100vh - 154px);padding:10px}#garage .garage-center{grid-column:2;grid-row:1;min-height:120px}#garage .garage-tuning{grid-column:2;grid-row:2;max-height:calc(100vh - 300px);padding:10px}#garage .garage-panel-heading b{font-size:11px}#garage .garage-footer{padding:0 10px}#garage .garage-footer span{font-size:7px}}
+@media(max-width:560px){#garage .garage-shell{grid-template-columns:1fr 1fr;grid-template-rows:0 minmax(0,1fr);padding:68px 7px 60px;gap:7px}#garage .dealer-panel{grid-column:1;grid-row:2;max-height:calc(100vh - 138px)}#garage .garage-center{grid-column:1 / -1;grid-row:1;height:0;min-height:0}#garage .garage-tuning{grid-column:2;grid-row:2;max-height:calc(100vh - 138px)}#garage .garage-back{font-size:9px;padding:7px 8px}#garage .garage-heading span{font-size:7px}#garage .garage-heading strong{font-size:14px}#garage .garage-balance{font-size:7px}#garage .garage-balance b{font-size:11px}#garage .garage-panel-heading b{font-size:10px}#garage .garage-current-car{padding:8px}#garage .garage-current-car strong{font-size:10px}#dealerCarChoices button{padding:8px;font-size:10px}#dealerCarChoices button small{font-size:8px}#garage label{font-size:9px;margin:7px 0}#garage label span{font-size:8px}#garage label span b{font-size:9px}#garage .garage-footer{height:54px}#garage .garage-footer button{padding:9px 13px;font-size:9px}#garage .garage-footer span{max-width:56%;line-height:1.4}}
+</style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 </head>
 <body>
 <div id="gameError" role="alert"></div><div id="loadingScreen"><div class="loading-panel"><div class="loading-mark">HARRISON MOTORSPORT</div><div class="loading-title">DRIFT WORLD</div><div class="loading-copy">BUILDING THE OPEN HIGHWAY</div><div class="loading-track"></div><div class="loading-foot">OPEN WORLD · TRAFFIC · CAR SHOP</div></div></div>
 <div id="introScreen" aria-label="Harrison Motorsport intro"><div class="intro-content"><div class="intro-kicker">HARRISON MOTORSPORT PRESENTS</div><div class="intro-title">AFTER<span>DARK</span></div><div class="intro-sub">THE STREETS ARE YOURS</div><div class="intro-car"><div class="intro-wheel"></div><div class="intro-light"></div></div><div class="intro-bottom"><button class="intro-enter" id="introEnter">START YOUR ENGINE</button><button class="intro-skip" id="introSkip">SKIP INTRO</button></div><div class="intro-progress"></div></div></div>
 <div id="menu" style="display:none"><div class="card"><h1>HIGHWAY<br>AFTER DARK</h1><p>Open roads. Live traffic. Your garage.</p><div class="menu-actions"><button class="primary" id="start">DRIVE HIGHWAY</button><button id="openGarage">CAR SHOP &amp; TUNING</button></div></div></div>
-<div id="garage"><div id="garageStatus">HIGHWAY MOTORSPORT · CAR DEALER</div><div class="card"><button class="garage-back" id="closeGarage">← BACK</button><div id="dealerPanel" style="grid-column:2;grid-row:1;align-self:start;max-height:calc(100vh - 130px);overflow:auto;margin:12px 0 20px;padding:16px;border:1px solid #5de2e455;border-radius:14px;background:#081522"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><div style="font-size:11px;letter-spacing:.18em;color:#5de2e4;font-weight:bold">LFA STARTER GARAGE</div><div style="font-size:24px;font-weight:800;margin-top:5px">YOUR LEXUS LFA</div></div><div style="font-weight:800;color:#8ef0bd">CASH: <span id="dealerCash">$150,000</span></div></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px"><div style="flex:1;min-width:190px;padding:12px;border-radius:8px;background:#122433;color:#8ef0bd;border:1px solid #5de2e455;font-weight:800">2012 LEXUS LFA NÜRBURGRING PACKAGE · YOUR STARTER CAR</div></div><div id="dealerMessage" style="font-size:12px;color:#b5c7d5;margin-top:10px">YOUR CARS: LEXUS LFA + TWO GTI BUILDS · ALL UNLOCKED</div><div id="dealerCarChoices" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:8px;margin-top:12px"><button type="button" data-car-choice="lexus_lfa">LEXUS LFA<br><small>V10</small></button><button type="button" data-car-choice="gti_2010">GTI MK6<br><small>STREET BUILD</small></button><button type="button" data-car-choice="gti_2010_hood_dump" class="primary">GTI MK6<br><small>HOOD DUMP EDITION</small></button><button type="button" data-car-choice="bmw_m4">BMW M4<br><small>COMPETITION</small></button></div></div><div class="garage-left">
-<label><span>TURBO: <b id="turboVal">14.3 psi</b></span><input id="turbo" type="range" min="0" max="25" step=".1" value="14.3"></label>
-<label><span>FRONT CAMBER: <b id="frontCamberVal">-5°</b></span><input id="frontCamber" type="range" min="-10" max="2" step=".5" value="-5"></label>
-<label><span>REAR CAMBER: <b id="rearCamberVal">-1°</b></span><input id="rearCamber" type="range" min="-10" max="2" step=".5" value="-1"></label>
-<label><span>FRONT OFFSET: <b id="frontOffsetVal">5 cm</b></span><input id="frontOffset" type="range" min="-2" max="10" step=".5" value="5"></label>
-<label><span>REAR OFFSET: <b id="rearOffsetVal">3 cm</b></span><input id="rearOffset" type="range" min="-2" max="10" step=".5" value="3"></label></div>
-<div class="garage-right"><label><span>BRAKE BALANCE: <b id="brakeBalanceVal">70%</b></span><input id="brakeBalance" type="range" min="40" max="80" value="70"></label>
-<label><span>FRONT HEIGHT: <b id="frontHeightVal">-6 cm</b></span><input id="frontHeight" type="range" min="-12" max="5" step=".5" value="-6"></label>
-<label><span>REAR HEIGHT: <b id="rearHeightVal">+1 cm</b></span><input id="rearHeight" type="range" min="-12" max="8" step=".5" value="1"></label>
-<label><span>BRAKE PRESSURE: <b id="brakePressureVal">100%</b></span><input id="brakePressure" type="range" min="50" max="120" value="100"></label>
+<div id="garage" class="velocity-style-garage">
+<div id="garageStatus">HIGHWAY MOTORSPORT · PRIVATE WORKSHOP</div>
+<div class="card garage-shell">
+<header class="garage-header">
+<button class="garage-back" id="closeGarage">← BACK TO ROAD</button>
+<div class="garage-heading"><span>VEHICLE MANAGEMENT</span><strong>GARAGE</strong></div>
+<div class="garage-balance">CASH BALANCE <b id="dealerCash">$150,000</b></div>
+</header>
+<section class="garage-left dealer-panel" id="dealerPanel">
+<div class="garage-panel-heading"><span>01 / YOUR COLLECTION</span><b>SELECT VEHICLE</b></div>
+<div class="garage-current-car"><span>ACTIVE VEHICLE</span><strong>YOUR CURRENT BUILD</strong><small>Choose a car below to preview and equip it</small></div>
+<div id="dealerMessage">YOUR CARS: LEXUS LFA + GTI BUILDS + BMW M4</div>
+<div id="dealerCarChoices">
+<button type="button" data-car-choice="lexus_lfa">LEXUS LFA <small>V10 · STARTER</small></button>
+<button type="button" data-car-choice="gti_2010">GTI MK6 <small>STREET BUILD</small></button>
+<button type="button" data-car-choice="gti_2010_hood_dump">GTI MK6 <small>HOOD DUMP EDITION</small></button>
+<button type="button" data-car-choice="bmw_m4">BMW M4 <small>COMPETITION</small></button>
+</div>
+</section>
+<div class="garage-center" aria-hidden="true"><div class="garage-floor-label">LIVE 3D VEHICLE PREVIEW</div></div>
+<section class="garage-tuning">
+<div class="garage-panel-heading"><span>02 / SETUP</span><b>PERFORMANCE & APPEARANCE</b></div>
+<div class="garage-tuning-columns">
+<div class="garage-left tuning-group">
+<div class="tuning-group-title">POWER & FITMENT</div>
+<label><span>TURBO <b id="turboVal">14.3 psi</b></span><input id="turbo" type="range" min="0" max="25" step=".1" value="14.3"></label>
+<label><span>FRONT CAMBER <b id="frontCamberVal">-5°</b></span><input id="frontCamber" type="range" min="-10" max="2" step=".5" value="-5"></label>
+<label><span>REAR CAMBER <b id="rearCamberVal">-1°</b></span><input id="rearCamber" type="range" min="-10" max="2" step=".5" value="-1"></label>
+<label><span>FRONT OFFSET <b id="frontOffsetVal">5 cm</b></span><input id="frontOffset" type="range" min="-2" max="10" step=".5" value="5"></label>
+<label><span>REAR OFFSET <b id="rearOffsetVal">3 cm</b></span><input id="rearOffset" type="range" min="-2" max="10" step=".5" value="3"></label>
+<label><span>FRONT HEIGHT <b id="frontHeightVal">-6 cm</b></span><input id="frontHeight" type="range" min="-12" max="5" step=".5" value="-6"></label>
+<label><span>REAR HEIGHT <b id="rearHeightVal">+1 cm</b></span><input id="rearHeight" type="range" min="-12" max="8" step=".5" value="1"></label>
+</div>
+<div class="garage-right tuning-group">
+<div class="tuning-group-title">BRAKES & STYLE</div>
+<label><span>BRAKE BALANCE <b id="brakeBalanceVal">70%</b></span><input id="brakeBalance" type="range" min="40" max="80" value="70"></label>
+<label><span>BRAKE PRESSURE <b id="brakePressureVal">100%</b></span><input id="brakePressure" type="range" min="50" max="120" value="100"></label>
 <label><span>BODY KIT</span><select id="bodyKit"><option value="factory">Factory</option><option value="street">Street kit</option><option value="widebody">Widebody</option><option value="track">Track aero</option></select></label>
 <label><span>REAR SPOILER</span><select id="spoilerStyle"><option value="stock">No spoiler</option><option value="ducktail">Ducktail</option><option value="gtwing">GT racing wing</option></select></label>
 <label><span>RIM FINISH</span><select id="rimFinish"><option value="silver">Machined silver</option><option value="black">Gloss black</option><option value="gold">Gold</option><option value="bronze">Bronze</option></select></label>
 <label><span>UNDERGLOW COLOR</span><input id="neonColor" type="color" value="#19d9ff"></label>
-<label><span>WINDOW TINT: <b id="windowTintVal">35%</b></span><input id="windowTint" type="range" min="0" max="90" step="5" value="35"></label>
-<label><span>BODY PAINT</span><input id="paint" type="color" value="#bfc7ce"></label><label><span>YOUR CAR</span><select id="carStyle" style="display:none"><option value="lexus_lfa">2012 Lexus LFA Nürburgring Package</option><option value="gti_2010">2010 Volkswagen Golf GTI Mk6 · Street</option><option value="gti_2010_hood_dump">2010 Volkswagen Golf GTI Mk6 · Hood Dump</option><option value="bmw_m4">BMW M4 Competition</option></select><div id="carChoiceButtons" style="display:grid;grid-template-columns:1fr;gap:7px;margin-top:8px"><button type="button" data-car-choice="lexus_lfa">EQUIP LEXUS LFA</button><button type="button" data-car-choice="gti_2010">EQUIP GTI · STREET</button><button type="button" data-car-choice="gti_2010_hood_dump" class="primary">EQUIP GTI · HOOD DUMP</button><button type="button" data-car-choice="bmw_m4">EQUIP BMW M4</button></div></label></div>
-<h2>TUNING</h2><div class="garage-actions"><button class="primary" id="saveGarage">SAVE BUILD</button></div></div></div>
+<label><span>WINDOW TINT <b id="windowTintVal">35%</b></span><input id="windowTint" type="range" min="0" max="90" step="5" value="35"></label>
+<label><span>BODY PAINT</span><input id="paint" type="color" value="#bfc7ce"></label>
+<label class="car-select-label"><span>ACTIVE CAR</span><select id="carStyle" style="display:none"><option value="lexus_lfa">2012 Lexus LFA Nürburgring Package</option><option value="gti_2010">2010 Volkswagen Golf GTI Mk6 · Street</option><option value="gti_2010_hood_dump">2010 Volkswagen Golf GTI Mk6 · Hood Dump</option><option value="bmw_m4">BMW M4 Competition</option></select><div id="carChoiceButtons" style="display:none"><button type="button" data-car-choice="lexus_lfa">EQUIP LEXUS LFA</button><button type="button" data-car-choice="gti_2010">EQUIP GTI · STREET</button><button type="button" data-car-choice="gti_2010_hood_dump">EQUIP GTI · HOOD DUMP</button><button type="button" data-car-choice="bmw_m4">EQUIP BMW M4</button></div></label>
+</div>
+</div>
+</section>
+<footer class="garage-footer"><span>CHANGES APPLY TO YOUR SELECTED VEHICLE</span><button class="primary" id="saveGarage">SAVE BUILD</button></footer>
+</div>
+</div>
 <div id="ui"><div id="driveCash" style="position:fixed;left:14px;top:14px;padding:10px 14px;border:1px solid #68dce455;border-radius:10px;background:#06131ddd;color:#9af5d7;font-weight:800;font-size:14px;letter-spacing:.04em;backdrop-filter:blur(10px)">CASH&nbsp; $150,000</div><div class="cockpit"><div class="cockpit-brand" aria-hidden="true"><b id="carLabel">SPECTRAL GT RS</b></div><div class="speed-cluster"><svg viewBox="0 0 220 145" aria-hidden="true" style="display:none"><path id="speedArc" d="M24 119 A86 86 0 0 1 196 119" fill="none" stroke="#56e8e2" stroke-width="5" stroke-dasharray="270" stroke-dashoffset="270"/></svg><div class="speed-readout"><b id="speed">0</b><span>KM/H</span></div></div><div class="drift-cluster" aria-hidden="true"><b id="score">0</b><span><b id="combo">x1</b></span></div></div></div>
 <div id="help">WASD / arrows: drive & steer<br>SPACE: handbrake · SHIFT: boost · R: reset<br>M: manual · 1: upshift · 2: downshift (N below 1)<br>C: first-person · drag mouse to look</div><div id="worldTimeControl" style="position:fixed;left:12px;top:72px;z-index:12;display:flex;align-items:center;gap:6px;padding:7px 9px;border:1px solid #78d9e477;border-radius:10px;background:#06131ddd;color:#eaf7ff;font:700 11px system-ui;backdrop-filter:blur(8px);pointer-events:auto"><span style="letter-spacing:.08em">WORLD</span><select id="worldTimeSelect" aria-label="Change world lighting" style="max-width:116px;padding:7px 8px;border:1px solid #70cbd088;border-radius:7px;background:#102435;color:#fff;font-weight:800"><option value="day">DAY</option><option value="sunset">SUNSET</option><option value="night" selected>NIGHT</option><option value="galaxy">GALAXY</option></select></div>
 <div id="driveActions" style="position:fixed;right:12px;top:72px;z-index:4;pointer-events:auto"><button id="cameraBtn">CAMERA</button><button id="manualBtn">AUTO</button><button id="radioBtn">RADIO</button><button id="garageBtn">GARAGE</button></div>

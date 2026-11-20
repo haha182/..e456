@@ -559,6 +559,7 @@ function tick(t){
 
   // Drift scoring and smoke now work for throttle-initiated power slides as well as e-brake entries.
   const actualSpeed=Math.hypot(speed,lateralSpeed);
+  updateCarAudio(gas?1:0,actualSpeed);
   const driftQuality=Math.abs(driftAngle);
   slip=driftQuality*actualSpeed;
   if(actualSpeed>9&&driftQuality>.22&&driftQuality<1.18){
@@ -597,10 +598,17 @@ function tick(t){
 }
 requestAnimationFrame(tick);
 
-// Synthetic oscillator audio removed; waiting for real recorded engine samples.
+// Recorded engine audio: CC0 racing-car loops from OpenGameArt.
+// https://opengameart.org/content/racing-car-engine-sound-loops
+const ENGINE_SAMPLE_URLS=['https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_1_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_2_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_3_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_4_0.wav','https://raw.githubusercontent.com/yashimosh/border-run/main/public/sfx/engine/loop_5.wav'];
+let carAudioCtx=null,carAudioMaster=null,engineVoices=[],engineAudioReady=false,engineAudioLoading=false,engineAudioWanted=false,engineThrottleSmooth=0,engineSpeedSmooth=0;
+async function initCarAudio(){engineAudioWanted=true;if(engineAudioReady){if(carAudioCtx.state==='suspended')carAudioCtx.resume();carAudioMaster.gain.setTargetAtTime(.72,carAudioCtx.currentTime,.35);return}if(engineAudioLoading)return;engineAudioLoading=true;try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;carAudioCtx=new AC();carAudioMaster=carAudioCtx.createGain();carAudioMaster.gain.value=0;carAudioMaster.connect(carAudioCtx.destination);await carAudioCtx.resume();const buffers=await Promise.all(ENGINE_SAMPLE_URLS.map(async url=>{const r=await fetch(url);if(!r.ok)throw Error('Engine sample download failed: '+r.status);return carAudioCtx.decodeAudioData(await r.arrayBuffer())}));buffers.forEach((buffer,i)=>{const source=carAudioCtx.createBufferSource(),gain=carAudioCtx.createGain();source.buffer=buffer;source.loop=true;source.playbackRate.value=.9+i*.045;gain.gain.value=i===0?.22:0;source.connect(gain);gain.connect(carAudioMaster);source.start();engineVoices.push({source,gain})});engineAudioReady=true;if(engineAudioWanted)carAudioMaster.gain.setTargetAtTime(.72,carAudioCtx.currentTime,.45)}catch(err){console.warn('Recorded engine audio could not load:',err)}finally{engineAudioLoading=false}}
+function stopCarAudio(){engineAudioWanted=false;if(engineAudioReady&&carAudioCtx)carAudioMaster.gain.setTargetAtTime(0,carAudioCtx.currentTime,.25)}
+function updateCarAudio(throttle,vehicleSpeed){if(!engineAudioReady||!carAudioCtx||carAudioCtx.state!=='running'||!engineAudioWanted)return;engineThrottleSmooth+=(throttle-engineThrottleSmooth)*.13;engineSpeedSmooth+=(Math.abs(vehicleSpeed)-engineSpeedSmooth)*.09;const rpm=THREE.MathUtils.clamp(.08+engineThrottleSmooth*.47+Math.min(engineSpeedSmooth/48,.48),0,1),index=rpm*(engineVoices.length-1),lo=Math.floor(index),hi=Math.min(engineVoices.length-1,lo+1),blend=index-lo,now=carAudioCtx.currentTime;engineVoices.forEach((v,i)=>{const weight=i===lo?1-blend:i===hi?blend:0;v.gain.gain.setTargetAtTime(weight*(.42+engineThrottleSmooth*.48),now,.09);v.source.playbackRate.setTargetAtTime((.88+i*.045)*(1+engineThrottleSmooth*.1),now,.12)})}
 function restoreTreeVisibility(root,visible=true){root.visible=visible;root.children?.forEach(child=>restoreTreeVisibility(child,visible))}
 function start(){
  try{
+  initCarAudio();
   garageMode=false;restoreTreeVisibility(scene,true);showroom.visible=false;
   scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,115,390);
   renderer.setClearColor(0x050914,1);
@@ -620,7 +628,7 @@ function start(){
 }
 function setGarageValues(){const ids=['turbo','frontCamber','rearCamber','frontOffset','rearOffset','brakeBalance','frontHeight','rearHeight','brakePressure'];for(const id of ids){const el=$(id),v=localStorage['hcg_'+id]??el.value;el.value=v;$(id+'Val').textContent=({turbo:v+' psi',frontCamber:v+'°',rearCamber:v+'°',frontOffset:v+' cm',rearOffset:v+' cm',brakeBalance:v+'%',frontHeight:(+v>0?'+':'')+v+' cm',rearHeight:(+v>0?'+':'')+v+' cm',brakePressure:v+'%'})[id]}}function setGarageCamera(){const cp=Math.cos(garageOrbitPitch);camera.position.set(Math.sin(garageOrbitYaw)*garageOrbitRadius*cp,1+Math.sin(garageOrbitPitch)*garageOrbitRadius,Math.cos(garageOrbitYaw)*garageOrbitRadius*cp);camera.lookAt(0,1,0)}
 function openGarage(){
- garageWasPlaying=!paused;paused=true;garageMode=true;garagePos.copy(carPos);garageHeading=heading;
+ stopCarAudio();garageWasPlaying=!paused;paused=true;garageMode=true;garagePos.copy(carPos);garageHeading=heading;
  garageOrbitYaw=.28;garageOrbitPitch=.16;garageOrbitRadius=9.2;
  $('menu').style.display='none';$('ui').style.display='none';$('help').style.display='none';$('touch').style.display='none';$('driveActions').style.display='none';
  scene.background=new THREE.Color(0x101820);scene.fog=null;renderer.setClearColor(0x101820,1);
@@ -641,7 +649,7 @@ function closeGarage(){
   camera.position.set(carPos.x+Math.sin(heading)*12,carPos.y+7.2,carPos.z+Math.cos(heading)*12);
   cameraLook.set(carPos.x,carPos.y+1.4,carPos.z-4);camera.lookAt(cameraLook);
  }
- if(garageWasPlaying){paused=false;last=performance.now()}
+ if(garageWasPlaying){initCarAudio();paused=false;last=performance.now()}
 }function saveGarage(){const ids=['turbo','frontCamber','rearCamber','frontOffset','rearOffset','brakeBalance','frontHeight','rearHeight','brakePressure'];for(const id of ids)localStorage['hcg_'+id]=$(id).value;paintMat.color.set($('paint').value);localStorage.hcgPaint=$('paint').value;localStorage.hcgPower=$('turbo').value;localStorage.hcg_turbo=$('turbo').value;localStorage.hcgStyle=$('carStyle').value;applyStyle(localStorage.hcgStyle);applyTune();closeGarage();toast('Tuning saved')}function updateTuneLabels(){for(const id of ['turbo','frontCamber','rearCamber','frontOffset','rearOffset','brakeBalance','frontHeight','rearHeight','brakePressure'])$(id).addEventListener('input',()=>{const v=$(id).value;$(id+'Val').textContent=({turbo:v+' psi',frontCamber:v+'°',rearCamber:v+'°',frontOffset:v+' cm',rearOffset:v+' cm',brakeBalance:v+'%',frontHeight:(+v>0?'+':'')+v+' cm',rearHeight:(+v>0?'+':'')+v+' cm',brakePressure:v+'%'})[id];localStorage['hcg_'+id]=v;if(id==='turbo')localStorage.hcg_turbo=v;applyTune()})}$('garage').addEventListener('pointerdown',e=>{if(!garageMode||e.target.closest('button,input,select,label'))return;garageDragging=true;garageLastX=e.clientX;garageLastY=e.clientY;$('garage').setPointerCapture(e.pointerId);$('garage').style.cursor='grabbing'});$('garage').addEventListener('pointermove',e=>{if(!garageDragging)return;const dx=e.clientX-garageLastX,dy=e.clientY-garageLastY;garageLastX=e.clientX;garageLastY=e.clientY;garageOrbitYaw-=dx*.009;garageOrbitPitch=THREE.MathUtils.clamp(garageOrbitPitch+dy*.007,-.12,1.05);setGarageCamera()});const stopGarageDrag=()=>{garageDragging=false;$('garage').style.cursor='grab'};$('garage').addEventListener('pointerup',stopGarageDrag);$('garage').addEventListener('pointercancel',stopGarageDrag);$('garage').addEventListener('wheel',e=>{if(!garageMode)return;e.preventDefault();garageOrbitRadius=THREE.MathUtils.clamp(garageOrbitRadius+e.deltaY*.012,6.2,19);setGarageCamera()},{passive:false});$('start').onclick=start;$('openGarage').onclick=openGarage;$('closeGarage').onclick=closeGarage;$('saveGarage').onclick=saveGarage;
 $('cameraBtn').onclick=changeCamera;$('garageBtn').onclick=openGarage;$('carStyle').value='spectral_gt';localStorage.hcgStyle='spectral_gt';applyStyle();$('carStyle').addEventListener('change',applyStyle);applyTune();if(localStorage.hcgPower)$('turbo').value=localStorage.hcgPower;setGarageValues();updateTuneLabels();if(localStorage.hcgPaint){$('paint').value=localStorage.hcgPaint;paintMat.color.set(localStorage.hcgPaint);applyTune()}
 const controlKeys=new Set(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' ','shift']);addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=true;e.preventDefault()}if(k==='c')changeCamera();if(k==='r')reset();if(e.key==='Escape'){paused=true;$('menu').style.display='grid'}});addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=false;e.preventDefault()}});addEventListener('blur',()=>{for(const k of controlKeys)keys[k]=false});

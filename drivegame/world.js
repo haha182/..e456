@@ -267,6 +267,7 @@ export function buildWorld(scene, track, opts = {}) {
     });
     apron.receiveShadow = true;
     scene.add(apron);
+    if (!opts.lightweight) {
     const far = buildRibbon(track, sgn * (RAIL_D + 6), sgn * 60, 0, grassFarMat, {
       stride: 3, maskFn: onBridge,
       heightFn: (i, d, v) => {
@@ -280,6 +281,7 @@ export function buildWorld(scene, track, opts = {}) {
     });
     far.receiveShadow = true;
     scene.add(far);
+    }
   }
 
   // ---- guardrails (galvanized steel, reflects the sky)
@@ -298,7 +300,7 @@ export function buildWorld(scene, track, opts = {}) {
   }
 
   // ---- world dressing
-  addForest(scene, track, treeFrac);
+  if (treeFrac > 0) addForest(scene, track, treeFrac);
   addSigns(scene, track);
   addGantry(scene, track);
   addBrakingMarkers(scene, track, chunks);
@@ -308,7 +310,7 @@ export function buildWorld(scene, track, opts = {}) {
   // (Breidscheid village, Brünnchen campers, German ad boards, tarmac
   // graffiti). On any other track the `% track.n` wrap scatters them at
   // arbitrary spots — including ON nearby track sections.
-  if (opts.nord) {
+  if (opts.nord && !opts.lightweight) {
     addAdBoards(scene, track);
     addGraffiti(scene, track);
     addVillage(scene, track);

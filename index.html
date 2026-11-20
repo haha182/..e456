@@ -192,21 +192,17 @@ function openRoad(points,width=13){
  dashes.count=di;dashes.instanceMatrix.needsUpdate=true;scene.add(dashes);
  return route;
 }
-const mountainRoute=openRoad([[76,65],[125,112],[175,158],[205,220],[255,285],[315,330],[365,300],[385,235],[350,175],[300,135],[235,112],[175,120],[125,112]]);
+const northForestRoute=openRoad([[76,65],[125,112],[175,158],[205,220],[255,285],[315,330],[365,300],[385,235],[350,175],[300,135],[235,112],[175,120],[125,112]]);
 const forestRoute=openRoad([[-75,65],[-130,115],[-190,155],[-255,190],[-325,170],[-365,105],[-345,35],[-285,-15],[-220,-28],[-165,5],[-130,55]]);
 const industrialRoute=openRoad([[105,-48],[155,-95],[215,-125],[285,-115],[350,-75],[390,-15],[365,45],[305,65],[245,45],[190,5],[155,-35]]);
 // Roadside reflector posts and occasional warm lamps make the routes readable from a distance.
 const reflectorMat=new THREE.MeshBasicMaterial({color:0xffc76b}),openRoadPostMat=mat(0x303943,.5,.65),lampGlowMat=new THREE.MeshBasicMaterial({color:0xffd36a});
-for(const route of [mountainRoute,forestRoute,industrialRoute]){
+for(const route of [northForestRoute,forestRoute,industrialRoute]){
  for(let i=3;i<70;i+=4){const p=route.getPointAt(i/72),t=route.getTangentAt(i/72),side=new THREE.Vector3(-t.z,0,t.x).normalize();
   for(const sign of [-1,1]){addWorldCollider(p.x+side.x*7.7*sign,p.z+side.z*7.7*sign,.18,.18);const post=new THREE.Mesh(new THREE.BoxGeometry(.13,.8,.13),openRoadPostMat);post.position.set(p.x+side.x*7.7*sign,.4,p.z+side.z*7.7*sign);scene.add(post);const reflector=new THREE.Mesh(new THREE.BoxGeometry(.16,.12,.035),reflectorMat);reflector.position.set(post.position.x,.72,post.position.z);scene.add(reflector)}
  }
 }
-// A remote mountain overlook and a small industrial yard give the roads destinations to discover.
-const overlook=new THREE.Group();overlook.position.set(315,0,330);scene.add(overlook);addWorldCollider(296,330,.45,12);addWorldCollider(334,330,.45,12);
-const deck=new THREE.Mesh(new THREE.BoxGeometry(42,.65,24),mat(0x343d46,.8,.3));deck.position.y=.1;deck.receiveShadow=true;overlook.add(deck);
-for(const x of [-19,19]){const rail=new THREE.Mesh(new THREE.BoxGeometry(.25,1.5,24),openRoadPostMat);rail.position.set(x,1,0);overlook.add(rail)}
-const overlookLamp=new THREE.PointLight(0xffbd58,48,76);overlookLamp.position.set(0,9,0);overlook.add(overlookLamp);
+// Northern route is forest country only; remove the former mountain-overlook landmark.
 const yard=new THREE.Group();yard.position.set(330,0,-95);scene.add(yard);
 const yardMat=mat(0x303a43,.9,.2);
 for(let i=0;i<5;i++){addWorldCollider(330+(i-2)*20,-95,9.2,3.7);const container=new THREE.Mesh(new THREE.BoxGeometry(18,5,7),i%2?mat(0x34464c,.85,.25):yardMat);container.position.set((i-2)*20,2.5,0);yard.add(container);for(let z=-3;z<=3;z+=1.5){const rib=new THREE.Mesh(new THREE.BoxGeometry(17.8,.07,.07),yardMat);rib.position.set((i-2)*20,2.5,z);yard.add(rib)}}
@@ -223,7 +219,7 @@ for(const route of [coastRoute,westRoute]){
  }
 }
 // Add spaced warm streetlights along all five open-world routes; no extra shadow maps.
-for(const route of [mountainRoute,forestRoute,industrialRoute,coastRoute,westRoute]){
+for(const route of [northForestRoute,forestRoute,industrialRoute,coastRoute,westRoute]){
  for(let i=8;i<68;i+=20){const p=route.getPointAt(i/72),t=route.getTangentAt(i/72),side=new THREE.Vector3(-t.z,0,t.x).normalize(),sign=(i%40===8)?1:-1;const x=p.x+side.x*9.2*sign,z=p.z+side.z*9.2*sign;const pole=new THREE.Mesh(new THREE.CylinderGeometry(.075,.12,6.4,7),openRoadPostMat);pole.position.set(x,3.2,z);scene.add(pole);const arm=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,1.35),openRoadPostMat);arm.position.set(x-side.x*sign*.62,6.15,z-side.z*sign*.62);arm.rotation.y=Math.atan2(-side.x*sign,-side.z*sign);scene.add(arm);const bulb=new THREE.Mesh(new THREE.BoxGeometry(.46,.08,.5),lampGlowMat);bulb.position.set(x-side.x*sign*1.25,6.02,z-side.z*sign*1.25);scene.add(bulb);if(!mobileQuality){const glow=new THREE.PointLight(0xffc56b,18,38,1.6);glow.position.set(x-side.x*sign*1.25,5.9,z-side.z*sign*1.25);glow.castShadow=false;scene.add(glow)}}
 }
 // Coastal freight terminal: warehouse, loading bays, cranes and container stacks.
@@ -258,10 +254,36 @@ function resolveWorldCollision(previous,next){
  if(!hits(slideZ)){next.x=previous.x;return next}
  next.copy(previous);return next;
 }
-const christmasBulbData=[];const treeCount=mobileQuality?82:220;for(let i=0;i<treeCount;i++){const a=i*2.399,rad=125+(i%7)*12,x=Math.cos(a)*rad,z=Math.sin(a)*rad;addWorldCollider(x,z,.65,.65);const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.35,.55,3.8,7),trunkMat);trunk.position.set(x,1.8,z);trunk.castShadow=false;scene.add(trunk);const crown=new THREE.Mesh(new THREE.ConeGeometry(2.7,8,7),i%2?leafMat:leaf2);crown.position.set(x,7,z);crown.castShadow=false;scene.add(crown);if(i<(mobileQuality?82:220))for(let ring=0;ring<3;ring++)for(let j=0;j<8;j++){const aa=j/8*Math.PI*2+ring*.22,rr=[2.05,1.55,1.02][ring],yy=[4.7,6.25,7.75][ring],palette=[0xff1744,0xff8a00,0xffed35,0x35f06b,0x27d9ff,0x3975ff,0xc65bff,0xff4fc8];christmasBulbData.push({position:new THREE.Vector3(x+Math.cos(aa)*rr,yy,z+Math.sin(aa)*rr),color:palette[(j+ring*3+i)%palette.length],phase:(i%5)*.16+ring*.12+j*.025})}}const christmasBulbs=new THREE.InstancedMesh(new THREE.SphereGeometry(.105,6,5),new THREE.MeshBasicMaterial({color:0xffffff}),christmasBulbData.length),christmasDummy=new THREE.Object3D(),christmasColor=new THREE.Color();christmasBulbData.forEach((b,i)=>{christmasDummy.position.copy(b.position);christmasDummy.updateMatrix();christmasBulbs.setMatrixAt(i,christmasDummy.matrix);christmasColor.setHex(b.color).multiplyScalar(.08);christmasBulbs.setColorAt(i,christmasColor)});christmasBulbs.instanceMatrix.needsUpdate=true;if(christmasBulbs.instanceColor)christmasBulbs.instanceColor.needsUpdate=true;scene.add(christmasBulbs);let christmasBlinkTime=-1;
+const christmasBulbData=[];
+const treeCount=mobileQuality?360:720;
+const forestRoutes=[curve,northForestRoute,forestRoute,industrialRoute,coastRoute,westRoute];
+const treeTrunkGeo=new THREE.CylinderGeometry(.35,.55,3.8,6),treeCrownGeo=new THREE.ConeGeometry(2.7,8,6);
+const treeTrunks=new THREE.InstancedMesh(treeTrunkGeo,trunkMat,treeCount),treeCrowns=new THREE.InstancedMesh(treeCrownGeo,leafMat,treeCount);
+treeTrunks.instanceMatrix.setUsage(THREE.StaticDrawUsage);treeCrowns.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+const treeDummy=new THREE.Object3D(),treeColor=new THREE.Color();
+for(let i=0;i<treeCount;i++){
+ const route=forestRoutes[i%forestRoutes.length],t=((Math.floor(i/forestRoutes.length)*.61803398875+i*.137)%1);
+ const p=route.getPointAt(t),tan=route.getTangentAt(t),side=new THREE.Vector3(-tan.z,0,tan.x).normalize();
+ const sign=i%2?1:-1,offset=18+(i*29%58),along=((i*17)%13)-6;
+ const x=p.x+side.x*offset*sign+tan.x*along,z=p.z+side.z*offset*sign+tan.z*along;
+ addWorldCollider(x,z,.65,.65);
+ treeDummy.position.set(x,1.9,z);treeDummy.rotation.y=(i%17)*.37;treeDummy.updateMatrix();treeTrunks.setMatrixAt(i,treeDummy.matrix);
+ treeDummy.position.set(x,7,z);treeDummy.scale.setScalar(.88+(i%5)*.06);treeDummy.updateMatrix();treeCrowns.setMatrixAt(i,treeDummy.matrix);
+ treeColor.set(i%3===0?0x172a25:(i%3===1?0x10231e:0x1d3028));treeCrowns.setColorAt(i,treeColor);
+ const palette=[0xff1744,0xff8a00,0xffed35,0x35f06b,0x27d9ff,0x3975ff,0xc65bff,0xff4fc8];
+ for(let ring=0;ring<3;ring++)for(let j=0;j<8;j++){
+  const aa=j/8*Math.PI*2+ring*.22,rr=[2.05,1.55,1.02][ring],yy=[4.7,6.25,7.75][ring];
+  christmasBulbData.push({position:new THREE.Vector3(x+Math.cos(aa)*rr,yy,z+Math.sin(aa)*rr),color:palette[(j+ring*3+i)%palette.length],phase:(i%5)*.16+ring*.12+j*.025});
+ }
+}
+treeTrunks.instanceMatrix.needsUpdate=true;treeCrowns.instanceMatrix.needsUpdate=true;
+treeTrunks.castShadow=false;treeCrowns.castShadow=false;scene.add(treeTrunks,treeCrowns);
+const christmasBulbs=new THREE.InstancedMesh(new THREE.SphereGeometry(.105,5,4),new THREE.MeshBasicMaterial({color:0xffffff}),christmasBulbData.length),christmasDummy=new THREE.Object3D(),christmasColor=new THREE.Color();
+christmasBulbData.forEach((b,i)=>{christmasDummy.position.copy(b.position);christmasDummy.updateMatrix();christmasBulbs.setMatrixAt(i,christmasDummy.matrix);christmasColor.setHex(b.color).multiplyScalar(.08);christmasBulbs.setColorAt(i,christmasColor)});
+christmasBulbs.instanceMatrix.needsUpdate=true;if(christmasBulbs.instanceColor)christmasBulbs.instanceColor.needsUpdate=true;scene.add(christmasBulbs);let christmasBlinkTime=-1;
 const cottageWhite=new THREE.MeshBasicMaterial({color:0xffffff}),cottageWall=mat(0x34404a,.92),cottageRoof=mat(0x18212d,.86),cottageBulbPositions=[];
 // Place the six decorated cabins clear of every drivable road and one another.
-const cabinRoutes=[curve,mountainRoute,forestRoute,industrialRoute,coastRoute,westRoute];
+const cabinRoutes=[curve,northForestRoute,forestRoute,industrialRoute,coastRoute,westRoute];
 const cabinRoadSamples=[];for(const route of cabinRoutes)for(let s=0;s<=180;s+=4){const p=route.getPointAt(s/180);cabinRoadSamples.push([p.x,p.z]);}
 const cabinSpots=[];for(let h=0;h<6;h++){let best=null,bestScore=-Infinity;for(let r=205;r<=260;r+=5)for(let deg=0;deg<360;deg+=5){const a=deg*Math.PI/180,x=Math.cos(a)*r,z=Math.sin(a)*r;let roadClear=Infinity;for(const p of cabinRoadSamples){const d=Math.hypot(x-p[0],z-p[1]);if(d<roadClear)roadClear=d;if(roadClear<20)break}if(roadClear<20)continue;let spacing=Infinity;for(const p of cabinSpots)spacing=Math.min(spacing,Math.hypot(x-p.x,z-p.z));if(spacing<44)continue;const score=Math.min(roadClear,spacing===Infinity?100:spacing);if(score>bestScore){bestScore=score;best={x,z,a}}}if(best)cabinSpots.push(best)}
 for(let h=0;h<cabinSpots.length;h++){const {x,z,a}=cabinSpots[h],house=new THREE.Group();house.position.set(x,0,z);house.rotation.y=-a+Math.PI/2;scene.add(house);addWorldCollider(x,z,4.8,4.2);const walls=new THREE.Mesh(new THREE.BoxGeometry(8,4.2,6.5),cottageWall);walls.position.y=2.1;house.add(walls);const roofA=new THREE.Mesh(new THREE.BoxGeometry(4.8,.28,7.1),cottageRoof);roofA.position.set(-1.75,4.45,0);roofA.rotation.z=-.48;house.add(roofA);const roofB=new THREE.Mesh(new THREE.BoxGeometry(4.8,.28,7.1),cottageRoof);roofB.position.set(1.75,4.45,0);roofB.rotation.z=.48;house.add(roofB);const door=new THREE.Mesh(new THREE.BoxGeometry(1.15,2.5,.12),mat(0x49352d,.8));door.position.set(0,1.25,3.31);house.add(door);for(const wx of [-2.45,2.45]){const pane=new THREE.Mesh(new THREE.BoxGeometry(1.35,1.15,.1),new THREE.MeshBasicMaterial({color:0xffe6ad}));pane.position.set(wx,2.35,3.34);house.add(pane)}for(const pts of [[[-4,4.15,3.38],[0,4.15,3.38],[4,4.15,3.38]],[[-4,4.15,3.38],[-1.8,5.5,0],[0,5.5,-3.4]],[[4,4.15,3.38],[1.8,5.5,0],[0,5.5,-3.4]]]){const path=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(...p)));house.add(new THREE.Mesh(new THREE.TubeGeometry(path,20,.035,5,false),cottageWhite));for(let k=0;k<=12;k++)cottageBulbPositions.push(house.localToWorld(path.getPoint(k/12).clone()))}}const cottageBulbs=new THREE.InstancedMesh(new THREE.SphereGeometry(.075,6,5),cottageWhite,cottageBulbPositions.length);cottageBulbPositions.forEach((p,i)=>{christmasDummy.position.copy(p);christmasDummy.updateMatrix();cottageBulbs.setMatrixAt(i,christmasDummy.matrix)});cottageBulbs.instanceMatrix.needsUpdate=true;scene.add(cottageBulbs);
@@ -305,8 +327,8 @@ const sideWallGeo=new THREE.PlaneGeometry(90,24);
 // No enclosing side wall on the right.
 const garageStripe=new THREE.Mesh(new THREE.BoxGeometry(44,.035,.12),new THREE.MeshStandardMaterial({color:0xd5d6cc,roughness:.6}));garageStripe.position.set(0,-.045,4.5);showroom.add(garageStripe);
 // Removed repeated dark vertical dividers for a cleaner, open showroom wall.
-const showroomLight=new THREE.PointLight(0xfff0d9,110,55);showroomLight.position.set(0,13,5);showroom.add(showroomLight);
-const showroomFill=new THREE.PointLight(0xc9e5ff,65,45);showroomFill.position.set(-12,8,4);showroom.add(showroomFill);
+const showroomLight=new THREE.PointLight(0xfff0d9,95,48);showroomLight.position.set(0,13,5);showroom.add(showroomLight);
+const showroomFill=new THREE.PointLight(0xc9e5ff,32,38);showroomFill.position.set(-12,8,4);showroom.add(showroomFill);
 // Industrial drift-shop garage: concrete panels, high windows, steel beams and ceiling strip lights.
 const concreteMat=new THREE.MeshStandardMaterial({color:0x777d7d,roughness:.94});
 const darkConcrete=new THREE.MeshStandardMaterial({color:0x3c4345,roughness:.8,metalness:.18});
@@ -338,7 +360,7 @@ const barrelMat=new THREE.MeshStandardMaterial({color:0x9c3430,roughness:.5,meta
 for(const x of [12,15]){const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.58,.58,1.7,20),barrelMat);barrel.position.set(x,.85,-7.8);showroom.add(barrel);const band=new THREE.Mesh(new THREE.TorusGeometry(.59,.055,8,24),darkConcrete);band.rotation.x=Math.PI/2;band.position.set(x,1.1,-7.8);showroom.add(band)}
 const tileMat=new THREE.MeshStandardMaterial({color:0x555b5d,roughness:.88});
 // Smooth concrete floor without a dense tile grid.
-for(const x of [-12,0,12]){const lamp=new THREE.Mesh(new THREE.BoxGeometry(5,.08,.65),new THREE.MeshBasicMaterial({color:0xfff2d9}));lamp.position.set(x,22.7,1);showroom.add(lamp);const glow=new THREE.PointLight(0xffedcf,85,30);glow.position.set(x,20,1);showroom.add(glow)}
+for(const x of [-12,0,12]){const lamp=new THREE.Mesh(new THREE.BoxGeometry(5,.08,.65),new THREE.MeshBasicMaterial({color:0xfff2d9}));lamp.position.set(x,22.7,1);showroom.add(lamp)}
 // Open ceiling: overhead strip lights remain as the garage lighting.
 // No floor grid: keep the showroom floor visually smooth.
 
@@ -1058,7 +1080,7 @@ function openGarage(){
  garageOrbitYaw=.28;garageOrbitPitch=.16;garageOrbitRadius=9.2;garageFramingKey='';garageCameraReady=false;
  $('menu').style.display='none';$('ui').style.display='none';$('help').style.display='none';$('touch').style.display='none';$('driveActions').style.display='none';$('carRadio').style.display='none';stopRadio();
  scene.background=new THREE.Color(0x101820);scene.fog=null;renderer.setClearColor(0x101820,1);
- scene.children.forEach(o=>{o.visible=(o===carRoot||o===showroom||o.isLight)});
+ scene.children.forEach(o=>{o.visible=(o===carRoot||o===showroom)});renderer.setPixelRatio(Math.min(devicePixelRatio,.68));
  restoreTreeVisibility(showroom,true);restoreTreeVisibility(carRoot,true);
  showroom.visible=true;carRoot.visible=true;restoreTreeVisibility(carRoot,true);applyStyle($('carStyle').value);updateFirstPersonCockpit();carPos.set(0,0,0);carRoot.position.set(0,-.065,0);carRoot.rotation.set(0,Math.PI,0);
  setGarageCamera(true);$('garage').style.display='grid';setGarageValues();applyTune();
@@ -1068,7 +1090,7 @@ function closeGarage(){
  $('garage').style.display='none';
  if(garageMode){
   garageMode=false;garageCameraReady=false;garageFramingKey='';for(const [object,wasVisible] of garageVisibilitySnapshot)object.visible=wasVisible;garageVisibilitySnapshot.length=0;showroom.visible=false;applyStyle($('carStyle').value);updateFirstPersonCockpit();
-  scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,145,560);renderer.setClearColor(0x050914,1);
+  renderer.setPixelRatio(isChromeOS?.88:(mobileQuality?Math.min(devicePixelRatio,.88):Math.min(devicePixelRatio,1)));scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,145,560);renderer.setClearColor(0x050914,1);
   $('ui').style.display=garageWasPlaying?'block':'none';$('help').style.display=garageWasPlaying?'block':'none';$('touch').style.display=touchControls&&garageWasPlaying?'flex':'none';$('driveActions').style.display=garageWasPlaying?'block':'none';$('carRadio').style.display=garageWasPlaying?'block':'none';
   if(garageWasPlaying){$('ui').style.display='block'}else{$('menu').style.display='grid'}
   carPos.copy(garagePos);heading=garageHeading;carRoot.position.copy(carPos);carRoot.rotation.y=heading;

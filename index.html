@@ -126,7 +126,7 @@ function finishLoading(){if(loadingScreen)loadingScreen.classList.add('done')}
 setTimeout(finishLoading,15000); // Failsafe only; normal completion follows the car load result.
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,145,560);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,950);
-const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const touchControls=matchMedia('(pointer:coarse)').matches&&navigator.maxTouchPoints>0;const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power',precision:'mediump'});renderer.setPixelRatio(mobileQuality?Math.min(devicePixelRatio,.85):Math.min(devicePixelRatio,1));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;document.body.appendChild(renderer.domElement);
+const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const isChromeOS=/CrOS/i.test(navigator.userAgent);const touchControls=matchMedia('(pointer:coarse)').matches&&navigator.maxTouchPoints>0;const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power',precision:'highp'});renderer.setPixelRatio(isChromeOS?1:(mobileQuality?Math.min(devicePixelRatio,.85):Math.min(devicePixelRatio,1)));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;document.body.appendChild(renderer.domElement);
 // Desktop uses generated studio reflections; mobile skips PMREM to avoid GPU render artifacts.
 if(!mobileQuality){
  const pmremGenerator=new THREE.PMREMGenerator(renderer);pmremGenerator.compileEquirectangularShader();
@@ -441,7 +441,7 @@ function applyCustomizations(){
  kitParts.visible=kit!=='factory';kitParts.children.forEach((o,i)=>{o.visible=kit==='widebody'||kit==='track'||(kit==='street'&&i<7)});
  spoilerParts.visible=true;ducktail.visible=spoiler==='ducktail';gtWing.visible=spoiler==='gtwing';
  customRimMat.color.set(({silver:'#c5cdd1',black:'#101419',gold:'#d6a52d',bronze:'#95613b'})[finish]||'#c5cdd1');
- neonMat.color.set(neon);neonParts.visible=!!(localStorage.hcg_neonEnabled??'1');
+ neonMat.color.set(neon);neonParts.visible=localStorage.hcg_neonEnabled==='1';
  const label=$('windowTintVal');if(label)label.textContent=tint+'%';
  const chosen=$('carStyle')?.value||localStorage.hcgStyle||'bmw_e46';
  const selected=chosen==='bmw_e46'?e46:chosen==='spectral_gt'?spectralModel:extraCarModels[chosen]?.group;

@@ -299,7 +299,7 @@ const ground=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),new THREE.MeshBas
 const driveGameTrack=new DriveGameTrack(DRIVE_GAME_TRACK);
 const pts=DRIVE_GAME_TRACK.points.map(p=>new THREE.Vector3(p[0],p[1],p[2]));
 const curve=new THREE.CatmullRomCurve3(pts,true,'centripetal');
-const driveGameWorld=buildDriveGameWorld(scene,driveGameTrack,{trees:isChromeOS?.03:(mobileQuality?.10:.16),aniso:isChromeOS?2:(mobileQuality?2:4),textureSize:isChromeOS?512:1024,terrainStep:isChromeOS?46:22,nord:true});
+const driveGameWorld=buildDriveGameWorld(scene,driveGameTrack,{trees:isChromeOS?.012:(mobileQuality?.10:.16),aniso:isChromeOS?1:(mobileQuality?2:4),textureSize:isChromeOS?384:1024,terrainStep:isChromeOS?100:22,nord:true,lightweight:isChromeOS});
 driveGameWorld.streetlights.group.visible=true;
 // Drive Game's buildWorld() now supplies the textured road, curbs, grass aprons,
  // PBR guardrails, rail posts, forest, signs, road furniture and night lamps.

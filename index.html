@@ -642,7 +642,7 @@ function applyStyle(){
   $('carLabel').textContent=item.label.toUpperCase();const status=$('garageStatus');if(status)status.textContent=item.label.toUpperCase()+' READY';
   applyCustomizations();applyTune();if(garageMode)setGarageCamera(true);return
  }
- if(item.loading){$('carLabel').textContent='LOADING '+item.label.toUpperCase();return}
+ if(item.loading){const fallback=extraCarModels.gti_2010;if(fallback?.ready&&choice!=='gti_2010'){fallback.group.visible=true;$('carLabel').textContent='LOADING '+item.label.toUpperCase()+' · GTI TEMPORARY DISPLAY';const loadingStatus=$('garageStatus');if(loadingStatus)loadingStatus.textContent='LOADING VEHICLE · TEMPORARY GTI DISPLAYED'}else $('carLabel').textContent='LOADING '+item.label.toUpperCase();return}
  if(item.openX&&!item.url){item.loading=true;$('carLabel').textContent='EXTRACTING '+item.label.toUpperCase();item.archiveFile.async('arraybuffer').then(bytes=>{item.url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));item.loading=false;if(($('carStyle')?.value||'')===choice)applyStyle(choice)}).catch(error=>{item.loading=false;console.error('OpenX model extraction failed:',error);toast('Could not extract '+item.label)});return}
  item.loading=true;$('carLabel').textContent='LOADING '+item.label.toUpperCase();const status=$('garageStatus');if(status)status.textContent='DOWNLOADING '+item.label.toUpperCase()+'…';
  extraCarLoader.load(item.url,gltf=>{

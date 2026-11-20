@@ -140,7 +140,7 @@ function finishLoading(){if(loadingScreen)loadingScreen.classList.add('done')}
 setTimeout(finishLoading,15000); // Failsafe only; normal completion follows the car load result.
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,145,560);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,950);
-const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const isChromeOS=/CrOS/i.test(navigator.userAgent);const touchControls=matchMedia('(pointer:coarse)').matches&&navigator.maxTouchPoints>0;const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power',precision:'highp'});renderer.setPixelRatio(isChromeOS?1:(mobileQuality?Math.min(devicePixelRatio,.85):Math.min(devicePixelRatio,1)));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;document.body.appendChild(renderer.domElement);
+const mobileQuality=innerWidth<900||/CrOS/i.test(navigator.userAgent);const isChromeOS=/CrOS/i.test(navigator.userAgent);const touchControls=matchMedia('(pointer:coarse)').matches&&navigator.maxTouchPoints>0;const renderer=new THREE.WebGLRenderer({antialias:!mobileQuality,powerPreference:'low-power',precision:mobileQuality?'mediump':'highp'});renderer.setPixelRatio(isChromeOS?.72:(mobileQuality?Math.min(devicePixelRatio,.72):Math.min(devicePixelRatio,.88)));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=false;renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;document.body.appendChild(renderer.domElement);
 // Desktop uses generated studio reflections; mobile skips PMREM to avoid GPU render artifacts.
 if(!mobileQuality){
  const pmremGenerator=new THREE.PMREMGenerator(renderer);pmremGenerator.compileEquirectangularShader();
@@ -224,7 +224,7 @@ for(const route of [coastRoute,westRoute]){
 }
 // Add spaced warm streetlights along all five open-world routes; no extra shadow maps.
 for(const route of [mountainRoute,forestRoute,industrialRoute,coastRoute,westRoute]){
- for(let i=8;i<68;i+=20){const p=route.getPointAt(i/72),t=route.getTangentAt(i/72),side=new THREE.Vector3(-t.z,0,t.x).normalize(),sign=(i%40===8)?1:-1;const x=p.x+side.x*9.2*sign,z=p.z+side.z*9.2*sign;const pole=new THREE.Mesh(new THREE.CylinderGeometry(.075,.12,6.4,7),openRoadPostMat);pole.position.set(x,3.2,z);scene.add(pole);const arm=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,1.35),openRoadPostMat);arm.position.set(x-side.x*sign*.62,6.15,z-side.z*sign*.62);arm.rotation.y=Math.atan2(-side.x*sign,-side.z*sign);scene.add(arm);const bulb=new THREE.Mesh(new THREE.BoxGeometry(.46,.08,.5),lampGlowMat);bulb.position.set(x-side.x*sign*1.25,6.02,z-side.z*sign*1.25);scene.add(bulb);const glow=new THREE.PointLight(0xffc56b,18,38,1.6);glow.position.set(x-side.x*sign*1.25,5.9,z-side.z*sign*1.25);glow.castShadow=false;scene.add(glow)}
+ for(let i=8;i<68;i+=20){const p=route.getPointAt(i/72),t=route.getTangentAt(i/72),side=new THREE.Vector3(-t.z,0,t.x).normalize(),sign=(i%40===8)?1:-1;const x=p.x+side.x*9.2*sign,z=p.z+side.z*9.2*sign;const pole=new THREE.Mesh(new THREE.CylinderGeometry(.075,.12,6.4,7),openRoadPostMat);pole.position.set(x,3.2,z);scene.add(pole);const arm=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,1.35),openRoadPostMat);arm.position.set(x-side.x*sign*.62,6.15,z-side.z*sign*.62);arm.rotation.y=Math.atan2(-side.x*sign,-side.z*sign);scene.add(arm);const bulb=new THREE.Mesh(new THREE.BoxGeometry(.46,.08,.5),lampGlowMat);bulb.position.set(x-side.x*sign*1.25,6.02,z-side.z*sign*1.25);scene.add(bulb);if(!mobileQuality){const glow=new THREE.PointLight(0xffc56b,18,38,1.6);glow.position.set(x-side.x*sign*1.25,5.9,z-side.z*sign*1.25);glow.castShadow=false;scene.add(glow)}}
 }
 // Coastal freight terminal: warehouse, loading bays, cranes and container stacks.
 const port=new THREE.Group();port.position.set(420,0,-90);scene.add(port);
@@ -307,7 +307,7 @@ for(let i=0;i<(mobileQuality?9:18);i++){
   const inward=side.clone().multiplyScalar(-sign);const arm=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,2.05),streetLampMetal);arm.position.set(inward.x*-.92,8.35,inward.z*-.92);arm.rotation.y=Math.atan2(inward.x,inward.z);group.add(arm);
   const head=new THREE.Mesh(new THREE.BoxGeometry(.72,.18,1.05),streetLampMetal);head.position.set(inward.x*1.82,8.28,inward.z*1.82);head.rotation.y=arm.rotation.y;group.add(head);
   const bulb=new THREE.Mesh(new THREE.BoxGeometry(.52,.035,.72),lampGlowMat);bulb.position.set(inward.x*1.82,8.17,inward.z*1.82);bulb.rotation.y=arm.rotation.y;group.add(bulb);
-  if(i%3===0){const light=new THREE.PointLight(0xffc45f,66,78,1.4);light.position.set(inward.x*1.8,7.95,inward.z*1.8);light.castShadow=false;group.add(light);}
+  if(!mobileQuality&&i%3===0){const light=new THREE.PointLight(0xffc45f,66,78,1.4);light.position.set(inward.x*1.8,7.95,inward.z*1.8);light.castShadow=false;group.add(light);}
   const halo=new THREE.Mesh(new THREE.SphereGeometry(.42,10,8),new THREE.MeshBasicMaterial({color:0xffd985,transparent:true,opacity:.16}));halo.position.set(inward.x*1.8,7.95,inward.z*1.8);group.add(halo);
  }
 }
@@ -848,7 +848,7 @@ function valueTune(id){const defaults={brakePressure:100,brakeBalance:70,turbo:1
 
 function tick(t){
  requestAnimationFrame(tick);
- const frameInterval=garageMode?(isChromeOS?1000/45:1000/60):(paused?1000/30:(mobileQuality?1000/40:1000/50));if(t-lastRender<frameInterval)return;lastRender=t;
+ const frameInterval=garageMode?(isChromeOS?1000/40:1000/60):(paused?1000/30:(isChromeOS?1000/40:(mobileQuality?1000/45:1000/60)));if(t-lastRender<frameInterval)return;lastRender=t;
  const dt=Math.min((t-last)/1000,.035);
  last=t;
  if(!garageMode&&christmasBulbData.length){const blink=Math.floor(t/850);if(blink!==christmasBlinkTime){christmasBlinkTime=blink;for(let i=0;i<christmasBulbData.length;i++){const b=christmasBulbData[i],on=Math.sin(t*.00115+b.phase)>-.12;christmasColor.setHex(b.color).multiplyScalar(on?1:.055);christmasBulbs.setColorAt(i,christmasColor)}if(christmasBulbs.instanceColor)christmasBulbs.instanceColor.needsUpdate=true}}
@@ -971,7 +971,7 @@ function tick(t){
   const camAlpha=1-Math.exp(-(cameraMode===3?11:7.2)*dt);
   if(cameraSnap){camera.position.copy(desiredCam);cameraLook.copy(desiredLook);cameraSnap=false}else{camera.position.lerp(desiredCam,camAlpha);cameraLook.lerp(desiredLook,1-Math.exp(-(cameraMode===3?13:8.4)*dt))}
   camera.lookAt(cameraLook);
-  camera.fov+=(targetFov-camera.fov)*(1-Math.exp(-3.8*dt));camera.updateProjectionMatrix();
+  const nextFov=camera.fov+(targetFov-camera.fov)*(1-Math.exp(-3.8*dt));if(Math.abs(nextFov-camera.fov)>.025){camera.fov=nextFov;camera.updateProjectionMatrix()}
   if(cameraMode===3){const speedShake=Math.min(Math.abs(speed)/46,1);camera.rotation.z+=-steerAngle*.025*speedShake;camera.position.y+=Math.sin(t*.012)*.006*speedShake}
   else if(cameraMode===0||cameraMode===1){const speedShake=Math.min(Math.abs(speed)/65,1);camera.position.y+=Math.sin(t*.009)*.018*speedShake}
   updateFirstPersonCockpit();
@@ -1089,6 +1089,6 @@ $('cameraBtn').onclick=changeCamera;$('garageBtn').onclick=openGarage;$('carStyl
 const controlKeys=new Set(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' ','shift']);addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=true;e.preventDefault()}if(k==='c')changeCamera();if(k==='r')reset();if(e.key==='Escape'){if(garageMode)closeGarage();paused=true;stopCarAudio();stopRadio();$('garage').style.display='none';$('menu').style.display='grid';$('ui').style.display='none';$('help').style.display='none';$('touch').style.display='none';$('driveActions').style.display='none';$('carRadio').style.display='none'}});addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(controlKeys.has(k)){keys[k]=false;e.preventDefault()}});addEventListener('blur',()=>{for(const k of controlKeys)keys[k]=false});
 function bind(id,k){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;el.setPointerCapture(e.pointerId)});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,()=>keys[k]=false))}
 bind('left','a');bind('right','d');bind('gas','w');bind('brake','s');bind('hand',' ');bind('boost','shift');
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);if(garageMode)setGarageCamera()});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(isChromeOS?.72:(mobileQuality?Math.min(devicePixelRatio,.72):Math.min(devicePixelRatio,.88)));renderer.setSize(innerWidth,innerHeight);if(garageMode)setGarageCamera()});
 paintMat.color.set($('paint').value);$('paint').addEventListener('input',()=>{paintMat.color.set($('paint').value);applyTune()});camera.position.set(0,8,14);camera.lookAt(0,0,0);
 </script></body></html>

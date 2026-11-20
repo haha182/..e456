@@ -310,14 +310,9 @@ function rebuildCollisionGrid(){
 }
 function addWorldCollider(x,z,halfX,halfZ){worldColliders.push({x,z,halfX,halfZ});collisionGridDirty=true}
 
-// Collision boundaries follow Drive Game's real guardrail offsets.
-const driveRailColliderPoint=new THREE.Vector3();
-for(let i=0;i<driveGameTrack.n;i++){
- for(const side of [-1,1]){
-  driveGameTrack.edge(i,side*DRIVE_GAME_RAIL_D,0,driveRailColliderPoint);
-  addWorldCollider(driveRailColliderPoint.x,driveRailColliderPoint.z,2.65,2.65);
- }
-}
+// Guardrails are visual boundaries, not square collision boxes. The old
+// overlapping AABBs reached into the asphalt on bends and stopped the car
+// even when it was nowhere near a rail. Keep solid collision for actual props.
 
 // Drive Game's Nürburgring world replaces the old highway, generated side roads,
  // procedural highway traffic, and unused roadside dealership props.
@@ -358,7 +353,31 @@ const starPositions=[],starSizes=[];
 for(let i=0;i<(mobileQuality?450:1800);i++){const a=Math.random()*Math.PI*2,y=35+Math.random()*245,r=3200+Math.random()*650;starPositions.push(DRIVE_GAME_CENTER.x+Math.cos(a)*r,DRIVE_GAME_CENTER.y+y,DRIVE_GAME_CENTER.z+Math.sin(a)*r);starSizes.push(i%37===0?2.4:1.0)}
 const starGeo=new THREE.BufferGeometry();starGeo.setAttribute('position',new THREE.Float32BufferAttribute(starPositions,3));starGeo.setAttribute('size',new THREE.Float32BufferAttribute(starSizes,1));
 const stars=new THREE.Points(starGeo,new THREE.PointsMaterial({color:0xe4edff,size:1.35,sizeAttenuation:false,transparent:true,opacity:.94,depthWrite:false}));scene.add(stars);
-// Open night horizon: no mountain meshes; Christmas forest frames the roads.
+// Procedural nebula sky: layered spiral arms, a bright galactic core and blue/purple gas.
+const galaxySky=new THREE.Mesh(new THREE.SphereGeometry(5980,48,32),new THREE.ShaderMaterial({
+ side:THREE.BackSide,transparent:true,depthWrite:false,uniforms:{uOpacity:{value:.82}},
+ vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+ fragmentShader:`varying vec2 vUv;uniform float uOpacity;
+ float hash21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+ float noise2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash21(i),hash21(i+vec2(1.,0.)),f.x),mix(hash21(i+vec2(0.,1.)),hash21(i+vec2(1.,1.)),f.x),f.y);}
+ float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=noise2(p)*a;p=p*2.03+vec2(13.1,7.7);a*=.5;}return v;}
+ void main(){
+  vec2 p=(vUv-vec2(.5,.52))*vec2(3.2,1.45);float r=length(p)+.025;float a=atan(p.y,p.x);
+  float arms=sin(a*3.0+log(r)*4.8)*.5+.5;
+  float clouds=fbm(p*4.2+vec2(cos(a*2.0),sin(a*2.0))*.7);
+  float dust=fbm(p*10.0+vec2(3.4,8.1));
+  float band=1.0-smoothstep(.10,.78,abs(p.y+.12*sin(p.x*2.2)));
+  float neb=clamp((clouds*.72+dust*.22+arms*.22-.40)*2.1,0.,1.)*band*(1.0-smoothstep(.35,1.65,r));
+  float core=exp(-r*5.2)*.95;
+  vec3 c=mix(vec3(.025,.035,.16),vec3(.20,.10,.48),neb);
+  c=mix(c,vec3(.56,.20,.58),neb*neb*.7);
+  c=mix(c,vec3(.10,.43,.67),smoothstep(.48,.82,dust)*neb*.48);
+  c+=vec3(.34,.25,.62)*core;
+  float alpha=clamp(neb*.58+core*.32,0.,.78)*uOpacity;
+  gl_FragColor=vec4(c,alpha);
+ }`
+}));galaxySky.visible=false;galaxySky.renderOrder=1;scene.add(galaxySky);
+// Open night horizon; the galaxy preset adds its own deep-space nebula layer.
 let currentWorldTime='night';
 function setWorldTime(mode){
  currentWorldTime=['day','sunset','night','galaxy'].includes(mode)?mode:'night';
@@ -372,8 +391,9 @@ function setWorldTime(mode){
  scene.background.setHex(p.bg);scene.fog.color.setHex(p.fog);
  hemiLight.color.setHex(p.hemiSky);hemiLight.groundColor.setHex(p.hemiGround);hemiLight.intensity=p.hemi;
  moon.color.setHex(p.light);moon.intensity=p.moon;
- moonDisc.visible=currentWorldTime==='night'||currentWorldTime==='galaxy';
- moonHalo.visible=moonDisc.visible;
+ moonDisc.visible=currentWorldTime==='night';
+ moonHalo.visible=currentWorldTime==='night';
+ galaxySky.visible=currentWorldTime==='galaxy';
  stars.visible=p.stars>0;stars.material.opacity=p.stars;
  renderer.toneMappingExposure=p.exposure;
  ground.material.color.setHex(currentWorldTime==='day'?0x34402f:currentWorldTime==='sunset'?0x211a20:currentWorldTime==='galaxy'?0x090719:0x080d13);
@@ -396,8 +416,10 @@ const sideWallGeo=new THREE.PlaneGeometry(90,24);
 // No enclosing side wall on the right.
 const garageStripe=new THREE.Mesh(new THREE.BoxGeometry(44,.035,.12),new THREE.MeshStandardMaterial({color:0xd5d6cc,roughness:.6}));garageStripe.position.set(0,-.045,4.5);showroom.add(garageStripe);
 // Removed repeated dark vertical dividers for a cleaner, open showroom wall.
-const showroomLight=new THREE.PointLight(0xfff0d9,95,48);showroomLight.position.set(0,13,5);showroom.add(showroomLight);
-const showroomFill=new THREE.PointLight(0xc9e5ff,32,38);showroomFill.position.set(-12,8,4);showroom.add(showroomFill);
+const showroomLight=new THREE.PointLight(0xfff4df,155,68);showroomLight.position.set(0,13,5);showroom.add(showroomLight);
+const showroomFill=new THREE.PointLight(0xc9e5ff,78,58);showroomFill.position.set(-12,8,4);showroom.add(showroomFill);
+const showroomBounce=new THREE.PointLight(0xffffff,58,62);showroomBounce.position.set(13,7,1);showroom.add(showroomBounce);
+showroom.add(new THREE.HemisphereLight(0xffffff,0x78899a,1.05));
 // Industrial drift-shop garage: concrete panels, high windows, steel beams and ceiling strip lights.
 const concreteMat=new THREE.MeshStandardMaterial({color:0x777d7d,roughness:.94});
 // Procedural, tileable workshop finishes: mottled poured concrete and sealed industrial flooring.
@@ -575,11 +597,12 @@ function applyCustomizations(){
 }
 function applyStyle(){
  for(const child of carRoot.children)child.visible=false;
- customParts.visible=false;applyCustomizations();
+ customParts.visible=false;applyCustomizations();customParts.visible=false;
  const choice=$('carStyle')?.value||'lexus_lfa';
+ for(const [key,other] of Object.entries(extraCarModels))other.group.visible=(key===choice&&other.ready);
  if(gtiAudioCredit)gtiAudioCredit.style.display=garageMode&&choice.startsWith('gti_2010')?'block':'none';if(bmwModelCredit)bmwModelCredit.style.display=garageMode&&choice==='bmw_m4'?'block':'none';
  const item=extraCarModels[choice];if(!item){$('carLabel').textContent='LEXUS LFA MODEL UNAVAILABLE';return}
- if(item.ready){item.group.visible=true;$('carLabel').textContent=item.label.toUpperCase();const status=$('garageStatus');if(status)status.textContent=item.label.toUpperCase()+' READY';applyCustomizations();applyTune();if(garageMode)setGarageCamera(true);return}
+ if(item.ready){item.group.visible=true;customParts.visible=choice.startsWith('gti_2010');$('carLabel').textContent=item.label.toUpperCase();const status=$('garageStatus');if(status)status.textContent=item.label.toUpperCase()+' READY';applyCustomizations();customParts.visible=choice.startsWith('gti_2010');applyTune();if(garageMode)setGarageCamera(true);return}
  if(item.loading){$('carLabel').textContent='LOADING '+item.label.toUpperCase();return}
  if(item.openX&&!item.url){item.loading=true;$('carLabel').textContent='EXTRACTING '+item.label.toUpperCase();item.archiveFile.async('arraybuffer').then(bytes=>{item.url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));item.loading=false;if(($('carStyle')?.value||'')===choice)applyStyle(choice)}).catch(error=>{item.loading=false;console.error('OpenX model extraction failed:',error);toast('Could not extract '+item.label)});return}
  item.loading=true;$('carLabel').textContent='LOADING '+item.label.toUpperCase();const status=$('garageStatus');if(status)status.textContent='DOWNLOADING '+item.label.toUpperCase()+'…';
@@ -592,8 +615,8 @@ function applyStyle(){
   model.updateMatrixWorld(true);bounds=new THREE.Box3().setFromObject(model);dims=bounds.getSize(new THREE.Vector3());const longest=Math.max(dims.x,dims.z);
   if(!longest)throw Error('Downloaded car model contains no measurable geometry');
   model.scale.setScalar(4.65/longest);model.updateMatrixWorld(true);bounds.setFromObject(model);const center=bounds.getCenter(new THREE.Vector3());const scaledSize=bounds.getSize(new THREE.Vector3());item.group.userData.vehicleHeight=scaledSize.y;item.group.userData.vehicleSize=scaledSize.clone();model.position.x-=center.x;model.position.z-=center.z;model.position.y-=bounds.min.y;
-  model.traverse(o=>{if(!o.isMesh)return;const meshBounds=new THREE.Box3().setFromObject(o);const meshSize=meshBounds.getSize(new THREE.Vector3());const wholeX=scaledSize.x,wholeZ=scaledSize.z;const meshName=(o.name||'').toLowerCase();const namedGround=/ground|platform|base.?plate|shadow.?plane/.test(meshName);const flatBase=meshSize.y<Math.max(wholeX,wholeZ)*.025&&meshSize.x>wholeX*.72&&meshSize.z>wholeZ*.72&&meshBounds.min.y<=bounds.min.y+scaledSize.y*.06;if(namedGround||flatBase){o.visible=false;return}o.castShadow=!mobileQuality;o.receiveShadow=!mobileQuality;const finishMaterial=m=>{const q=m.clone();const label=((q.name||'')+' '+(o.name||'')).toLowerCase();q.envMapIntensity=1.65;if(/paint|body|exterior|shell|fender|hood|bumper|door|carbon/.test(label)&&!/glass|window|rubber|tire|wheel|trim/.test(label)){const glossy=new THREE.MeshPhysicalMaterial({color:q.color?.clone()??0xffffff,map:q.map,normalMap:q.normalMap,roughnessMap:q.roughnessMap,metalnessMap:q.metalnessMap,metalness:Math.max(q.metalness??0,.48),roughness:.19,clearcoat:1,clearcoatRoughness:.055,side:q.side,transparent:q.transparent,opacity:q.opacity,alphaMap:q.alphaMap,alphaTest:q.alphaTest,vertexColors:q.vertexColors});glossy.name=q.name;glossy.envMapIntensity=2.0;return glossy}return q};if(Array.isArray(o.material))o.material=o.material.map(finishMaterial);else if(o.material)o.material=finishMaterial(o.material)});
-  item.group.add(model);item.group.updateMatrixWorld(true);const modelBounds=new THREE.Box3().setFromObject(item.group);const modelCenter=modelBounds.getCenter(new THREE.Vector3());item.group.userData.cameraCenter=carRoot.worldToLocal(modelCenter.clone());item.group.userData.cameraCenter.y=scaledSize.y*.5;item.ready=true;item.loading=false;const isSelected=$('carStyle').value===choice;item.group.visible=isSelected;if(isSelected)applyCustomizations();applyTune();if(isSelected){$('carLabel').textContent=item.label.toUpperCase();if(status)status.textContent=item.label.toUpperCase()+' READY';if(garageMode)setGarageCamera();toast(item.label+' loaded')}
+  model.traverse(o=>{if(!o.isMesh)return;const meshBounds=new THREE.Box3().setFromObject(o);const meshSize=meshBounds.getSize(new THREE.Vector3());const wholeX=scaledSize.x,wholeZ=scaledSize.z;const meshName=(o.name||'').toLowerCase();const namedGround=/ground|platform|base.?plate|shadow.?plane|shadow.?mesh|floor|collision|helper/.test(meshName);const flatBase=meshSize.y<Math.max(wholeX,wholeZ)*.025&&meshSize.x>wholeX*.72&&meshSize.z>wholeZ*.72&&meshBounds.min.y<=bounds.min.y+scaledSize.y*.06;if(namedGround||flatBase){o.visible=false;return}o.castShadow=!mobileQuality;o.receiveShadow=!mobileQuality;const finishMaterial=m=>{const q=m.clone();const label=((q.name||'')+' '+(o.name||'')).toLowerCase();q.envMapIntensity=1.65;if(/paint|body|exterior|shell|fender|hood|bumper|door|carbon/.test(label)&&!/glass|window|rubber|tire|wheel|trim/.test(label)){const glossy=new THREE.MeshPhysicalMaterial({color:q.color?.clone()??0xffffff,map:q.map,normalMap:q.normalMap,roughnessMap:q.roughnessMap,metalnessMap:q.metalnessMap,metalness:Math.max(q.metalness??0,.48),roughness:.19,clearcoat:1,clearcoatRoughness:.055,side:q.side,transparent:q.transparent,opacity:q.opacity,alphaMap:q.alphaMap,alphaTest:q.alphaTest,vertexColors:q.vertexColors});glossy.name=q.name;glossy.envMapIntensity=2.0;return glossy}return q};if(Array.isArray(o.material))o.material=o.material.map(finishMaterial);else if(o.material)o.material=finishMaterial(o.material)});
+  item.group.add(model);item.group.updateMatrixWorld(true);item.group.traverse(o=>{if(o.isMesh){o.renderOrder=0;if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(material=>{if(material){material.depthWrite=!material.transparent;material.polygonOffset=false}})}});const modelBounds=new THREE.Box3().setFromObject(item.group);const modelCenter=modelBounds.getCenter(new THREE.Vector3());item.group.userData.cameraCenter=carRoot.worldToLocal(modelCenter.clone());item.group.userData.cameraCenter.y=scaledSize.y*.5;item.ready=true;item.loading=false;const isSelected=$('carStyle').value===choice;item.group.visible=isSelected;if(isSelected)applyCustomizations();applyTune();if(isSelected){$('carLabel').textContent=item.label.toUpperCase();if(status)status.textContent=item.label.toUpperCase()+' READY';if(garageMode)setGarageCamera();toast(item.label+' loaded')}
  },undefined,error=>{item.loading=false;console.error(item.label+' load failed:',error);if($('carStyle').value===choice){$('carLabel').textContent='CAR DOWNLOAD FAILED';if(status)status.textContent='MODEL DOWNLOAD FAILED — SELECT ANOTHER CAR';toast('Could not download '+item.label+'; your other cars are still available')}});
 }
 
@@ -1506,7 +1529,7 @@ function openGarage(){
  updateDealerUI();stopCarAudio();garageWasPlaying=!paused;paused=true;garageMode=true;garageVisibilitySnapshot=scene.children.map(o=>[o,o.visible]);garagePos.copy(carPos);garageHeading=heading;
  garageOrbitYaw=.28;garageOrbitPitch=.16;garageOrbitRadius=9.2;garageFramingKey='';garageCameraReady=false;
  $('menu').style.display='none';$('ui').style.display='none';$('help').style.display='none';$('touch').style.display='none';$('driveActions').style.display='none';$('carRadio').style.display='none';stopRadio();
- scene.background=new THREE.Color(0x101820);scene.fog=null;renderer.setClearColor(0x101820,1);
+ scene.background=new THREE.Color(0x101820);scene.fog=null;renderer.setClearColor(0x101820,1);renderer.toneMappingExposure=1.48;
  scene.children.forEach(o=>{o.visible=(o===carRoot||o===showroom)});adaptivePixelRatio=Math.min(adaptivePixelRatio,.78);applyAdaptivePixelRatio();
  restoreTreeVisibility(showroom,true);restoreTreeVisibility(carRoot,true);
  showroom.visible=true;carRoot.visible=true;restoreTreeVisibility(carRoot,true);applyStyle($('carStyle').value);updateFirstPersonCockpit();carPos.set(0,0,0);carRoot.position.set(0,-.065,0);carRoot.rotation.set(0,Math.PI,0);
@@ -1517,7 +1540,7 @@ function closeGarage(){
  $('garage').style.display='none';
  if(garageMode){
   garageMode=false;garageCameraReady=false;garageFramingKey='';for(const [object,wasVisible] of garageVisibilitySnapshot)object.visible=wasVisible;garageVisibilitySnapshot.length=0;showroom.visible=false;applyStyle($('carStyle').value);updateFirstPersonCockpit();
-  adaptivePixelRatio=Math.min(adaptivePixelRatio,devicePixelRatioCap);applyAdaptivePixelRatio();scene.background=new THREE.Color(0x050914);scene.fog=new THREE.Fog(0x091323,175,500);renderer.setClearColor(0x050914,1);
+  adaptivePixelRatio=Math.min(adaptivePixelRatio,devicePixelRatioCap);applyAdaptivePixelRatio();setWorldTime(currentWorldTime);scene.fog=new THREE.Fog(0x091323,175,500);renderer.setClearColor(0x050914,1);
   $('ui').style.display=garageWasPlaying?'block':'none';$('help').style.display=garageWasPlaying?'block':'none';$('touch').style.display=touchControls&&garageWasPlaying?'flex':'none';$('driveActions').style.display=garageWasPlaying?'block':'none';$('carRadio').style.display=garageWasPlaying?'block':'none';
   if(garageWasPlaying){$('ui').style.display='block'}else{$('menu').style.display='grid'}
   carPos.copy(garagePos);heading=garageHeading;carRoot.position.copy(carPos);carRoot.rotation.y=heading;

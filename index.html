@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#050617">
+<title>Harrison's Games</title>
+<style>
+:root{color-scheme:dark;--cyan:#8be9ff;--violet:#a78bfa;--glass:rgba(12,17,43,.72)}
+*{box-sizing:border-box}html{min-height:100%;background:#03040d}body{margin:0;min-height:100vh;color:#f4f5ff;font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;overflow-x:hidden;background:radial-gradient(ellipse at 50% 115%,#35206d 0%,#101638 35%,#050817 68%,#02030a 100%)}
+.sky{position:fixed;inset:-12%;pointer-events:none;overflow:hidden;z-index:-1;background:radial-gradient(ellipse at 48% 45%,rgba(90,72,185,.18),transparent 55%)}
+.stars,.stars:before,.stars:after{position:absolute;inset:0;content:"";background-image:radial-gradient(1px 1px at 8% 14%,#fff 99%,transparent),radial-gradient(1px 1px at 23% 62%,#c7dcff 99%,transparent),radial-gradient(2px 2px at 41% 27%,#fff 99%,transparent),radial-gradient(1px 1px at 62% 72%,#d9d5ff 99%,transparent),radial-gradient(1px 1px at 78% 19%,#fff 99%,transparent),radial-gradient(1px 1px at 91% 53%,#c6d8ff 99%,transparent);background-size:370px 290px;animation:drift 90s linear infinite}
+.stars:before{transform:translate(40px,80px) scale(1.4);opacity:.55}.stars:after{transform:translate(-80px,-40px) scale(.8);opacity:.7}
+.nebula{position:absolute;width:130vw;height:55vw;left:-15vw;top:15%;transform:rotate(-22deg);background:linear-gradient(90deg,transparent,rgba(66,89,195,.08),rgba(177,106,232,.18),rgba(98,167,245,.11),transparent);filter:blur(32px);border-radius:50%;animation:nebula 50s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate3d(-35px,24px,0)}}@keyframes nebula{to{transform:translate(5vw,3vh) rotate(-18deg)}}
+main{width:min(1080px,calc(100% - 32px));margin:auto;padding:52px 0 64px}.top{display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{font-size:.9rem;letter-spacing:.2em;text-transform:uppercase;color:#c6c8ef}.status{font-size:.78rem;color:#c6c8ef;border:1px solid #44496c;border-radius:99px;padding:7px 12px;background:#090d22aa}
+h1{font-size:clamp(2.8rem,8vw,6rem);line-height:.98;letter-spacing:-.065em;margin:62px 0 18px;font-weight:800;background:linear-gradient(110deg,#fff 15%,#c7d9ff 48%,#c8a9ff 82%);color:transparent;background-clip:text}
+.intro{max-width:620px;color:#c5c8e4;font-size:1.1rem}.panel{margin-top:38px;border:1px solid rgba(180,190,255,.2);border-radius:24px;background:var(--glass);backdrop-filter:blur(18px);box-shadow:0 24px 90px #0007;overflow:hidden}
+.panel-head{padding:22px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid #ffffff16}.panel-head h2{margin:0;font-size:1.2rem}.tag{font-size:.75rem;color:#b5c5ff;letter-spacing:.1em;text-transform:uppercase}
+.game{padding:24px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}.game h3{font-size:1.5rem;margin:0 0 8px}.game p{color:#bfc3df;margin:0;max-width:620px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:12px;padding:11px 16px;font-weight:650;color:#07101f;background:linear-gradient(120deg,#9deaff,#c7b5ff)}.btn.secondary{color:#e6e8ff;background:#ffffff0d;border:1px solid #ffffff26}
+.symbol{width:76px;height:76px;border-radius:20px;display:grid;place-items:center;font-size:2rem;background:linear-gradient(140deg,#6c6bcb55,#43c4db22);border:1px solid #aeb8ff33}
+.note{padding:0 24px 22px;color:#9299c5;font-size:.86rem}
+footer{margin-top:34px;color:#888fb8;font-size:.85rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+@media(max-width:600px){main{padding-top:28px}.game{grid-template-columns:1fr}.symbol{display:none}h1{margin-top:48px}.panel-head{align-items:flex-start;flex-direction:column}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="sky" aria-hidden="true"><div class="nebula"></div><div class="stars"></div></div>
+<main>
+<header class="top"><div class="brand">Harrison's Games</div><div class="status">Your corner of the internet</div></header>
+<section aria-labelledby="hero"><h1 id="hero">Play beyond<br>the ordinary.</h1><p class="intro">A little universe for great games. Pick a game, launch into the action, and check back as the collection grows.</p></section>
+<section class="panel" aria-labelledby="library">
+<div class="panel-head"><h2 id="library">Game library</h2><span class="tag">Featured</span></div>
+<article class="game"><div><h3>LibreCorsa</h3><p>A racing simulator project. Open its GitHub page to explore the game and its available launch instructions.</p><div class="actions"><a class="btn" href="https://github.com/librecorsa/librecorsa" target="_blank" rel="noopener noreferrer">Open LibreCorsa ↗</a><a class="btn secondary" href="https://github.com/librecorsa/librecorsa" target="_blank" rel="noopener noreferrer">View source</a></div></div><div class="symbol" aria-hidden="true">✦</div></article>
+<div class="note">The link you shared is the game's source repository, not a verified playable embed URL. Send the playable game link to add an in-page game window.</div>
+</section>
+<footer><span>Harrison's Games</span><span>Made for late-night game sessions ✦</span></footer>
+</main>
+</body>
+</html>

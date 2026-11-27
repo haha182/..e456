@@ -19,9 +19,9 @@ h1{font-size:clamp(2.8rem,8vw,6rem);line-height:.98;letter-spacing:-.065em;margi
 .panel-head{padding:22px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid #ffffff16}.panel-head h2{margin:0;font-size:1.2rem}.tag{font-size:.75rem;color:#b5c5ff;letter-spacing:.1em;text-transform:uppercase}
 .game{padding:24px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}.game h3{font-size:1.5rem;margin:0 0 8px}.game p{color:#bfc3df;margin:0;max-width:620px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:12px;padding:11px 16px;font-weight:650;color:#07101f;background:linear-gradient(120deg,#9deaff,#c7b5ff)}.btn.secondary{color:#e6e8ff;background:#ffffff0d;border:1px solid #ffffff26}
 .symbol{width:76px;height:76px;border-radius:20px;display:grid;place-items:center;font-size:2rem;background:linear-gradient(140deg,#6c6bcb55,#43c4db22);border:1px solid #aeb8ff33}
-.note{padding:0 24px 22px;color:#9299c5;font-size:.86rem}
+.embed-wrap{padding:0 24px 24px}.game-frame{display:block;width:100%;height:min(72vh,760px);min-height:460px;border:1px solid #ffffff24;border-radius:16px;background:#03040d}.note{padding:0 24px 22px;color:#9299c5;font-size:.86rem}
 footer{margin-top:34px;color:#888fb8;font-size:.85rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-@media(max-width:600px){main{padding-top:28px}.game{grid-template-columns:1fr}.symbol{display:none}h1{margin-top:48px}.panel-head{align-items:flex-start;flex-direction:column}}
+@media(max-width:600px){.game-frame{min-height:65vh;height:65vh}.embed-wrap{padding:0 14px 18px}main{padding-top:28px}.game{grid-template-columns:1fr}.symbol{display:none}h1{margin-top:48px}.panel-head{align-items:flex-start;flex-direction:column}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
@@ -32,8 +32,9 @@ footer{margin-top:34px;color:#888fb8;font-size:.85rem;display:flex;justify-conte
 <section aria-labelledby="hero"><h1 id="hero">Play beyond<br>the ordinary.</h1><p class="intro">A little universe for great games. Pick a game, launch into the action, and check back as the collection grows.</p></section>
 <section class="panel" aria-labelledby="library">
 <div class="panel-head"><h2 id="library">Game library</h2><span class="tag">Featured</span></div>
-<article class="game"><div><h3>LibreCorsa</h3><p>A racing simulator project. Open its GitHub page to explore the game and its available launch instructions.</p><div class="actions"><a class="btn" href="https://github.com/librecorsa/librecorsa" target="_blank" rel="noopener noreferrer">Open LibreCorsa ↗</a><a class="btn secondary" href="https://github.com/librecorsa/librecorsa" target="_blank" rel="noopener noreferrer">View source</a></div></div><div class="symbol" aria-hidden="true">✦</div></article>
-<div class="note">The link you shared is the game's source repository, not a verified playable embed URL. Send the playable game link to add an in-page game window.</div>
+<article class="game"><div><h3>LibreCorsa</h3><p>Play the racing simulator right here. If the game refuses to load inside the frame, use the open-game button below.</p><div class="actions"><a class="btn" href="https://librecorsa.org/" target="_blank" rel="noopener noreferrer">Open game in new tab ↗</a><a class="btn secondary" href="https://github.com/librecorsa/librecorsa" target="_blank" rel="noopener noreferrer">View source</a></div></div><div class="symbol" aria-hidden="true">✦</div></article>
+<div class="embed-wrap"><iframe class="game-frame" src="https://librecorsa.org/" title="LibreCorsa racing simulator" loading="lazy" allow="fullscreen; gamepad; autoplay; accelerometer; gyroscope" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+<div class="note">Embedded game from librecorsa.org. If its hosting settings block embedding, open it in a new tab above.</div>
 </section>
 <footer><span>Harrison's Games</span><span>Made for late-night game sessions ✦</span></footer>
 </main>

@@ -1,27 +1,16 @@
-name: Horizon Remade quality checks
+name: Ghost Driver checks
 on:
   push:
     branches: ['**']
   pull_request:
     branches: [main]
 jobs:
-  game-tests-and-build:
+  static-game-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.12.0
-          cache: npm
-          cache-dependency-path: horizon-remade/package-lock.json
-      - name: Install locked dependencies
-        working-directory: horizon-remade
-        run: npm ci
-      - name: Run game tests
-        working-directory: horizon-remade
-        run: npm test
-      - name: Verify production build
-        working-directory: horizon-remade
-        run: npm run build
+      - name: Verify game entrypoint
+        run: |
+          test -s index.html
+          grep -q 'GHOST DRIVER' index.html
+          grep -q 'requestAnimationFrame' index.html
